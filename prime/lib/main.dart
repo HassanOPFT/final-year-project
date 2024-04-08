@@ -1,8 +1,20 @@
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:prime/firebase_options.dart';
+import 'package:prime/views/home/admin_dashboard_screen.dart';
 
-import 'widgets/home_page.dart';
-
-void main() {
+Future<void> main() async {
+  try {
+    WidgetsFlutterBinding.ensureInitialized();
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+  } on Exception catch (e) {
+    if (kDebugMode) {
+      print(e.toString());
+    }
+  }
   runApp(const MyApp());
 }
 
@@ -15,12 +27,12 @@ class MyApp extends StatelessWidget {
       title: 'PRIME',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
-          brightness: Brightness.dark,
-          seedColor: Colors.tealAccent,
+          brightness: Brightness.light,
+          seedColor: Colors.cyanAccent,
         ),
       ),
       debugShowCheckedModeBanner: false,
-      home: const HomePage(),
+      home: const AdminDashboardScreen(),
     );
   }
 }
