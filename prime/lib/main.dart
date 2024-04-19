@@ -1,8 +1,12 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:prime/firebase_options.dart';
-import 'package:prime/views/home/admin_dashboard_screen.dart';
+import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
+import 'firebase_options.dart';
+
+import 'providers/theme_provider.dart';
+import 'views/home/home_screen.dart';
 
 Future<void> main() async {
   try {
@@ -15,6 +19,11 @@ Future<void> main() async {
       print(e.toString());
     }
   }
+  SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
+
   runApp(const MyApp());
 }
 
@@ -23,16 +32,23 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'PRIME',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          brightness: Brightness.light,
-          seedColor: Colors.cyanAccent,
+    return ChangeNotifierProvider(
+      create: (_) => ThemeProvider(),
+      child: Consumer<ThemeProvider>(
+        builder: (_, themeProvider, __) => MaterialApp(
+          title: 'PRIME',
+          theme: ThemeData(
+            colorScheme: ColorScheme.fromSeed(
+              brightness: themeProvider.themeMode == ThemeModeType.light
+                  ? Brightness.light
+                  : Brightness.dark,
+              seedColor: Colors.cyanAccent,
+            ),
+          ),
+          debugShowCheckedModeBanner: false,
+          home: const HomeScreen(),
         ),
       ),
-      debugShowCheckedModeBanner: false,
-      home: const AdminDashboardScreen(),
     );
   }
 }

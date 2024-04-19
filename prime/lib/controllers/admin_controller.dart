@@ -1,16 +1,28 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+import '../models/admin.dart';
+import 'user_controller.dart';
+
 class AdminController {
   static const String _adminCollectionName = 'Admin';
-  static const String _idFieldName = 'id';
-  static const String _userIdFieldName = 'userId';
-  static const String _firstNameFieldName = 'userFirstName';
-  static const String _lastNameFieldName = 'userLastName';
-  static const String _emailFieldName = 'userEmail';
-  static const String _roleFieldName = 'userRole';
-  static const String _referenceNumberFieldName = 'userReferenceNumber';
-  static const String _profileUrlFieldName = 'userProfileUrl';
-  static const String _phoneNumberFieldName = 'userPhoneNumber';
-  static const String _fcmTokenFieldName = 'userFcmToken';
-  static const String _activityStatusFieldName = 'userActivityStatus';
-  static const String _notificationsEnabledFieldName = 'notificationsEnabled';
-  static const String _createdAtFieldName = 'createdAt';
+
+  final _adminCollection =
+      FirebaseFirestore.instance.collection(_adminCollectionName);
+  final _userController = UserController();
+
+  Future<void> createAdmin({required Admin admin}) async {
+    try {
+      if (admin.userId == null || admin.userId!.isEmpty) {
+        throw Exception('Admin creation failed. Please try again.');
+      }
+
+      // Create a user in the User collection
+      await _userController.createUser(user: admin);
+
+      // Create an admin in the Admin collection
+      // await _adminCollection.doc(admin.userId).set({});
+    } catch (_) {
+      rethrow;
+    }
+  }
 }

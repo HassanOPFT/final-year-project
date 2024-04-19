@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../../widgets/navigation_bar/customer_navigation_bar.dart';
 
 class HostScreen extends StatelessWidget {
-  static const routeName = '/host';
 
   const HostScreen({super.key});
 

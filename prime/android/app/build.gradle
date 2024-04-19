@@ -35,6 +35,7 @@ android {
 
     kotlinOptions {
         jvmTarget = '1.8'
+
     }
 
     sourceSets {
@@ -46,7 +47,8 @@ android {
         applicationId "com.example.prime"
         // You can update the following values to match your application needs.
         // For more information, see: https://docs.flutter.dev/deployment/android#reviewing-the-gradle-build-configuration.
-        minSdkVersion flutter.minSdkVersion
+        minSdkVersion flutter.minSdkVersion // original and first configuration
+        minSdkVersion 21 // added configuration (Android 5)
         // targetSdkVersion flutter.targetSdkVersion original and first configuration
         targetSdkVersion 34 // added configuration (Android 14)
         versionCode flutterVersionCode.toInteger()
@@ -66,4 +68,8 @@ flutter {
     source '../..'
 }
 
-dependencies {}
+dependencies {
+    // implementation platform('com.google.firebase:firebase-bom:32.8.1')
+    // implementation("com.google.firebase:firebase-auth")
+    // implementation 'com.google.firebase:firebase-analytics'
+}

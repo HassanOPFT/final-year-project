@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../utils/navigation/navigate_with_animation.dart';
+import '../../utils/navigate_with_animation.dart';
 import '../../views/profile/customer_profile_screen.dart';
 import '../../views/home/customer_explore_screen.dart';
 import '../../views/rentals/customer_rentals_screen.dart';
@@ -25,9 +25,9 @@ class CustomerNavigationBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return NavigationBar(
       selectedIndex: currentIndex,
-      onDestinationSelected: (index) => navigateWithAnimation(
-        context,
-        customerScreens[index],
+      onDestinationSelected: (index) => animatedPushReplacementNavigation(
+        context: context,
+        screen: customerScreens[index],
       ),
       destinations: [
         _buildNavigationDestination(

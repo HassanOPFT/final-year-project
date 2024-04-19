@@ -8,10 +8,13 @@ allprojects {
 rootProject.buildDir = '../build'
 subprojects {
     project.buildDir = "${rootProject.buildDir}/${project.name}"
+    project.evaluationDependsOn(':app') // added configuration
 }
-subprojects {
-    project.evaluationDependsOn(':app')
-}
+
+// origianl code
+// subprojects {
+//     project.evaluationDependsOn(':app')
+// }
 
 tasks.register("clean", Delete) {
     delete rootProject.buildDir

@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../../widgets/navigation_bar/customer_navigation_bar.dart';
 
 class CustomerExploreScreen extends StatelessWidget {
-  static const routeName = '/customer-explore';
 
   const CustomerExploreScreen({super.key});
 

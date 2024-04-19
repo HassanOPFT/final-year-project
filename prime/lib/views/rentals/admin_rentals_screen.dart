@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:prime/widgets/navigation_bar/admin_navigation_bar.dart';
 
 class AdminRentalsScreen extends StatelessWidget {
-  static const routeName = '/admin-rentals';
 
   const AdminRentalsScreen({super.key});
 

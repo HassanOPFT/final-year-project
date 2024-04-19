@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../utils/navigation/navigate_with_animation.dart';
+import '../../utils/navigate_with_animation.dart';
 import '../../views/admin/admin_users_screen.dart';
 import '../../views/cars/admin_cars_screen.dart';
 import '../../views/home/admin_dashboard_screen.dart';
@@ -27,9 +27,9 @@ class AdminNavigationBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return NavigationBar(
       selectedIndex: currentIndex,
-      onDestinationSelected: (index) => navigateWithAnimation(
-        context,
-        adminScreens[index],
+      onDestinationSelected: (index) => animatedPushReplacementNavigation(
+        context: context,
+        screen: adminScreens[index],
       ),
       destinations: [
         _buildNavigationDestination(

@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../../widgets/navigation_bar/customer_navigation_bar.dart';
 
 class CustomerRentalsScreen extends StatelessWidget {
-  static const routeName = '/customer-rentals';
 
   const CustomerRentalsScreen({super.key});
 

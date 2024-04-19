@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:prime/widgets/navigation_bar/admin_navigation_bar.dart';
 
 class AdminCarsScreen extends StatelessWidget {
-  static const routeName = '/admin-cars';
 
   const AdminCarsScreen({super.key});
 

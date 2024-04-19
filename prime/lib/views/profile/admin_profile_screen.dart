@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:prime/widgets/navigation_bar/admin_navigation_bar.dart';
 
 class AdminProfileScreen extends StatelessWidget {
-  static const routeName = '/admin-profile';
 
   const AdminProfileScreen({super.key});
 

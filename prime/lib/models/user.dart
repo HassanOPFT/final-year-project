@@ -8,7 +8,7 @@ class User {
   String? userProfileUrl;
   String? userPhoneNumber;
   String? userFcmToken;
-  String? userActivityStatus;
+  ActivityStatus? userActivityStatus;
   bool? notificationsEnabled;
   DateTime? createdAt;
 
@@ -33,4 +33,9 @@ enum UserRole {
   secondaryAdmin,
   customer,
   host,
+}
+
+enum ActivityStatus {
+  active,
+  halted,
 }
