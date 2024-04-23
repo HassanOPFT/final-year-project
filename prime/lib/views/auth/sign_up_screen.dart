@@ -11,25 +11,22 @@ class SignUpScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Create Your Account'),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20.0),
+    return const Scaffold(
+      body: Center(
         child: SingleChildScrollView(
+          padding: EdgeInsets.symmetric(horizontal: 20.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const AppLogo(height: 240.0),
-              const SignUpForm(),
-              const SizedBox(height: 20.0),
-              const OrDivider(),
-              const SizedBox(height: 20.0),
+              AppLogo(height: 200.0),
+              SignUpForm(),
+              SizedBox(height: 20.0),
+              OrDivider(),
+              SizedBox(height: 20.0),
               ContinueWithGoogle(),
-              const SizedBox(height: 10.0),
-              const SignInPrompt(),
+              SizedBox(height: 10.0),
+              SignInPrompt(),
             ],
           ),
         ),

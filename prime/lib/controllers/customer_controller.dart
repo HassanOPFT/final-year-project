@@ -5,6 +5,12 @@ import '../models/customer.dart';
 import '../models/user.dart';
 import '../utils/generate_reference_number.dart';
 
+// car-road-tax/${carId}_${randomString}.jpg
+// driving-license/${userId}_${randomString}.jpg
+// user-identity-document/${userId}_${randomString}.jpg
+// user-profile-picture/${userId}_${randomString}.jpg
+
+
 class CustomerController {
   static const String _customerCollectionName = 'Customer';
 

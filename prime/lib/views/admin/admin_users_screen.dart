@@ -8,10 +8,10 @@ class AdminUsersScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Cars'),
+        title: const Text('Users'),
       ),
       body: const Center(
-        child: Text('Cars'),
+        child: Text('Users'),
       ),
       bottomNavigationBar: const AdminNavigationBar(currentIndex: 3),
     );

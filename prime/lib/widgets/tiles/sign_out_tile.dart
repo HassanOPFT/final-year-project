@@ -1,36 +1,35 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:flutter/material.dart';
+import 'package:prime/views/auth/auth_screen.dart';
 
-import '../services/firebase/authentication/firebase_auth_service.dart';
-import '../utils/navigate_with_animation.dart';
-import '../utils/snackbar.dart';
-import '../views/home/home_screen.dart';
+import '../../services/firebase/firebase_auth_service.dart';
+import '../../utils/navigate_with_animation.dart';
+import '../../utils/snackbar.dart';
 
 class SignOutTile extends StatelessWidget {
   SignOutTile({super.key});
   final _firebaseAuthService = FirebaseAuthService();
   @override
   Widget build(BuildContext context) {
-    final themeOfContext = Theme.of(context);
     return ListTile(
-      title: Text(
+      title: const Text(
         'Sign out',
         style: TextStyle(
           fontSize: 20.0,
-          color: themeOfContext.colorScheme.error,
+          color: Colors.red,
         ),
       ),
-      leading: Icon(
+      leading: const Icon(
         Icons.logout,
-        color: themeOfContext.colorScheme.error,
+        color: Colors.red,
       ),
       onTap: () async {
         try {
           await _firebaseAuthService.signOut();
           animatedPushReplacementNavigation(
             context: context,
-            screen: const HomeScreen(),
+            screen: const AuthScreen(),
           );
         } catch (e) {
           buildFailureSnackbar(

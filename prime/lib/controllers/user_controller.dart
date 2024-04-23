@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../models/user.dart';
+import '../services/firebase/firebase_storage_service.dart';
 
 class UserController {
   static const String _userCollectionName = 'User';
@@ -44,12 +45,13 @@ class UserController {
 
   Future<UserRole> getUserRole(String userId) async {
     try {
-      DocumentSnapshot userSnapshot = await _userCollection.doc(userId).get();
+      final userSnapshot = await _userCollection.doc(userId).get();
       if (!userSnapshot.exists) {
         throw Exception('User not found.');
       }
       dynamic data = userSnapshot.data();
-      if (data == null || data.runtimeType != Map) {
+
+      if (data == null) {
         throw Exception('Invalid data format in Firestore.');
       }
       UserRole userRole = UserRole.customer;
@@ -60,8 +62,61 @@ class UserController {
           orElse: () => UserRole.customer,
         );
       }
+
       return userRole;
     } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<bool> isUserRegistered(String email) async {
+    try {
+      QuerySnapshot<Map<String, dynamic>> querySnapshot = await _userCollection
+          .where(
+            _emailFieldName,
+            isEqualTo: email,
+          )
+          .get();
+
+      return querySnapshot.docs.isNotEmpty;
+    } on FirebaseException catch (_) {
+      rethrow;
+    } catch (_) {
+      rethrow;
+    }
+  }
+
+  Future<String?> getUserProfilePicture(String userId) async {
+    try {
+      final userSnapshot = await _userCollection.doc(userId).get();
+      if (userSnapshot.exists) {
+        final data = userSnapshot.data();
+        if (data != null && data[_profileUrlFieldName] != null) {
+          return data[_profileUrlFieldName] as String;
+        }
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // user-profile-picture/${userId}_${randomString}.jpg
+  Future<String?> uploadProfilePicture(String filePath, String userId) async {
+    try {
+      final firebaseStorageService = FirebaseStorageService();
+      final downloadUrl = await firebaseStorageService.uploadFile(
+        filePath: filePath,
+        storagePath: 'user-profile-picture/$userId',
+      );
+      if (downloadUrl != null) {
+        await _userCollection.doc(userId).update({
+          _profileUrlFieldName: downloadUrl,
+        });
+        return downloadUrl;
+      }
+      return null;
+    } catch (_) {
       rethrow;
     }
   }

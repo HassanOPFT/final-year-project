@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:prime/widgets/navigation_bar/admin_navigation_bar.dart';
 
-class AdminProfileScreen extends StatelessWidget {
+import '../../widgets/tiles/dark_mode_switch.dart';
+import '../../widgets/tiles/sign_out_tile.dart';
 
+class AdminProfileScreen extends StatelessWidget {
   const AdminProfileScreen({super.key});
 
   @override
@@ -11,8 +13,12 @@ class AdminProfileScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Profile'),
       ),
-      body: const Center(
-        child: Text('Profile'),
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const DarkModeSwitch(),
+          SignOutTile(),
+        ],
       ),
       bottomNavigationBar: const AdminNavigationBar(currentIndex: 4),
     );

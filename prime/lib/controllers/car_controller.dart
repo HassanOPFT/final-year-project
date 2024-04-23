@@ -24,3 +24,8 @@ class CarController {
   static const String _referenceNumberFieldName = 'referenceNumber';
   static const String _createdAtFieldName = 'createdAt';
 }
+
+// carImages/${carId}/somethingHere.jpg all images in the carId folder
+// car-insurance/${carId}_${randomString}.jpg
+// car-registration/${carId}_${randomString}.jpg
+// car-road-tax/${carId}_${randomString}.jpg

@@ -1,25 +1,46 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
-import '../../services/firebase/authentication/firebase_auth_service.dart';
-import 'customer_explore_screen.dart';
-import '../auth/sign_in_screen.dart';
+import '../../controllers/user_controller.dart';
+import '../../models/user.dart';
+import '../../utils/navigate_with_animation.dart';
+import '../../widgets/error_screen.dart';
+import '../auth/auth_screen.dart';
 import '../auth/splash_screen.dart';
+import 'admin_dashboard_screen.dart';
+import 'customer_explore_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder(
-      initialData: FirebaseAuthService().currentUser,
-      stream: FirebaseAuthService().authStateChanges,
-      builder: (ctx, userSnapshot) {
-        if (userSnapshot.connectionState == ConnectionState.waiting) {
+    final user = FirebaseAuth.instance.currentUser;
+    final userController = UserController();
+
+    if (user == null) {
+      animatedPushReplacementNavigation(
+        context: context,
+        screen: const AuthScreen(),
+      );
+      return Container();
+    }
+
+    return FutureBuilder<UserRole>(
+      future: userController.getUserRole(user.uid),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
           return const SplashScreen();
-        } else if (userSnapshot.hasData) {
-          return const CustomerExploreScreen();
+        } else if (snapshot.hasError) {
+          return const ErrorScreen(
+            errorMessage: 'Error Signing In. Please try again.',
+          );
         } else {
-          return const SignInScreen();
+          final userRole = snapshot.data;
+          return userRole == UserRole.primaryAdmin ||
+                  userRole == UserRole.secondaryAdmin
+              ? const AdminDashboardScreen()
+              : const CustomerExploreScreen();
         }
       },
     );

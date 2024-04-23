@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:prime/views/home/home_screen.dart';
 
 import '../utils/navigate_with_animation.dart';
 import '../utils/snackbar.dart';
-import '../views/home/customer_explore_screen.dart';
 import '../widgets/custom_progress_indicator.dart';
-import '../services/firebase/authentication/firebase_auth_service.dart';
+import '../services/firebase/firebase_auth_service.dart';
+import 'forgot_password_prompt.dart';
 
 class SignInForm extends StatefulWidget {
   const SignInForm({super.key});
@@ -83,7 +84,7 @@ class _SignInFormState extends State<SignInForm> {
           if (mounted) {
             animatedPushReplacementNavigation(
               context: context,
-              screen: const CustomerExploreScreen(),
+              screen: const HomeScreen(),
             );
           }
         } catch (e) {
@@ -147,7 +148,7 @@ class _SignInFormState extends State<SignInForm> {
               _signIn();
             },
           ),
-          // const SizedBox(height: 10.0),
+          const SizedBox(height: 10.0),
           // GestureDetector(
           //   onTap: () {
           //     setState(() {
@@ -171,7 +172,13 @@ class _SignInFormState extends State<SignInForm> {
           //     ],
           //   ),
           // ),
-          const SizedBox(height: 30.0),
+          const Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              ForgotPasswordPrompt(),
+            ],
+          ),
+          const SizedBox(height: 10.0),
           SizedBox(
             height: 50.0,
             child: _signInLoading

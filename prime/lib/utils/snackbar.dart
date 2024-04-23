@@ -23,7 +23,7 @@ void buildFailureSnackbar({
 }) {
   const backgroundColor = Color.fromARGB(255, 255, 242, 242);
   const iconData = Icons.error_outline;
-  const textColor = Color.fromARGB(255, 219, 5, 5);
+  const textColor = Colors.red;
 
   _buildCustomSnackbar(
     context: context,
@@ -112,17 +112,3 @@ void _buildCustomSnackbar({
     ),
   );
 }
-
-// void buildSnackBar(String message) {
-//     ScaffoldMessenger.of(context).showSnackBar(
-//       SnackBar(
-//         content: Text(message),
-//         backgroundColor: Theme.of(context).colorScheme.error,
-//         behavior: SnackBarBehavior.floating,
-//         elevation: 20,
-//         shape: RoundedRectangleBorder(
-//           borderRadius: BorderRadius.circular(15),
-//         ),
-//       ),
-//     );
-//   }

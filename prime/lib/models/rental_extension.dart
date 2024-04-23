@@ -4,6 +4,7 @@ class RentalExtension {
   DateTime? startDate;
   DateTime? endDate;
   String? stripePaymentMethodId;
+  String? referenceNumber;
   DateTime? createdAt;
 
   RentalExtension({
@@ -12,6 +13,7 @@ class RentalExtension {
     this.startDate,
     this.endDate,
     this.stripePaymentMethodId,
+    this.referenceNumber,
     this.createdAt,
   });
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:prime/views/home/home_screen.dart';
 
 import '../utils/navigate_with_animation.dart';
 import '../views/home/customer_explore_screen.dart';
@@ -6,7 +7,7 @@ import '../controllers/customer_controller.dart';
 import '../models/customer.dart';
 import 'custom_progress_indicator.dart';
 import '../utils/snackbar.dart';
-import '../services/firebase/authentication/firebase_auth_service.dart';
+import '../services/firebase/firebase_auth_service.dart';
 
 class SignUpForm extends StatefulWidget {
   const SignUpForm({super.key});
@@ -104,6 +105,8 @@ class _SignUpFormState extends State<SignUpForm> {
               userEmail: _emailController.text.trim(),
               userFirstName: _firstNameController.text.trim(),
               userLastName: _lastNameController.text.trim(),
+              userProfileUrl:
+                  'https://firebasestorage.googleapis.com/v0/b/prime-b09b7.appspot.com/o/default-files%2Fuser-default-profile-picture.jpg?alt=media&token=4acacd32-a06e-4637-a5af-357c986caca3',
             ),
           );
 
@@ -113,10 +116,18 @@ class _SignUpFormState extends State<SignUpForm> {
           setState(() {
             _signUpLoading = false;
           });
+
           if (mounted) {
+            // Display Confirmation Message
+            buildSuccessSnackbar(
+              context: context,
+              message:
+                  'Welcome aboard! Your account has been successfully created.',
+            );
+
             animatedPushReplacementNavigation(
               context: context,
-              screen: const CustomerExploreScreen(),
+              screen: const HomeScreen(),
             );
           }
         } catch (e) {

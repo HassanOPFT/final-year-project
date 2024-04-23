@@ -6,7 +6,7 @@ import 'package:provider/provider.dart';
 import 'firebase_options.dart';
 
 import 'providers/theme_provider.dart';
-import 'views/home/home_screen.dart';
+import 'views/auth/auth_screen.dart';
 
 Future<void> main() async {
   try {
@@ -46,7 +46,7 @@ class MyApp extends StatelessWidget {
             ),
           ),
           debugShowCheckedModeBanner: false,
-          home: const HomeScreen(),
+          home: const AuthScreen(),
         ),
       ),
     );
