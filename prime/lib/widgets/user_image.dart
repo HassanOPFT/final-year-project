@@ -23,7 +23,10 @@ class _UserImageState extends State<UserImage> {
 
   Future<void> _uploadFile(String path) async {
     try {
-      final ref = FirebaseStorage.instance.ref().child('test').child('${DateTime.now().toIso8601String()}${p.basename(path)}');
+      final ref = FirebaseStorage.instance
+          .ref()
+          .child('test')
+          .child('${DateTime.now().toIso8601String()}${p.basename(path)}');
       final result = await ref.putFile(File(path));
       final fileUrl = await result.ref.getDownloadURL();
       setState(() {
@@ -31,24 +34,30 @@ class _UserImageState extends State<UserImage> {
       });
       widget.onFileChanged(fileUrl);
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error uploading image')));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Error uploading image')));
     }
   }
 
   Future<XFile?> _compressImage(String path, int quality) async {
     try {
-      final newPath = p.join((await getTemporaryDirectory()).path, '${DateTime.now()}${p.extension(path)}');
-      final result = await FlutterImageCompress.compressAndGetFile(path, newPath, quality: quality);
+      final newPath = p.join((await getTemporaryDirectory()).path,
+          '${DateTime.now()}${p.extension(path)}');
+      final result = await FlutterImageCompress.compressAndGetFile(
+          path, newPath,
+          quality: quality);
       return result;
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error compressing image')));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Error compressing image')));
       return null;
     }
   }
 
   Future<void> _pickImage(ImageSource imageSource) async {
     try {
-      final pickedFile = await _imagePicker.pickImage(source: imageSource, imageQuality: 50);
+      final pickedFile =
+          await _imagePicker.pickImage(source: imageSource, imageQuality: 50);
       if (pickedFile == null) return;
 
       final imageCropper = ImageCropper();
@@ -64,7 +73,8 @@ class _UserImageState extends State<UserImage> {
 
       await _uploadFile(compressedFile.path);
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error picking image')));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Error picking image')));
     }
   }
 
