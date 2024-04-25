@@ -14,17 +14,7 @@ class FirebaseStorageService {
       return getDownloadUrl(storagePath);
     } on FirebaseException catch (_) {
       rethrow;
-    } catch (e) {
-      rethrow;
-    }
-  }
-
-  Future<void> deleteFile(String storagePath) async {
-    try {
-      await _firebaseStorage.ref().child(storagePath).delete();
-    } on FirebaseException catch (_) {
-      rethrow;
-    } catch (e) {
+    } catch (_) {
       rethrow;
     }
   }
@@ -36,7 +26,7 @@ class FirebaseStorageService {
       return downloadUrl;
     } on FirebaseException catch (_) {
       rethrow;
-    } catch (e) {
+    } catch (_) {
       rethrow;
     }
   }
@@ -53,7 +43,17 @@ class FirebaseStorageService {
       return getDownloadUrl(storagePath);
     } on FirebaseException catch (_) {
       rethrow;
-    } catch (e) {
+    } catch (_) {
+      rethrow;
+    }
+  }
+
+  Future<void> deleteFile(String storagePath) async {
+    try {
+      await _firebaseStorage.ref().child(storagePath).delete();
+    } on FirebaseException catch (_) {
+      rethrow;
+    } catch (_) {
       rethrow;
     }
   }

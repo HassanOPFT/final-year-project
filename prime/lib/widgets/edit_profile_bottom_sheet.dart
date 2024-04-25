@@ -1,8 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 class EditProfileBottomSheet extends StatelessWidget {
-  final bool isProfileDefault;
-  const EditProfileBottomSheet({super.key, required this.isProfileDefault});
+  final bool isDefaultProfile;
+  final Function(ImageSource) pickImage;
+  final Function deleteImage;
+  const EditProfileBottomSheet({
+    super.key,
+    required this.isDefaultProfile,
+    required this.pickImage,
+    required this.deleteImage,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +32,10 @@ class EditProfileBottomSheet extends StatelessWidget {
           const Divider(),
           const SizedBox(height: 15.0),
           TextButton.icon(
-            onPressed: () {},
+            onPressed: () {
+              Navigator.of(context).pop();
+              pickImage(ImageSource.gallery);
+            },
             icon: const Icon(Icons.upload_rounded),
             label: const Text(
               'Upload Image',
@@ -34,7 +45,10 @@ class EditProfileBottomSheet extends StatelessWidget {
             ),
           ),
           TextButton.icon(
-            onPressed: () {},
+            onPressed: () {
+              Navigator.of(context).pop();
+              pickImage(ImageSource.camera);
+            },
             icon: const Icon(Icons.camera),
             label: const Text(
               'Take Image',
@@ -43,9 +57,12 @@ class EditProfileBottomSheet extends StatelessWidget {
               ),
             ),
           ),
-          if (isProfileDefault)
+          if (isDefaultProfile)
             TextButton.icon(
-              onPressed: () {},
+              onPressed: () {
+                Navigator.of(context).pop();
+                deleteImage();
+              },
               icon: const Icon(
                 Icons.delete_rounded,
                 color: Colors.red,

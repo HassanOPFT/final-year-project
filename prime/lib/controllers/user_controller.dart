@@ -17,6 +17,10 @@ class UserController {
   static const String _notificationsEnabledFieldName = 'notificationsEnabled';
   static const String _createdAtFieldName = 'createdAt';
 
+  // create getter for defaultProfileUrl
+  String get defaultProfileUrl =>
+      'https://firebasestorage.googleapis.com/v0/b/prime-b09b7.appspot.com/o/default-files%2Fuser-default-profile-picture.jpg?alt=media&token=4acacd32-a06e-4637-a5af-357c986caca3';
+
   final _userCollection =
       FirebaseFirestore.instance.collection(_userCollectionName);
 
@@ -38,6 +42,29 @@ class UserController {
           _createdAtFieldName: Timestamp.now(),
         },
       );
+    } on FirebaseException catch (_) {
+      rethrow;
+    } catch (_) {
+      rethrow;
+    }
+  }
+
+  Future<Map<String, String?>> getUserNameAndPhoneNo(String userId) async {
+    try {
+      final userSnapshot = await _userCollection.doc(userId).get();
+      if (userSnapshot.exists) {
+        final data = userSnapshot.data();
+        if (data != null) {
+          return {
+            _firstNameFieldName: data[_firstNameFieldName] as String?,
+            _lastNameFieldName: data[_lastNameFieldName] as String?,
+            _phoneNumberFieldName: data[_phoneNumberFieldName] as String?,
+          };
+        }
+      }
+      return {};
+    } on FirebaseException catch (_) {
+      rethrow;
     } catch (_) {
       rethrow;
     }
@@ -101,19 +128,64 @@ class UserController {
     }
   }
 
-  // user-profile-picture/${userId}_${randomString}.jpg
+  String _generateProfilePictureStoragePath(String userReferenceNumber) {
+    return 'user-profile-picture/$userReferenceNumber.jpg';
+  }
+
+  // user-profile-picture/${userReferenceNumber}.jpg
   Future<String?> uploadProfilePicture(String filePath, String userId) async {
     try {
-      final firebaseStorageService = FirebaseStorageService();
-      final downloadUrl = await firebaseStorageService.uploadFile(
-        filePath: filePath,
-        storagePath: 'user-profile-picture/$userId',
-      );
-      if (downloadUrl != null) {
+      // Get user reference number
+      final userReferenceNumber = await getUserReferenceNumber(userId);
+
+      if (userReferenceNumber != null) {
+        final firebaseStorageService = FirebaseStorageService();
+        final storagePath =
+            _generateProfilePictureStoragePath(userReferenceNumber);
+        final downloadUrl = await firebaseStorageService.uploadFile(
+          filePath: filePath,
+          storagePath: storagePath,
+        );
+        if (downloadUrl != null) {
+          await _userCollection.doc(userId).update({
+            _profileUrlFieldName: downloadUrl,
+          });
+          return downloadUrl;
+        }
+      }
+      return null;
+    } catch (_) {
+      rethrow;
+    }
+  }
+
+  Future<void> deleteProfilePicture(String userId) async {
+    try {
+      final userReferenceNumber = await getUserReferenceNumber(userId);
+      if (userReferenceNumber != null) {
+        final firebaseStorageService = FirebaseStorageService();
+        final storagePath =
+            _generateProfilePictureStoragePath(userReferenceNumber);
+        // Update default profile image URL in Firestore
         await _userCollection.doc(userId).update({
-          _profileUrlFieldName: downloadUrl,
+          _profileUrlFieldName: defaultProfileUrl,
         });
-        return downloadUrl;
+        // Delete profile picture from Firebase Storage
+        await firebaseStorageService.deleteFile(storagePath);
+      }
+    } catch (_) {
+      rethrow;
+    }
+  }
+
+  Future<String?> getUserReferenceNumber(String userId) async {
+    try {
+      final userSnapshot = await _userCollection.doc(userId).get();
+      if (userSnapshot.exists) {
+        final data = userSnapshot.data();
+        if (data != null && data[_referenceNumberFieldName] != null) {
+          return data[_referenceNumberFieldName] as String?;
+        }
       }
       return null;
     } catch (_) {

@@ -1,11 +1,18 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter/widgets.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'package:image_cropper/image_cropper.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:prime/utils/navigate_with_animation.dart';
 import 'package:prime/views/profile/view_full_image_screen.dart';
+import 'package:path/path.dart' as p;
 
 import '../controllers/user_controller.dart';
 import '../services/firebase/firebase_auth_service.dart';
+import '../utils/snackbar.dart';
 import 'edit_profile_bottom_sheet.dart';
 
 class ProfileAvatar extends StatefulWidget {
@@ -19,20 +26,117 @@ class _ProfileAvatarState extends State<ProfileAvatar> {
   final authService = FirebaseAuthService();
   final userController = UserController();
   String? userProfileUrl;
-  static const defaultProfileUrl =
-      'https://firebasestorage.googleapis.com/v0/b/prime-b09b7.appspot.com/o/default-files%2Fuser-default-profile-picture.jpg?alt=media&token=4acacd32-a06e-4637-a5af-357c986caca3';
+  late String defaultProfileUrl;
+  late String? userId;
+  final _imagePicker = ImagePicker();
 
   @override
   void initState() {
     super.initState();
+    defaultProfileUrl = userController.defaultProfileUrl;
+    userId = authService.currentUser?.uid;
     _loadUserProfileUrl();
   }
 
+  void deleteImage() async {
+    try {
+      if (userProfileUrl == defaultProfileUrl) {
+        return;
+      }
+
+      if (userId != null) {
+        await userController.deleteProfilePicture(userId!);
+        setState(() {
+          userProfileUrl = defaultProfileUrl;
+        });
+      } else {
+        if (mounted) {
+          buildFailureSnackbar(
+            context: context,
+            message: 'Error while deleting image. Please try again.',
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        buildFailureSnackbar(
+          context: context,
+          message: 'Error while deleting image. Please try again.',
+        );
+      }
+    }
+  }
+
+  Future<XFile?> _compressImage(String path, int quality) async {
+    try {
+      final newPath = p.join(
+        (await getTemporaryDirectory()).path,
+        '${DateTime.now()}${p.extension(path)}',
+      );
+      final result = await FlutterImageCompress.compressAndGetFile(
+        path,
+        newPath,
+        quality: quality,
+      );
+      return result;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<void> pickImage(ImageSource imageSource) async {
+    try {
+      final pickedFile = await _imagePicker.pickImage(
+        source: imageSource,
+        imageQuality: 50,
+      );
+      if (pickedFile == null) return;
+
+      final imageCropper = ImageCropper();
+      final croppedFile = await imageCropper.cropImage(
+        sourcePath: pickedFile.path,
+        aspectRatio: const CropAspectRatio(
+          ratioX: 1,
+          ratioY: 1,
+        ),
+      );
+
+      if (croppedFile == null) return;
+
+      final compressedFile = await _compressImage(croppedFile.path, 35);
+      if (compressedFile == null) return;
+
+      // Upload the image to Firebase Storage
+      if (userId != null) {
+        final newProfileImage = await userController.uploadProfilePicture(
+          compressedFile.path,
+          userId as String,
+        );
+        setState(() {
+          userProfileUrl = newProfileImage;
+        });
+      } else {
+        if (mounted) {
+          buildFailureSnackbar(
+            context: context,
+            message: 'Error while picking image. Please try again.',
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        buildFailureSnackbar(
+          context: context,
+          message: 'Error while picking image. Please try again.',
+        );
+      }
+    }
+  }
+
   void _loadUserProfileUrl() async {
-    final currentUser = authService.currentUser;
-    if (currentUser != null) {
+    if (userId != null) {
       final profileUrl =
-          await userController.getUserProfilePicture(currentUser.uid);
+          await userController.getUserProfilePicture(userId as String);
       setState(() {
         userProfileUrl = profileUrl ?? defaultProfileUrl;
         if (userProfileUrl != null && userProfileUrl!.isEmpty) {
@@ -46,14 +150,18 @@ class _ProfileAvatarState extends State<ProfileAvatar> {
     }
   }
 
-  void _showEditProfileBottomSheet() {
-    final isProfileDefault = userProfileUrl != defaultProfileUrl;
+  Future<void> _showEditProfileBottomSheet() async {
+    final isDefaultProfile = userProfileUrl != defaultProfileUrl;
 
-    showModalBottomSheet(
+    await showModalBottomSheet(
       context: context,
       showDragHandle: true,
       builder: (BuildContext context) {
-        return EditProfileBottomSheet(isProfileDefault: isProfileDefault);
+        return EditProfileBottomSheet(
+          isDefaultProfile: isDefaultProfile,
+          pickImage: pickImage,
+          deleteImage: deleteImage,
+        );
       },
     );
   }

@@ -6,12 +6,13 @@ import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
+import 'package:prime/utils/snackbar.dart';
 
 import 'app_round_image.dart';
 
 class UserImage extends StatefulWidget {
   final Function(String imageUrl) onFileChanged;
-  const UserImage({Key? key, required this.onFileChanged}) : super(key: key);
+  const UserImage({super.key, required this.onFileChanged});
 
   @override
   State<UserImage> createState() => _UserImageState();
@@ -34,36 +35,42 @@ class _UserImageState extends State<UserImage> {
       });
       widget.onFileChanged(fileUrl);
     } catch (e) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Error uploading image')));
+      rethrow;
     }
   }
 
   Future<XFile?> _compressImage(String path, int quality) async {
     try {
-      final newPath = p.join((await getTemporaryDirectory()).path,
-          '${DateTime.now()}${p.extension(path)}');
+      final newPath = p.join(
+        (await getTemporaryDirectory()).path,
+        '${DateTime.now()}${p.extension(path)}',
+      );
       final result = await FlutterImageCompress.compressAndGetFile(
-          path, newPath,
-          quality: quality);
+        path,
+        newPath,
+        quality: quality,
+      );
       return result;
     } catch (e) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Error compressing image')));
-      return null;
+      rethrow;
     }
   }
 
   Future<void> _pickImage(ImageSource imageSource) async {
     try {
-      final pickedFile =
-          await _imagePicker.pickImage(source: imageSource, imageQuality: 50);
+      final pickedFile = await _imagePicker.pickImage(
+        source: imageSource,
+        imageQuality: 50,
+      );
       if (pickedFile == null) return;
 
       final imageCropper = ImageCropper();
       final croppedFile = await imageCropper.cropImage(
         sourcePath: pickedFile.path,
-        aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
+        aspectRatio: const CropAspectRatio(
+          ratioX: 1,
+          ratioY: 1,
+        ),
       );
 
       if (croppedFile == null) return;
@@ -73,8 +80,12 @@ class _UserImageState extends State<UserImage> {
 
       await _uploadFile(compressedFile.path);
     } catch (e) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Error picking image')));
+      if (mounted) {
+        buildFailureSnackbar(
+          context: context,
+          message: 'Error while picking image. Please try again.',
+        );
+      }
     }
   }
 
@@ -122,7 +133,7 @@ class _UserImageState extends State<UserImage> {
           InkWell(
             splashColor: Colors.transparent,
             highlightColor: Colors.transparent,
-            onTap: () => _selectPhoto(),
+            onTap: _selectPhoto,
             child: AppRoundImage.url(
               imageUrl: imageUrl!,
               width: 80,
@@ -130,7 +141,7 @@ class _UserImageState extends State<UserImage> {
             ),
           ),
         InkWell(
-          onTap: () => _selectPhoto(),
+          onTap: _selectPhoto,
           child: Padding(
             padding: const EdgeInsets.all(8.0),
             child: Text(
