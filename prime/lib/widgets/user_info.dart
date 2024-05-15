@@ -1,21 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:prime/widgets/custom_progress_indicator.dart';
-
-import '../controllers/user_controller.dart';
-import '../services/firebase/firebase_auth_service.dart';
+import 'package:provider/provider.dart';
+import '../providers/user_provider.dart';
+import 'custom_progress_indicator.dart';
 
 class UserInfo extends StatelessWidget {
   const UserInfo({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final authService = FirebaseAuthService();
-    final userId = authService.currentUser?.uid;
-    if (userId == null) {
-      return const Text('User not authenticated');
-    }
+    final userProvider = Provider.of<UserProvider>(context);
+
     return FutureBuilder<Map<String, String?>>(
-      future: UserController().getUserNameAndPhoneNo(userId),
+      future: userProvider.getUserNameAndPhoneNo(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const CustomProgressIndicator();

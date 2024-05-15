@@ -5,12 +5,6 @@ import '../models/customer.dart';
 import '../models/user.dart';
 import '../utils/generate_reference_number.dart';
 
-// car-road-tax/${carId}_${randomString}.jpg
-// driving-license/${userId}_${randomString}.jpg
-// user-identity-document/${userId}_${randomString}.jpg
-// user-profile-picture/${userId}_${randomString}.jpg
-
-
 class CustomerController {
   static const String _customerCollectionName = 'Customer';
 
@@ -62,5 +56,140 @@ class CustomerController {
       userActivityStatus: ActivityStatus.active,
       notificationsEnabled: true,
     );
+  }
+
+  Future<void> setDefaultAddress({
+    required String userId,
+    required String addressId,
+  }) async {
+    try {
+      if (userId.isEmpty || addressId.isEmpty) {
+        throw Exception('Invalid userId or addressId');
+      }
+      await _customerCollection.doc(userId).update(
+        {
+          _defaultAddressIdFieldName: addressId,
+        },
+      );
+    } catch (_) {
+      rethrow;
+    }
+  }
+
+  Future<String> getCustomerDefaultAddress(String userId) async {
+    try {
+      if (userId.isEmpty) {
+        throw Exception('Invalid userId');
+      }
+      final customer = await _customerCollection.doc(userId).get();
+      return customer.get(_defaultAddressIdFieldName) as String;
+    } catch (_) {
+      rethrow;
+    }
+  }
+
+  Future<void> deleteDefaultAddress(String userId) async {
+    try {
+      if (userId.isEmpty) {
+        throw Exception('Invalid userId');
+      }
+      await _customerCollection.doc(userId).update(
+        {
+          _defaultAddressIdFieldName: '',
+        },
+      );
+    } catch (_) {
+      rethrow;
+    }
+  }
+
+  Future<void> setIdentityDocumentId({
+    required String userId,
+    required String documentId,
+  }) async {
+    try {
+      if (userId.isEmpty || documentId.isEmpty) {
+        throw Exception('Invalid userId or documentId');
+      }
+      await _customerCollection.doc(userId).update(
+        {
+          _identityDocumentIdFieldName: documentId,
+        },
+      );
+    } catch (_) {
+      rethrow;
+    }
+  }
+
+  Future<String> getIdentityDocumentId(String userId) async {
+    try {
+      if (userId.isEmpty) {
+        throw Exception('Invalid userId');
+      }
+      final customer = await _customerCollection.doc(userId).get();
+      return customer.get(_identityDocumentIdFieldName) as String;
+    } catch (_) {
+      rethrow;
+    }
+  }
+
+  Future<void> deleteIdentityDocumentId(String userId) async {
+    try {
+      if (userId.isEmpty) {
+        throw Exception('Invalid userId');
+      }
+      await _customerCollection.doc(userId).update(
+        {
+          _identityDocumentIdFieldName: '',
+        },
+      );
+    } catch (_) {
+      rethrow;
+    }
+  }
+
+  Future<void> setDrivingLicenseDocumentId({
+    required String userId,
+    required String documentId,
+  }) async {
+    try {
+      if (userId.isEmpty || documentId.isEmpty) {
+        throw Exception('Invalid userId or documentId');
+      }
+      await _customerCollection.doc(userId).update(
+        {
+          _drivingLicenseDocumentIdFieldName: documentId,
+        },
+      );
+    } catch (_) {
+      rethrow;
+    }
+  }
+
+  Future<String> getDrivingLicenseDocumentId(String userId) async {
+    try {
+      if (userId.isEmpty) {
+        throw Exception('Invalid userId');
+      }
+      final customer = await _customerCollection.doc(userId).get();
+      return customer.get(_drivingLicenseDocumentIdFieldName) as String;
+    } catch (_) {
+      rethrow;
+    }
+  }
+
+  Future<void> deleteDrivingLicenseDocumentId(String userId) async {
+    try {
+      if (userId.isEmpty) {
+        throw Exception('Invalid userId');
+      }
+      await _customerCollection.doc(userId).update(
+        {
+          _drivingLicenseDocumentIdFieldName: '',
+        },
+      );
+    } catch (_) {
+      rethrow;
+    }
   }
 }

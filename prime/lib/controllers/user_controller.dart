@@ -49,6 +49,39 @@ class UserController {
     }
   }
 
+  Future<User?> getUserDetails(String userId) async {
+    try {
+      final userSnapshot = await FirebaseFirestore.instance
+          .collection(_userCollectionName)
+          .doc(userId)
+          .get();
+      if (userSnapshot.exists) {
+        final data = userSnapshot.data();
+        if (data != null) {
+          return User(
+            userId: userId,
+            userFirstName: data['userFirstName'] as String?,
+            userLastName: data['userLastName'] as String?,
+            userEmail: data['userEmail'] as String?,
+            userRole: UserRole.values
+                .firstWhere((role) => role.name == data['userRole']),
+            userReferenceNumber: data['userReferenceNumber'] as String?,
+            userProfileUrl: data['userProfileUrl'] as String?,
+            userPhoneNumber: data['userPhoneNumber'] as String?,
+            userFcmToken: data['userFcmToken'] as String?,
+            userActivityStatus: ActivityStatus.values.firstWhere(
+                (status) => status.name == data['userActivityStatus']),
+            notificationsEnabled: data['notificationsEnabled'] as bool?,
+            createdAt: (data['createdAt'] as Timestamp).toDate(),
+          );
+        }
+      }
+      return null;
+    } catch (e) {
+      throw Exception('Error fetching user details: $e');
+    }
+  }
+
   Future<Map<String, String?>> getUserNameAndPhoneNo(String userId) async {
     try {
       final userSnapshot = await _userCollection.doc(userId).get();
@@ -66,6 +99,23 @@ class UserController {
     } on FirebaseException catch (_) {
       rethrow;
     } catch (_) {
+      rethrow;
+    }
+  }
+
+  Future<void> updateUserProfile({
+    required String userId,
+    required String firstName,
+    required String lastName,
+    required String phoneNumber,
+  }) async {
+    try {
+      await _userCollection.doc(userId).update({
+        _firstNameFieldName: firstName,
+        _lastNameFieldName: lastName,
+        _phoneNumberFieldName: phoneNumber,
+      });
+    } catch (e) {
       rethrow;
     }
   }

@@ -74,6 +74,20 @@ class FirebaseAuthService {
     return userCredential;
   }
 
+  Future<void> updatePassword(String newPassword) async {
+    try {
+      if (currentUser != null) {
+        await currentUser!.updatePassword(newPassword);
+      } else {
+        throw Exception('User not authenticated.');
+      }
+    } on FirebaseAuthException catch (_) {
+      rethrow;
+    } catch (_) {
+      rethrow;
+    }
+  }
+
   Future<void> sendPasswordResetEmail(String email) async {
     try {
       await _firebaseAuth.sendPasswordResetEmail(email: email);

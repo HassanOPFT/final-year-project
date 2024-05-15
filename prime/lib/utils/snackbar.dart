@@ -4,12 +4,13 @@ void buildSuccessSnackbar({
   required BuildContext context,
   required String message,
 }) {
-  const backgroundColor = Color.fromARGB(255, 232, 247, 242);
+  Color backgroundColor = Colors.green.shade100;
+  Color textColor = Colors.green.shade900;
   const iconData = Icons.check_circle_outline;
-  const textColor = Color.fromARGB(255, 38, 151, 109);
 
   _buildCustomSnackbar(
     context: context,
+    title: 'Success!',
     message: message,
     iconData: iconData,
     backgroundColor: backgroundColor,
@@ -21,12 +22,13 @@ void buildFailureSnackbar({
   required BuildContext context,
   required String message,
 }) {
-  const backgroundColor = Color.fromARGB(255, 255, 242, 242);
+  Color backgroundColor = Colors.red.shade100;
+  Color textColor = Colors.red.shade900;
   const iconData = Icons.error_outline;
-  const textColor = Colors.red;
 
   _buildCustomSnackbar(
     context: context,
+    title: 'Error!',
     message: message,
     iconData: iconData,
     backgroundColor: backgroundColor,
@@ -34,16 +36,17 @@ void buildFailureSnackbar({
   );
 }
 
-void buildWarningSnackbar({
+void buildAlertSnackbar({
   required BuildContext context,
   required String message,
 }) {
-  const backgroundColor = Color.fromARGB(255, 255, 244, 235);
+  Color backgroundColor = Colors.orange.shade50;
+  Color textColor = Colors.orange.shade900;
   const iconData = Icons.warning_amber_outlined;
-  const textColor = Color.fromARGB(255, 244, 171, 107);
 
   _buildCustomSnackbar(
     context: context,
+    title: 'Alert!',
     message: message,
     iconData: iconData,
     backgroundColor: backgroundColor,
@@ -55,13 +58,13 @@ void buildInfoSnackbar({
   required BuildContext context,
   required String message,
 }) {
-  const backgroundColor = Color.fromRGBO(233, 245, 255, 1);
-
+  Color backgroundColor = Colors.blue.shade50;
+  Color textColor = Colors.blue.shade900;
   const iconData = Icons.info_outline;
-  const textColor = Color.fromRGBO(69, 130, 223, 1);
 
   _buildCustomSnackbar(
     context: context,
+    title: 'Information!',
     message: message,
     iconData: iconData,
     backgroundColor: backgroundColor,
@@ -71,6 +74,7 @@ void buildInfoSnackbar({
 
 void _buildCustomSnackbar({
   required BuildContext context,
+  required String title,
   required String message,
   required IconData iconData,
   required Color backgroundColor,
@@ -83,31 +87,28 @@ void _buildCustomSnackbar({
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(15.0),
       ),
-      // elevation: 0,
-      margin: const EdgeInsets.symmetric(
-        horizontal: 10.0,
-        vertical: 15.0,
-      ),
-      padding: const EdgeInsets.all(18.0),
-      content: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            iconData,
+      padding: const EdgeInsets.all(0.0),
+      content: ListTile(
+        leading: Icon(
+          iconData,
+          color: textColor,
+          size: 30.0,
+        ),
+        title: Text(
+          title,
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 18.0,
             color: textColor,
-            size: 24.0,
           ),
-          const SizedBox(width: 16.0),
-          Flexible(
-            child: Text(
-              message,
-              style: TextStyle(
-                fontSize: 16.0,
-                color: textColor,
-              ),
-            ),
+        ),
+        subtitle: Text(
+          message,
+          style: TextStyle(
+            fontSize: 16.0,
+            color: textColor,
           ),
-        ],
+        ),
       ),
     ),
   );

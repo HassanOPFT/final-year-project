@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:prime/utils/navigate_with_animation.dart';
+import 'package:prime/views/profile/edit_profile_screen.dart';
 
 class EditProfileTile extends StatelessWidget {
   const EditProfileTile({
@@ -16,7 +18,10 @@ class EditProfileTile extends StatelessWidget {
         ),
       ),
       trailing: const Icon(Icons.keyboard_arrow_right_rounded),
-      onTap: () {},
+      onTap: () => animatedPushNavigation(
+        context: context,
+        screen: const EditProfileScreen(),
+      ),
     );
   }
 }

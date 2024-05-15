@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:prime/views/home/home_screen.dart';
 
+import '../views/home/home_screen.dart';
+import '../controllers/user_controller.dart';
 import '../utils/navigate_with_animation.dart';
-import '../views/home/customer_explore_screen.dart';
 import '../controllers/customer_controller.dart';
 import '../models/customer.dart';
 import 'custom_progress_indicator.dart';
@@ -105,8 +105,7 @@ class _SignUpFormState extends State<SignUpForm> {
               userEmail: _emailController.text.trim(),
               userFirstName: _firstNameController.text.trim(),
               userLastName: _lastNameController.text.trim(),
-              userProfileUrl:
-                  'https://firebasestorage.googleapis.com/v0/b/prime-b09b7.appspot.com/o/default-files%2Fuser-default-profile-picture.jpg?alt=media&token=4acacd32-a06e-4637-a5af-357c986caca3',
+              userProfileUrl: UserController().defaultProfileUrl,
             ),
           );
 

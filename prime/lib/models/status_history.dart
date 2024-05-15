@@ -18,6 +18,6 @@ class StatusHistory {
     this.newStatus,
     this.statusDescription,
     this.modifiedById,
-    this.createdAt,
+    this.createdAt, 
   });
 }

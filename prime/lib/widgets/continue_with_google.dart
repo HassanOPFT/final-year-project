@@ -2,13 +2,14 @@
 
 import 'package:flutter/material.dart';
 
+import '../controllers/user_controller.dart';
 import '../utils/navigate_with_animation.dart';
 import '../utils/snackbar.dart';
 import '../controllers/customer_controller.dart';
 import '../models/customer.dart';
 import '../services/firebase/firebase_auth_service.dart';
 import '../utils/assets_paths.dart';
-import '../views/home/customer_explore_screen.dart';
+import '../views/home/home_screen.dart';
 import 'custom_progress_indicator.dart';
 
 class ContinueWithGoogle extends StatefulWidget {
@@ -49,7 +50,7 @@ class _ContinueWithGoogleState extends State<ContinueWithGoogle> {
               userEmail: customerEmail,
               userFirstName: customerFirstName,
               userLastName: customerLastName,
-              userProfileUrl: 'https://firebasestorage.googleapis.com/v0/b/prime-b09b7.appspot.com/o/default-files%2Fuser-default-profile-picture.jpg?alt=media&token=4acacd32-a06e-4637-a5af-357c986caca3',
+              userProfileUrl: UserController().defaultProfileUrl,
             ),
           );
           // Display Confirmation Message
@@ -63,7 +64,7 @@ class _ContinueWithGoogleState extends State<ContinueWithGoogle> {
         if (mounted) {
           animatedPushReplacementNavigation(
             context: context,
-            screen: const CustomerExploreScreen(),
+            screen: const HomeScreen(),
           );
         }
       } else {

@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:prime/utils/navigate_with_animation.dart';
+
+import '../../views/profile/change_password_screen.dart';
 
 class ChangePasswordTile extends StatelessWidget {
   const ChangePasswordTile({
@@ -16,7 +19,10 @@ class ChangePasswordTile extends StatelessWidget {
         ),
       ),
       trailing: const Icon(Icons.keyboard_arrow_right_rounded),
-      onTap: () {},
+      onTap: () => animatedPushNavigation(
+        context: context,
+        screen: const ChangePasswordScreen(),
+      ),
     );
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../utils/snackbar.dart';
 import '../../widgets/app_logo.dart';
 import '../../widgets/navigation_bar/customer_navigation_bar.dart';
 
@@ -13,125 +14,54 @@ class CustomerExploreScreen extends StatelessWidget {
         centerTitle: true,
         title: const AppLogo(height: 120),
       ),
-      body: const SingleChildScrollView(
+      body: const Center(
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Card(
-              child: ListTile(
-                title: Text('Item 1'),
-                subtitle: Text('Description 1'),
-                trailing: Icon(Icons.arrow_forward_ios),
-              ),
-            ),
-            Card(
-              child: ListTile(
-                title: Text('Item 2'),
-                subtitle: Text('Description 2'),
-                trailing: Icon(Icons.arrow_forward_ios),
-              ),
-            ),
-            Card(
-              child: ListTile(
-                title: Text('Item 3'),
-                subtitle: Text('Description 3'),
-                trailing: Icon(Icons.arrow_forward_ios),
-              ),
-            ),
-            Card(
-              child: ListTile(
-                title: Text('Item 1'),
-                subtitle: Text('Description 1'),
-                trailing: Icon(Icons.arrow_forward_ios),
-              ),
-            ),
-            Card(
-              child: ListTile(
-                title: Text('Item 2'),
-                subtitle: Text('Description 2'),
-                trailing: Icon(Icons.arrow_forward_ios),
-              ),
-            ),
-            Card(
-              child: ListTile(
-                title: Text('Item 3'),
-                subtitle: Text('Description 3'),
-                trailing: Icon(Icons.arrow_forward_ios),
-              ),
-            ),
-            Card(
-              child: ListTile(
-                title: Text('Item 1'),
-                subtitle: Text('Description 1'),
-                trailing: Icon(Icons.arrow_forward_ios),
-              ),
-            ),
-            Card(
-              child: ListTile(
-                title: Text('Item 2'),
-                subtitle: Text('Description 2'),
-                trailing: Icon(Icons.arrow_forward_ios),
-              ),
-            ),
-            Card(
-              child: ListTile(
-                title: Text('Item 3'),
-                subtitle: Text('Description 3'),
-                trailing: Icon(Icons.arrow_forward_ios),
-              ),
-            ),
-            Card(
-              child: ListTile(
-                title: Text('Item 3'),
-                subtitle: Text('Description 3'),
-                trailing: Icon(Icons.arrow_forward_ios),
-              ),
-            ),
-            Card(
-              child: ListTile(
-                title: Text('Item 1'),
-                subtitle: Text('Description 1'),
-                trailing: Icon(Icons.arrow_forward_ios),
-              ),
-            ),
-            Card(
-              child: ListTile(
-                title: Text('Item 2'),
-                subtitle: Text('Description 2'),
-                trailing: Icon(Icons.arrow_forward_ios),
-              ),
-            ),
-            Card(
-              child: ListTile(
-                title: Text('Item 3'),
-                subtitle: Text('Description 3'),
-                trailing: Icon(Icons.arrow_forward_ios),
-              ),
-            ),
-            Card(
-              child: ListTile(
-                title: Text('Item 1'),
-                subtitle: Text('Description 1'),
-                trailing: Icon(Icons.arrow_forward_ios),
-              ),
-            ),
-            Card(
-              child: ListTile(
-                title: Text('Item 2'),
-                subtitle: Text('Description 2'),
-                trailing: Icon(Icons.arrow_forward_ios),
-              ),
-            ),
-            Card(
-              child: ListTile(
-                title: Text('Item 3'),
-                subtitle: Text('Description 3'),
-                trailing: Icon(Icons.arrow_forward_ios),
-              ),
-            ),
+            Text('Explore'),
+            // ElevatedButton(
+            //   onPressed: () {
+            //     buildSuccessSnackbar(
+            //       context: context,
+            //       message: 'Success Snackbar',
+            //     );
+            //   },
+            //   child: const Text('Show Success Snackbar'),
+            // ),
+            // const SizedBox(height: 16.0),
+            // ElevatedButton(
+            //   onPressed: () {
+            //     buildFailureSnackbar(
+            //       context: context,
+            //       message: 'Failure Snackbar',
+            //     );
+            //   },
+            //   child: const Text('Show Failure Snackbar'),
+            // ),
+            // const SizedBox(height: 16.0),
+            // ElevatedButton(
+            //   onPressed: () {
+            //     buildWarningSnackbar(
+            //       context: context,
+            //       message: 'Warning Snackbar',
+            //     );
+            //   },
+            //   child: const Text('Show Warning Snackbar'),
+            // ),
+            // const SizedBox(height: 16.0),
+            // ElevatedButton(
+            //   onPressed: () {
+            //     buildInfoSnackbar(
+            //       context: context,
+            //       message: 'Info Snackbar',
+            //     );
+            //   },
+            //   child: const Text('Show Info Snackbar'),
+            // ),
           ],
         ),
       ),
-      bottomNavigationBar: CustomerNavigationBar(currentIndex: 0),
+      bottomNavigationBar: const CustomerNavigationBar(currentIndex: 0),
     );
   }
 }

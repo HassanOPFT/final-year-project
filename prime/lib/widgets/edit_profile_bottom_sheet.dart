@@ -64,7 +64,7 @@ class EditProfileBottomSheet extends StatelessWidget {
                 deleteImage();
               },
               icon: const Icon(
-                Icons.delete_rounded,
+                Icons.delete_outline_rounded,
                 color: Colors.red,
               ),
               label: const Text(

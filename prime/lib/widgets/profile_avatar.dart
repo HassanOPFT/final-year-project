@@ -95,10 +95,10 @@ class _ProfileAvatarState extends State<ProfileAvatar> {
       final imageCropper = ImageCropper();
       final croppedFile = await imageCropper.cropImage(
         sourcePath: pickedFile.path,
-        aspectRatio: const CropAspectRatio(
-          ratioX: 1,
-          ratioY: 1,
-        ),
+        // aspectRatio: const CropAspectRatio(
+        //   ratioX: 1,
+        //   ratioY: 1,
+        // ),
       );
 
       if (croppedFile == null) return;
@@ -180,7 +180,11 @@ class _ProfileAvatarState extends State<ProfileAvatar> {
               onTap: () {
                 animatedPushNavigation(
                   context: context,
-                  screen: ViewFullImageScreen(imageUrl: userProfileUrl!),
+                  screen: ViewFullImageScreen(
+                    imageUrl: userProfileUrl!,
+                    appBarTitle: 'Profile Image',
+                    tag: 'profile-image',
+                  ),
                 );
               },
               child: Hero(
@@ -204,8 +208,8 @@ class _ProfileAvatarState extends State<ProfileAvatar> {
               ),
             ),
             Positioned(
-              right: 0.0,
-              bottom: 0.0,
+              right: 5.0,
+              bottom: 5.0,
               child: Container(
                 width: 40,
                 height: 40,

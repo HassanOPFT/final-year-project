@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:provider/provider.dart';
 
 import '../../controllers/user_controller.dart';
 import '../../models/user.dart';
+import '../../providers/user_provider.dart';
 import '../../utils/navigate_with_animation.dart';
 import '../../widgets/error_screen.dart';
 import '../auth/auth_screen.dart';
@@ -26,8 +28,12 @@ class HomeScreen extends StatelessWidget {
       return Container();
     }
 
-    return FutureBuilder<UserRole>(
-      future: userController.getUserRole(user.uid),
+    return FutureBuilder(
+      future: Future.wait([
+        userController.getUserRole(user.uid),
+        Provider.of<UserProvider>(context, listen: false)
+            .initializeUser(user.uid),
+      ]),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const SplashScreen();
@@ -36,7 +42,7 @@ class HomeScreen extends StatelessWidget {
             errorMessage: 'Error Signing In. Please try again.',
           );
         } else {
-          final userRole = snapshot.data;
+          final userRole = snapshot.data!.first as UserRole;
           return userRole == UserRole.primaryAdmin ||
                   userRole == UserRole.secondaryAdmin
               ? const AdminDashboardScreen()

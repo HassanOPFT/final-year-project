@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:prime/utils/navigate_with_animation.dart';
+
+import '../../views/profile/personal_documents_screen.dart';
 
 class PersonalDocumentsTile extends StatelessWidget {
   const PersonalDocumentsTile({
@@ -16,7 +19,10 @@ class PersonalDocumentsTile extends StatelessWidget {
         ),
       ),
       trailing: const Icon(Icons.keyboard_arrow_right_rounded),
-      onTap: () {},
+      onTap: () => animatedPushNavigation(
+        context: context,
+        screen: const PersonalDocumentsScreen(),
+      ),
     );
   }
 }
