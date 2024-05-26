@@ -39,3 +39,33 @@ enum ActivityStatus {
   active,
   halted,
 }
+
+extension UserRoleExtension on UserRole {
+  String toReadableString() {
+    switch (this) {
+      case UserRole.primaryAdmin:
+        return 'Primary Admin';
+      case UserRole.secondaryAdmin:
+        return 'Secondary Admin';
+      case UserRole.customer:
+        return 'Customer';
+      case UserRole.host:
+        return 'Host';
+      default:
+        return '';
+    }
+  }
+}
+
+extension ActivityStatusExtension on ActivityStatus {
+  String toReadableString() {
+    switch (this) {
+      case ActivityStatus.active:
+        return 'Active';
+      case ActivityStatus.halted:
+        return 'Halted';
+      default:
+        return '';
+    }
+  }
+}

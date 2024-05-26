@@ -2,25 +2,25 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart';
 
-import '../utils/navigate_with_animation.dart';
-import '../utils/snackbar.dart';
-import '../views/common/google_maps_screen.dart';
-import 'custom_progress_indicator.dart';
+import '../../utils/navigate_with_animation.dart';
+import '../../utils/snackbar.dart';
+import '../../views/common/google_maps_screen.dart';
+import '../custom_progress_indicator.dart';
 
-class AddAddressFloatingButton extends StatefulWidget {
+class AddAddressFloatingActionButton extends StatefulWidget {
   final String? userId;
 
-  const AddAddressFloatingButton({
+  const AddAddressFloatingActionButton({
     super.key,
     this.userId,
   });
 
   @override
-  State<AddAddressFloatingButton> createState() =>
+  State<AddAddressFloatingActionButton> createState() =>
       _AddAddressFloatingButtonState();
 }
 
-class _AddAddressFloatingButtonState extends State<AddAddressFloatingButton> {
+class _AddAddressFloatingButtonState extends State<AddAddressFloatingActionButton> {
   bool _addAddressLoading = false;
 
   Future<void> _addAddressOnMap() async {

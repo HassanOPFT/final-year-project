@@ -1,11 +1,14 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:prime/utils/assets_paths.dart';
-import 'package:prime/utils/snackbar.dart';
-import 'package:prime/widgets/custom_progress_indicator.dart';
+import 'package:prime/models/status_history.dart';
+import 'package:prime/widgets/latest_status_history_record.dart';
 import 'package:provider/provider.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
+import '../../providers/status_history_provider.dart';
+import '../../utils/assets_paths.dart';
+import '../../utils/snackbar.dart';
+import '../../widgets/custom_progress_indicator.dart';
 import '../../models/user.dart';
 import '../../providers/user_provider.dart';
 import '../../providers/verification_document_provider.dart';
@@ -18,22 +21,329 @@ import '../../widgets/bottom_sheet/edit_verification_document_bottom_sheet.dart'
 import '../../widgets/verification_document_status_indicator.dart';
 
 class VerificationDocumentDetailsScreen extends StatelessWidget {
-  final VerificationDocument verificationDocument;
+  final String verificationDocumentId;
 
   const VerificationDocumentDetailsScreen({
     super.key,
-    required this.verificationDocument,
+    required this.verificationDocumentId,
   });
 
   @override
   Widget build(BuildContext context) {
-    void updateVerificationDocument() {
+    final userProvider = Provider.of<UserProvider>(
+      context,
+      listen: false,
+    );
+    final userRole = userProvider.user?.userRole ?? UserRole.customer;
+    final firebaseAuthService = FirebaseAuthService();
+    final verificationDocumentProvider =
+        Provider.of<VerificationDocumentProvider>(
+      context,
+    );
+    void updateVerificationDocument(VerificationDocument verificationDocument) {
       animatedPushNavigation(
         context: context,
         screen: UpdateVerificationDocumentScreen(
           verificationDocument: verificationDocument,
         ),
       );
+    }
+
+    Future<void> approveVerificationDocument(
+        VerificationDocument verificationDocument) async {
+      if (verificationDocument.id == null || verificationDocument.id!.isEmpty) {
+        return;
+      }
+      if (firebaseAuthService.currentUser == null) {
+        buildFailureSnackbar(
+          context: context,
+          message: 'Error while approving document. Please try again.',
+        );
+        return;
+      }
+
+      try {
+        final currentUserId = firebaseAuthService.currentUser!.uid;
+        await verificationDocumentProvider.updateVerificationDocumentStatus(
+          verificationDocumentId: verificationDocument.id!,
+          newStatus: VerificationDocumentStatus.approved,
+          previousStatus:
+              verificationDocument.status as VerificationDocumentStatus,
+          documentType:
+              verificationDocument.documentType as VerificationDocumentType,
+          modifiedById: currentUserId,
+        );
+        buildSuccessSnackbar(
+          context: context,
+          message: 'Document approved successfully',
+        );
+      } on Exception catch (_) {
+        buildFailureSnackbar(
+          context: context,
+          message: 'Error approving document. Please try again later.',
+        );
+      }
+    }
+
+    Future<String?> showReasonDialog({
+      required String title,
+      required String hintText,
+    }) async {
+      final TextEditingController reasonController = TextEditingController();
+      final formKey = GlobalKey<FormState>();
+
+      return showDialog<String>(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(15),
+            ),
+            title: Text(title),
+            content: SizedBox(
+              width: MediaQuery.of(context).size.width, // Set the width
+              child: Form(
+                key: formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextFormField(
+                      controller: reasonController,
+                      textInputAction: TextInputAction.done,
+                      keyboardType: TextInputType.text,
+                      decoration: InputDecoration(
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        labelText: hintText,
+                      ),
+                      validator: (value) {
+                        if (value == null ||
+                            value.isEmpty ||
+                            value.trim().isEmpty) {
+                          return 'Please enter a reason.';
+                        }
+                        return null;
+                      },
+                      onFieldSubmitted: (_) {
+                        if (formKey.currentState!.validate()) {
+                          Navigator.of(context).pop(reasonController.text);
+                        }
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop(null);
+                },
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () {
+                  if (formKey.currentState!.validate()) {
+                    Navigator.of(context).pop(reasonController.text);
+                  }
+                },
+                child: const Text('Submit'),
+              ),
+            ],
+          );
+        },
+      );
+    }
+
+    Future<void> rejectVerificationDocument(
+      VerificationDocument verificationDocument,
+    ) async {
+      if (verificationDocument.id == null || verificationDocument.id!.isEmpty) {
+        return;
+      }
+
+      if (firebaseAuthService.currentUser == null) {
+        buildFailureSnackbar(
+          context: context,
+          message: 'Error while rejecting document. Please try again.',
+        );
+        return;
+      }
+
+      String? rejectReason = await showReasonDialog(
+        title: 'Rejection Reason',
+        hintText: 'Enter reason for rejection',
+      );
+
+      if (rejectReason == null) {
+        return;
+      }
+
+      if (rejectReason.isEmpty) {
+        buildFailureSnackbar(
+          context: context,
+          message:
+              'Reason for rejection is required to reject document. please try again.',
+        );
+        return;
+      }
+
+      try {
+        final currentUserId = firebaseAuthService.currentUser!.uid;
+        await verificationDocumentProvider.updateVerificationDocumentStatus(
+          verificationDocumentId: verificationDocument.id!,
+          newStatus: VerificationDocumentStatus.rejected,
+          previousStatus:
+              verificationDocument.status as VerificationDocumentStatus,
+          statusDescription: rejectReason,
+          documentType:
+              verificationDocument.documentType as VerificationDocumentType,
+          modifiedById: currentUserId,
+        );
+        buildSuccessSnackbar(
+          context: context,
+          message: 'Document rejected successfully',
+        );
+      } on Exception catch (e) {
+        buildFailureSnackbar(
+          context: context,
+          message: 'Error rejecting document. Please try again later.',
+        );
+      }
+    }
+
+    Future<void> haltVerificationDocument(
+      VerificationDocument verificationDocument,
+    ) async {
+      if (verificationDocument.id == null || verificationDocument.id!.isEmpty) {
+        return;
+      }
+
+      String? haltReason = await showReasonDialog(
+        title: 'Halt Reason',
+        hintText: 'Enter reason for halting',
+      );
+
+      if (haltReason == null) {
+        return;
+      }
+
+      if (haltReason.isEmpty) {
+        buildFailureSnackbar(
+          context: context,
+          message:
+              'Reason for halting is required to halt document. please try again.',
+        );
+        return;
+      }
+
+      try {
+        final firebaseAuthService = FirebaseAuthService();
+        if (firebaseAuthService.currentUser == null) {
+          buildFailureSnackbar(
+            context: context,
+            message: 'Error while halting document. Please try again.',
+          );
+          return;
+        }
+        final currentUserId = firebaseAuthService.currentUser!.uid;
+        await verificationDocumentProvider.updateVerificationDocumentStatus(
+          verificationDocumentId: verificationDocument.id!,
+          newStatus: VerificationDocumentStatus.halted,
+          previousStatus:
+              verificationDocument.status as VerificationDocumentStatus,
+          statusDescription: haltReason,
+          documentType:
+              verificationDocument.documentType as VerificationDocumentType,
+          modifiedById: currentUserId,
+        );
+        buildSuccessSnackbar(
+          context: context,
+          message: 'Document halted successfully',
+        );
+      } on Exception catch (e) {
+        buildFailureSnackbar(
+          context: context,
+          message: 'Error halting document. Please try again later.',
+        );
+      }
+    }
+
+    Future<void> requestUnhaltVerificationDocument(
+      VerificationDocument verificationDocument,
+    ) async {
+      if (verificationDocument.id == null || verificationDocument.id!.isEmpty) {
+        return;
+      }
+
+      try {
+        final firebaseAuthService = FirebaseAuthService();
+        if (firebaseAuthService.currentUser == null) {
+          buildFailureSnackbar(
+            context: context,
+            message: 'Error while requesting unhalt. Please try again.',
+          );
+          return;
+        }
+        final currentUserId = firebaseAuthService.currentUser!.uid;
+        await verificationDocumentProvider.updateVerificationDocumentStatus(
+          verificationDocumentId: verificationDocument.id!,
+          newStatus: VerificationDocumentStatus.unHaltRequested,
+          previousStatus:
+              verificationDocument.status as VerificationDocumentStatus,
+          documentType:
+              verificationDocument.documentType as VerificationDocumentType,
+          modifiedById: currentUserId,
+        );
+        buildSuccessSnackbar(
+          context: context,
+          message: 'Unhalt requested successfully',
+        );
+      } on Exception catch (e) {
+        buildFailureSnackbar(
+          context: context,
+          message: 'Error requesting unhalt. Please try again later.',
+        );
+      }
+    }
+
+    Future<void> unhaltVerificationDocument(
+      VerificationDocument verificationDocument,
+    ) async {
+      if (verificationDocument.id == null || verificationDocument.id!.isEmpty) {
+        return;
+      }
+
+      try {
+        final firebaseAuthService = FirebaseAuthService();
+        if (firebaseAuthService.currentUser == null) {
+          buildFailureSnackbar(
+            context: context,
+            message: 'Error while unhalting document. Please try again.',
+          );
+          return;
+        }
+        final currentUserId = firebaseAuthService.currentUser!.uid;
+        await verificationDocumentProvider.updateVerificationDocumentStatus(
+          verificationDocumentId: verificationDocument.id!,
+          newStatus: VerificationDocumentStatus.pendingApproval,
+          previousStatus:
+              verificationDocument.status as VerificationDocumentStatus,
+          documentType:
+              verificationDocument.documentType as VerificationDocumentType,
+          modifiedById: currentUserId,
+        );
+        buildSuccessSnackbar(
+          context: context,
+          message: 'Document unhalted successfully',
+        );
+      } on Exception catch (e) {
+        buildFailureSnackbar(
+          context: context,
+          message: 'Error unhalting document. Please try again later.',
+        );
+      }
     }
 
     Future<bool> confirmDeleteDocument(BuildContext context) async {
@@ -72,7 +382,9 @@ class VerificationDocumentDetailsScreen extends StatelessWidget {
       return isConfirmed;
     }
 
-    Future<void> deleteVerificationDocument() async {
+    Future<void> deleteVerificationDocument(
+      VerificationDocument verificationDocument,
+    ) async {
       if (verificationDocument.id == null || verificationDocument.id!.isEmpty) {
         return;
       }
@@ -83,10 +395,6 @@ class VerificationDocumentDetailsScreen extends StatelessWidget {
       }
       final verificationDocumentProvider =
           Provider.of<VerificationDocumentProvider>(
-        context,
-        listen: false,
-      );
-      final userProvider = Provider.of<UserProvider>(
         context,
         listen: false,
       );
@@ -102,7 +410,7 @@ class VerificationDocumentDetailsScreen extends StatelessWidget {
           return;
         }
         final currentUserId = firebaseAuthService.currentUser!.uid;
-        final userRole = userProvider.user?.userRole ?? UserRole.customer;
+        // final userRole = userProvider.user?.userRole ?? UserRole.customer;
         await verificationDocumentProvider.deleteVerificationDocument(
           documentId: verificationDocument.id!,
           referenceNumber: verificationDocument.referenceNumber ?? '',
@@ -113,11 +421,18 @@ class VerificationDocumentDetailsScreen extends StatelessWidget {
               verificationDocument.status as VerificationDocumentStatus,
           modifiedById: currentUserId,
         );
+        // call notify of status history provider
+        Provider.of<StatusHistoryProvider>(
+          context,
+          listen: false,
+        ).notify();
+
         buildSuccessSnackbar(
           context: context,
           message: 'Document deleted successfully',
         );
-      } on Exception catch (e) {
+        Navigator.of(context).pop();
+      } on Exception catch (_) {
         buildFailureSnackbar(
           context: context,
           message: 'Error deleting document. Please try again later.',
@@ -125,7 +440,8 @@ class VerificationDocumentDetailsScreen extends StatelessWidget {
       }
     }
 
-    Future<void> showEditVerificationDocumentBottomSheet() async {
+    Future<void> showEditVerificationDocumentBottomSheet(
+        VerificationDocument verificationDocument) async {
       await showModalBottomSheet(
         context: context,
         showDragHandle: true,
@@ -133,145 +449,228 @@ class VerificationDocumentDetailsScreen extends StatelessWidget {
           return EditVerificationDocumentBottomSheet(
             updateVerificationDocument: updateVerificationDocument,
             deleteVerificationDocument: deleteVerificationDocument,
+            approveVerificationDocument: approveVerificationDocument,
+            rejectVerificationDocument: rejectVerificationDocument,
+            haltVerificationDocument: haltVerificationDocument,
+            requestUnhaltVerificationDocument:
+                requestUnhaltVerificationDocument,
+            unhaltVerificationDocument: unhaltVerificationDocument,
+            isAdmin: userRole == UserRole.primaryAdmin ||
+                userRole == UserRole.secondaryAdmin,
+            documentStatus:
+                verificationDocument.status as VerificationDocumentStatus,
+            verificationDocument: verificationDocument,
           );
         },
       );
     }
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          '${verificationDocument.documentType?.getDocumentTypeString()} Details',
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.edit_rounded),
-            onPressed: () => showEditVerificationDocumentBottomSheet(),
-          ),
-        ],
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(10.0),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Stack(
-                children: [
-                  GestureDetector(
-                    onTap: verificationDocument.documentUrl != null
-                        ? () => animatedPushNavigation(
-                              context: context,
-                              screen: ViewFullImageScreen(
-                                imageUrl: verificationDocument.documentUrl!,
-                                appBarTitle: 'Document Image',
-                                tag: 'document-image',
-                              ),
-                            )
-                        : null,
-                    child: Hero(
-                      tag: 'document-image',
-                      child: SizedBox(
-                        width: double.infinity,
-                        height: 250,
-                        child: verificationDocument.documentUrl != null
-                            ? ClipRRect(
-                                borderRadius: BorderRadius.circular(15.0),
-                                child: CachedNetworkImage(
-                                  imageUrl: verificationDocument.documentUrl!,
-                                  fit: BoxFit.cover,
-                                  placeholder: (context, url) =>
-                                      const CustomProgressIndicator(),
-                                  errorWidget: (context, url, error) =>
-                                      const Center(child: Icon(Icons.error)),
-                                ),
-                              )
-                            : const Center(
-                                child: Text('Error loading image'),
-                              ),
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    top: 10.0,
-                    right: 10.0,
-                    child: VerificationDocumentStatusIndicator(
-                      verificationDocumentStatus: verificationDocument.status
-                          as VerificationDocumentStatus,
-                    ),
-                  ),
-                ],
+    Future<StatusHistory?> getMostRecentStatusHistory(
+        String? verificationDocumentId) async {
+      if (verificationDocumentId == null || verificationDocumentId.isEmpty) {
+        return null;
+      }
+      try {
+        final statusHistoryProvider = Provider.of<StatusHistoryProvider>(
+          context,
+        );
+        final mostRecentStatusHistory =
+            await statusHistoryProvider.getMostRecentStatusHistory(
+          verificationDocumentId,
+        );
+        return mostRecentStatusHistory;
+      } catch (_) {
+        return null;
+      }
+    }
+
+    return FutureBuilder<VerificationDocument?>(
+      future: verificationDocumentProvider
+          .getVerificationDocumentById(verificationDocumentId),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Scaffold(
+            appBar: AppBar(
+              title: const Text('Document Details'),
+            ),
+            body: const Center(
+              child: CustomProgressIndicator(),
+            ),
+          );
+        } else if (snapshot.hasError) {
+          return Scaffold(
+            appBar: AppBar(
+              title: const Text('Document Details'),
+            ),
+            body: Center(
+              child: Text('Error: ${snapshot.error}'),
+            ),
+          );
+        } else if (!snapshot.hasData || snapshot.data == null) {
+          return Scaffold(
+            body: Scaffold(
+              appBar: AppBar(
+                title: const Text('Document Details'),
               ),
-              const SizedBox(height: 20.0),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Expiry Date',
-                    style: TextStyle(
-                      color: Theme.of(context).hintColor,
-                      fontSize: 20.0,
-                    ),
-                  ),
-                  Text(
-                    verificationDocument.expiryDate != null
-                        ? DateFormat.yMMMMd()
-                            .format(verificationDocument.expiryDate as DateTime)
-                        : 'N/A',
-                    style: const TextStyle(
-                      fontSize: 20.0,
-                    ),
-                  ),
-                ],
+              body: const Center(
+                child: Text('No verification document found.'),
               ),
-              const SizedBox(height: 5.0),
-              const Divider(),
-              const SizedBox(height: 5.0),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Ref No:',
-                    style: TextStyle(
-                      color: Theme.of(context).hintColor,
-                      fontSize: 16.0,
-                    ),
-                  ),
-                  Text(
-                    verificationDocument.referenceNumber ?? 'N/A',
-                    style: TextStyle(
-                      color: Theme.of(context).hintColor,
-                      fontSize: 16.0,
-                    ),
-                  ),
-                ],
+            ),
+          );
+        } else {
+          final verificationDocument = snapshot.data!;
+
+          return Scaffold(
+            appBar: AppBar(
+              title: Text(
+                '${verificationDocument.documentType?.getDocumentTypeString()} Details',
               ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Created At:',
-                    style: TextStyle(
-                      color: Theme.of(context).hintColor,
-                      fontSize: 16.0,
-                    ),
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.edit_rounded),
+                  onPressed: () => showEditVerificationDocumentBottomSheet(
+                    verificationDocument,
                   ),
-                  Text(
-                    DateFormat.yMMMd()
-                        .add_jm()
-                        .format(verificationDocument.createdAt as DateTime),
-                    style: TextStyle(
-                      color: Theme.of(context).hintColor,
-                      fontSize: 16.0,
+                ),
+              ],
+            ),
+            body: Padding(
+              padding: const EdgeInsets.all(10.0),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Stack(
+                      children: [
+                        GestureDetector(
+                          onTap: verificationDocument.documentUrl != null
+                              ? () => animatedPushNavigation(
+                                    context: context,
+                                    screen: ViewFullImageScreen(
+                                      imageUrl:
+                                          verificationDocument.documentUrl!,
+                                      appBarTitle: 'Document Image',
+                                      tag: 'document-image',
+                                    ),
+                                  )
+                              : null,
+                          child: Hero(
+                            tag: 'document-image',
+                            child: SizedBox(
+                              width: double.infinity,
+                              height: 250,
+                              child: verificationDocument.documentUrl != null
+                                  ? ClipRRect(
+                                      borderRadius: BorderRadius.circular(15.0),
+                                      child: CachedNetworkImage(
+                                        imageUrl:
+                                            verificationDocument.documentUrl!,
+                                        fit: BoxFit.cover,
+                                        placeholder: (context, url) =>
+                                            const CustomProgressIndicator(),
+                                        errorWidget: (context, url, error) =>
+                                            const Center(
+                                                child: Icon(Icons.error)),
+                                      ),
+                                    )
+                                  : const Center(
+                                      child: Text('Error loading image'),
+                                    ),
+                            ),
+                          ),
+                        ),
+                        Positioned(
+                          top: 10.0,
+                          right: 10.0,
+                          child: Consumer<VerificationDocumentProvider>(
+                            builder: (BuildContext context,
+                                VerificationDocumentProvider value,
+                                Widget? child) {
+                              return VerificationDocumentStatusIndicator(
+                                verificationDocumentStatus: verificationDocument
+                                    .status as VerificationDocumentStatus,
+                              );
+                            },
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 20.0),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Expires on',
+                          style: TextStyle(
+                            color: Theme.of(context).hintColor,
+                            fontSize: 20.0,
+                          ),
+                        ),
+                        Text(
+                          verificationDocument.expiryDate != null
+                              ? DateFormat.yMMMMd().format(
+                                  verificationDocument.expiryDate as DateTime)
+                              : 'N/A',
+                          style: const TextStyle(
+                            fontSize: 20.0,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 5.0),
+                    const Divider(),
+                    const SizedBox(height: 5.0),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Ref No:',
+                          style: TextStyle(
+                            color: Theme.of(context).hintColor,
+                            fontSize: 16.0,
+                          ),
+                        ),
+                        Text(
+                          verificationDocument.referenceNumber ?? 'N/A',
+                          style: const TextStyle(
+                            fontSize: 16.0,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Created At:',
+                          style: TextStyle(
+                            color: Theme.of(context).hintColor,
+                            fontSize: 16.0,
+                          ),
+                        ),
+                        Text(
+                          DateFormat.yMMMd().add_jm().format(
+                              verificationDocument.createdAt as DateTime),
+                          style: const TextStyle(
+                            fontSize: 16.0,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const Divider(height: 40.0),
+                    LatestStatusHistoryRecord(
+                      fetchStatusHistory: getMostRecentStatusHistory,
+                      linkedObjectId:
+                          verificationDocument.id ?? verificationDocumentId,
+                    ),
+                  ],
+                ),
               ),
-            ],
-          ),
-        ),
-      ),
+            ),
+          );
+        }
+      },
     );
   }
 }

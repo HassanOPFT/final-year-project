@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:prime/widgets/tiles/notification_switch.dart';
+import 'package:prime/widgets/tiles/payment_cards_and_bank_account_tile.dart';
 import 'package:prime/widgets/user_info.dart';
 
 import '../../widgets/tiles/address_tile.dart';
@@ -7,7 +8,6 @@ import '../../widgets/tiles/change_password_tile.dart';
 import '../../widgets/tiles/edit_profile_tile.dart';
 import '../../widgets/profile_avatar.dart';
 import '../../widgets/tiles/help_center_tile.dart';
-import '../../widgets/tiles/payment_and_bank_details_tile.dart';
 import '../../widgets/tiles/personal_documents_tile.dart';
 import '../../widgets/tiles/privacy_policy_tile.dart';
 import '../../widgets/tiles/sign_out_tile.dart';
@@ -44,7 +44,7 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
           const AddressTile(),
           const PersonalDocumentsTile(), // make tabs for each document type
           const NotificationsSwitch(),
-          const PaymentAndBankDetails(),
+          const PaymentCardsAndBankAccountTile(),
           const DarkModeSwitch(),
           const PrivacyPolicyTile(),
           const HelpCenterTile(),
@@ -57,8 +57,3 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
     );
   }
 }
-
-
-
-
-

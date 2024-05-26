@@ -23,8 +23,6 @@ class Address {
     this.label,
   });
 
-  // to string method
-
   @override
   String toString() {
     return '$street, $city, $state, $postalCode, $country';

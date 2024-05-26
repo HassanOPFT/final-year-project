@@ -32,11 +32,11 @@ class VerificationDocumentProvider extends ChangeNotifier {
     }
   }
 
-  Future<VerificationDocument?> getVerificationDocument(
+  Future<VerificationDocument?> getVerificationDocumentById(
     String documentId,
   ) async {
     try {
-      return await _verificationDocumentController.getVerificationDocument(
+      return await _verificationDocumentController.getVerificationDocumentById(
         documentId,
       );
     } catch (_) {
@@ -78,13 +78,51 @@ class VerificationDocumentProvider extends ChangeNotifier {
         expiryDate: expiryDate,
         previousStatus: previousStatus,
         newStatus: newStatus,
-        verificationDocumentReferenceNumber: verificationDocumentReferenceNumber,
+        verificationDocumentReferenceNumber:
+            verificationDocumentReferenceNumber,
         documentType: documentType,
         modifiedById: modifiedById,
         filePath: filePath,
         verificationDocumentUrl: verificationDocumentUrl,
       );
       notifyListeners();
+    } catch (_) {
+      rethrow;
+    }
+  }
+
+  Future<void> updateVerificationDocumentStatus({
+    required String verificationDocumentId,
+    required VerificationDocumentStatus newStatus,
+    required VerificationDocumentStatus previousStatus,
+    String? statusDescription,
+    required VerificationDocumentType documentType,
+    required String modifiedById,
+  }) async {
+    try {
+      await _verificationDocumentController.updateVerificationDocumentStatus(
+        verificationDocumentId: verificationDocumentId,
+        newStatus: newStatus,
+        previousStatus: previousStatus,
+        statusDescription: statusDescription,
+        documentType: documentType,
+        modifiedById: modifiedById,
+      );
+      notifyListeners();
+    } catch (_) {
+      rethrow;
+    }
+  }
+
+
+  Future<List<VerificationDocument>> getVerificationDocumentsByLinkedObjectId(
+    String linkedObjectId,
+  ) async {
+    try {
+      return await _verificationDocumentController
+          .getVerificationDocumentsByLinkedObjectId(
+        linkedObjectId,
+      );
     } catch (_) {
       rethrow;
     }

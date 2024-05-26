@@ -58,7 +58,7 @@ class StatusHistoryController {
         );
       }
       return null;
-    } catch (e) {
+    } catch (_) {
       rethrow;
     }
   }

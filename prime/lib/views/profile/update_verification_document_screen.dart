@@ -5,11 +5,12 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../models/verification_document.dart';
+import '../../providers/status_history_provider.dart';
 import '../../providers/verification_document_provider.dart';
 import '../../services/firebase/firebase_auth_service.dart';
 import '../../utils/navigate_with_animation.dart';
 import '../../utils/snackbar.dart';
-import '../../widgets/choose_image_container.dart';
+import '../../widgets/images/choose_image_container.dart';
 import '../../widgets/custom_progress_indicator.dart';
 import 'view_full_image_screen.dart';
 
@@ -190,6 +191,11 @@ class _UpdateVerificationDocumentScreenState
         verificationDocumentUrl: widget.verificationDocument.documentUrl,
         modifiedById: currentUserId,
       );
+
+      Provider.of<StatusHistoryProvider>(
+          context,
+          listen: false,
+        ).notify();
 
       setIsSubmitting(false);
       if (mounted) {

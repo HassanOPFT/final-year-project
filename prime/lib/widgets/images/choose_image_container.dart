@@ -7,10 +7,10 @@ import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
-import '../utils/navigate_with_animation.dart';
-import '../utils/snackbar.dart';
-import '../views/common/full_screen_image_screen.dart';
-import 'bottom_sheet/select_image_bottom_sheet.dart';
+import '../../utils/navigate_with_animation.dart';
+import '../../utils/snackbar.dart';
+import '../../views/common/full_screen_image_screen.dart';
+import '../bottom_sheet/select_image_bottom_sheet.dart';
 
 class ChooseImageContainer extends StatefulWidget {
   final Function(File?) setSelectedImage;

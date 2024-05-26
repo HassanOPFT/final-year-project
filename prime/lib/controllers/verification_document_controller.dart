@@ -21,8 +21,7 @@ class VerificationDocumentController {
 
   final _verificationDocumentCollection = FirebaseFirestore.instance
       .collection(_verificationDocumentCollectionName);
-  final StatusHistoryController _statusHistoryController =
-      StatusHistoryController();
+  final _statusHistoryController = StatusHistoryController();
 
   Future<String> createVerificationDocument(
     String? linkedObjectId,
@@ -83,8 +82,8 @@ class VerificationDocumentController {
       await _createStatusHistory(
         linkedObjectId: newDocument.id,
         linkedObjectType: documentType.name,
-        previousStatus: status,
-        newStatus: status,
+        previousStatus: VerificationDocumentStatus.uploaded.getStatusString(),
+        newStatus: VerificationDocumentStatus.uploaded.getStatusString(),
         modifiedById: modifiedById,
       );
 
@@ -97,8 +96,8 @@ class VerificationDocumentController {
       await _createStatusHistory(
         linkedObjectId: newDocument.id,
         linkedObjectType: documentType.name,
-        previousStatus: status,
-        newStatus: VerificationDocumentStatus.pendingApproval.name,
+        previousStatus: VerificationDocumentStatus.uploaded.getStatusString(),
+        newStatus: VerificationDocumentStatus.pendingApproval.getStatusString(),
         modifiedById: modifiedById,
       );
 
@@ -137,7 +136,7 @@ class VerificationDocumentController {
     }
   }
 
-  Future<VerificationDocument?> getVerificationDocument(
+  Future<VerificationDocument?> getVerificationDocumentById(
     String documentId,
   ) async {
     try {
@@ -278,10 +277,89 @@ class VerificationDocumentController {
       await _createStatusHistory(
         linkedObjectId: verificationDocumentId,
         linkedObjectType: documentType.name,
-        previousStatus: previousStatus.name,
-        newStatus: newStatus.name,
+        previousStatus: previousStatus.getStatusString(),
+        newStatus: newStatus.getStatusString(),
         modifiedById: modifiedById,
       );
+    } on FirebaseException catch (_) {
+      rethrow;
+    } catch (_) {
+      rethrow;
+    }
+  }
+
+  Future<void> updateVerificationDocumentStatus({
+    required String verificationDocumentId,
+    required VerificationDocumentStatus newStatus,
+    required VerificationDocumentStatus previousStatus,
+    String? statusDescription,
+    required VerificationDocumentType documentType,
+    required String modifiedById,
+  }) async {
+    try {
+      DocumentReference documentRef =
+          _verificationDocumentCollection.doc(verificationDocumentId);
+
+      await documentRef.update({
+        _statusFieldName: newStatus.name,
+      });
+
+      // Create StatusHistory record
+      await _createStatusHistory(
+        linkedObjectId: verificationDocumentId,
+        linkedObjectType: documentType.name,
+        previousStatus: previousStatus.getStatusString(),
+        newStatus: newStatus.getStatusString(),
+        statusDescription: statusDescription ?? '',
+        modifiedById: modifiedById,
+      );
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<List<VerificationDocument>> getVerificationDocumentsByLinkedObjectId(
+      String userId) async {
+    try {
+      if (userId.isEmpty) {
+        throw Exception(
+            'User ID is required for fetching verification documents.');
+      }
+
+      final querySnapshot = await _verificationDocumentCollection
+          .where(_linkedObjectIdFieldName, isEqualTo: userId)
+          .where(_linkedObjectTypeFieldName,
+              isEqualTo: VerificationDocumentLinkedObjectType.user.name)
+          .get();
+
+      final documents = <VerificationDocument>[];
+
+      for (var doc in querySnapshot.docs) {
+        final data = doc.data();
+
+        final documentId = doc.id;
+
+        final linkedObjectType =
+            _getLinkedObjectType(data[_linkedObjectTypeFieldName]);
+        final documentType = _getDocumentType(data[_documentTypeFieldName]);
+        final status = _getStatus(data[_statusFieldName]);
+
+        final document = VerificationDocument(
+          id: documentId,
+          linkedObjectId: data[_linkedObjectIdFieldName],
+          linkedObjectType: linkedObjectType,
+          documentUrl: data[_documentUrlFieldName],
+          documentType: documentType,
+          status: status,
+          expiryDate: data[_expiryDateFieldName]?.toDate(),
+          referenceNumber: data[_referenceNumberFieldName],
+          createdAt: data[_createdAtFieldName]?.toDate(),
+        );
+
+        documents.add(document);
+      }
+
+      return documents;
     } on FirebaseException catch (_) {
       rethrow;
     } catch (_) {
@@ -298,7 +376,7 @@ class VerificationDocumentController {
     required String modifiedById,
   }) async {
     try {
-      String newStatus;
+      VerificationDocumentStatus newStatus;
 
       if (userRole == UserRole.primaryAdmin ||
           userRole == UserRole.secondaryAdmin) {
@@ -308,22 +386,26 @@ class VerificationDocumentController {
         );
         await FirebaseStorageService().deleteFile(newDocumentStoragePath);
         await _verificationDocumentCollection.doc(documentId).delete();
-        newStatus = VerificationDocumentStatus.deletedByAdmin.name;
+        newStatus = VerificationDocumentStatus.deletedByAdmin;
       } else {
         await _verificationDocumentCollection.doc(documentId).update({
           _statusFieldName: VerificationDocumentStatus.deletedByCustomer.name,
         });
-        newStatus = VerificationDocumentStatus.deletedByCustomer.name;
+        newStatus = VerificationDocumentStatus.deletedByCustomer;
       }
 
       // Create StatusHistory record
       await _createStatusHistory(
         linkedObjectId: documentId,
         linkedObjectType: documentType.name,
-        previousStatus: previousStatus.name,
-        newStatus: newStatus,
+        previousStatus: previousStatus.getStatusString(),
+        newStatus: newStatus.getStatusString(),
         modifiedById: modifiedById,
       );
+      // delete all StatusHistory records for the document
+      // await _statusHistoryController.deleteStatusHistoriesByLinkedObjectId(
+      //   documentId,
+      // );
     } on FirebaseException catch (_) {
       rethrow;
     } catch (_) {

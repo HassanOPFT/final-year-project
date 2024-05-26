@@ -5,7 +5,7 @@ import '../../widgets/no_data_found.dart';
 import '../../providers/customer_provider.dart';
 import '../../models/address.dart';
 import '../../providers/address_provider.dart';
-import '../../widgets/add_address_floating_button.dart';
+import '../../widgets/floating_action_button/add_address_floating_action_button.dart';
 import '../../widgets/custom_progress_indicator.dart';
 import '../../widgets/address_details_tile.dart';
 import '../../providers/user_provider.dart';
@@ -90,7 +90,7 @@ class _AddressScreenState extends State<AddressScreen> {
           },
         ),
       ),
-      floatingActionButton: AddAddressFloatingButton(userId: userId),
+      floatingActionButton: AddAddressFloatingActionButton(userId: userId),
     );
   }
 }

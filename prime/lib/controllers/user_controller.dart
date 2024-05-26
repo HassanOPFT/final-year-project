@@ -242,4 +242,46 @@ class UserController {
       rethrow;
     }
   }
+
+  Future<List<User>> getUsers(List<String> usersRoles) async {
+    try {
+      QuerySnapshot<Map<String, dynamic>> querySnapshot =
+          await _userCollection.where(
+        _roleFieldName,
+        whereIn: usersRoles,
+      ).get();
+
+      List<User> customers = [];
+      if (querySnapshot.docs.isNotEmpty) {
+        customers = querySnapshot.docs.map((doc) {
+          Map<String, dynamic> data = doc.data();
+          return User(
+            userId: doc.id,
+            userFirstName: data[_firstNameFieldName] as String?,
+            userLastName: data[_lastNameFieldName] as String?,
+            userEmail: data[_emailFieldName] as String?,
+            userRole: UserRole.values.firstWhere(
+              (role) => role.name == data[_roleFieldName],
+              orElse: () => UserRole.customer,
+            ),
+            userReferenceNumber: data[_referenceNumberFieldName] as String?,
+            userProfileUrl: data[_profileUrlFieldName] as String?,
+            userPhoneNumber: data[_phoneNumberFieldName] as String?,
+            userFcmToken: data[_fcmTokenFieldName] as String?,
+            userActivityStatus: ActivityStatus.values.firstWhere(
+              (status) => status.name == data[_activityStatusFieldName],
+              orElse: () => ActivityStatus.active,
+            ),
+            notificationsEnabled:
+                data[_notificationsEnabledFieldName] as bool? ?? false,
+            createdAt: (data[_createdAtFieldName] as Timestamp).toDate(),
+          );
+        }).toList();
+      }
+
+      return customers;
+    } catch (_) {
+      rethrow;
+    }
+  }
 }

@@ -9,7 +9,7 @@ import '../../models/verification_document.dart';
 import '../../providers/customer_provider.dart';
 import '../../providers/verification_document_provider.dart';
 import '../../utils/snackbar.dart';
-import '../../widgets/choose_image_container.dart';
+import '../../widgets/images/choose_image_container.dart';
 
 class UploadVerificationDocumentScreen extends StatefulWidget {
   final String? linkedObjectId;
@@ -149,7 +149,7 @@ class _UploadVerificationDocumentScreenState
           message: 'Identity document uploaded successfully',
         );
       }
-    } on Exception catch (e) {
+    } on Exception catch (_) {
       setIsSubmitting(false);
       if (mounted) {
         buildFailureSnackbar(
@@ -160,24 +160,76 @@ class _UploadVerificationDocumentScreenState
     }
   }
 
-  void uploadDrivingLicense() {
-    // Implement logic to upload driving license document
+  Future<void> uploadDrivingLicense() async {
+    try {
+      final verificationDocumentProvider =
+          Provider.of<VerificationDocumentProvider>(
+        context,
+        listen: false,
+      );
+      // get the current user from firebase auth service
+      final firebaseAuthService = FirebaseAuthService();
+      if (firebaseAuthService.currentUser == null) {
+        buildFailureSnackbar(
+          context: context,
+          message: 'Error while driving license. Please try again.',
+        );
+        return;
+      }
+      final currentUserId = firebaseAuthService.currentUser!.uid;
+      final drivingLicenseDocumentId =
+          await verificationDocumentProvider.createVerificationDocument(
+        widget.linkedObjectId,
+        VerificationDocumentLinkedObjectType.user,
+        widget.verificationDocumentType,
+        _selectedDate,
+        _selectedImage?.path,
+        currentUserId,
+      );
+      if (drivingLicenseDocumentId.isNotEmpty &&
+          widget.linkedObjectId != null &&
+          mounted) {
+        final customerProvider = Provider.of<CustomerProvider>(
+          context,
+          listen: false,
+        );
+        await customerProvider.setLicenseDocumentId(
+          userId: widget.linkedObjectId!,
+          documentId: drivingLicenseDocumentId,
+        );
+      }
+      setIsSubmitting(false);
+      if (mounted) {
+        Navigator.of(context).pop();
+        buildSuccessSnackbar(
+          context: context,
+          message: 'Driving license uploaded successfully',
+        );
+      }
+    } on Exception catch (_) {
+      setIsSubmitting(false);
+      if (mounted) {
+        buildFailureSnackbar(
+          context: context,
+          message: 'Error while uploading driving license. Please try again.',
+        );
+      }
+    }
   }
 
   void uploadCarRegistration() {
-    // Implement logic to upload car registration document
+    // TODO: implement this method
   }
 
   void uploadCarInsurance() {
-    // Implement logic to upload car insurance document
+    // TODO: implement this method
   }
 
   void uploadCarRoadTax() {
-    // Implement logic to upload car road tax document
+    // TODO: implement this method
   }
 
   void submitDocument() {
-    // unfocus the expiry date field
     _expiryDateFocusNode.unfocus();
     if (_selectedImage == null) {
       buildAlertSnackbar(

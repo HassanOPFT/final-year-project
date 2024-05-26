@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:prime/widgets/tiles/verification_document_tile.dart';
 import 'package:provider/provider.dart';
 
-import 'card/verification_document_details_card.dart';
 import '../services/firebase/firebase_auth_service.dart';
 import '../utils/navigate_with_animation.dart';
 import 'custom_progress_indicator.dart';
@@ -32,7 +31,7 @@ class IdentityTabBody extends StatelessWidget {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const CustomProgressIndicator();
           } else if (snapshot.hasError) {
-            return Text('Error: ${snapshot.error}');
+            return const Text('Error while fetching identity document');
           } else if (snapshot.hasData &&
               snapshot.data != null &&
               snapshot.data!.status !=
@@ -40,11 +39,8 @@ class IdentityTabBody extends StatelessWidget {
             final document = snapshot.data!;
             return Column(
               children: [
-                // VerificationDocumentDetailsCard(
-                //   verificationDocument: document,
-                // ),
                 VerificationDocumentTile(
-                  verificationDocument: document,
+                  verificationDocumentId: document.id ?? '',
                 ),
               ],
             );

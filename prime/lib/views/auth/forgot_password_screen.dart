@@ -69,11 +69,17 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           .sendPasswordResetEmail(_emailController.text.trim());
 
       if (mounted) {
-        DialogUtils.showSuccessDialog(
+        buildSuccessSnackbar(
           context: context,
           message:
               'Password reset email sent successfully. Please check your email.',
         );
+        Navigator.of(context).pop();
+        // DialogUtils.showSuccessDialog(
+        //   context: context,
+        //   message:
+        //       'Password reset email sent successfully. Please check your email.',
+        // );
       }
     } on FirebaseAuthException catch (e) {
       if (mounted) {

@@ -59,14 +59,13 @@ class VerificationDocumentStatusIndicator extends StatelessWidget {
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 5.0, vertical: 3.0),
+      padding: const EdgeInsets.symmetric(horizontal: 5.0),
       decoration: BoxDecoration(
         color: backgroundColor,
         borderRadius: BorderRadius.circular(5.0),
       ),
       child: Text(
-        verificationDocumentStatus
-            .getStatusString(), // Display the verificationDocumentStatus enum without the enum class prefix
+        verificationDocumentStatus.getStatusString(),
         style: TextStyle(
           fontSize: 16.0,
           color: textColor,
