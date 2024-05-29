@@ -68,7 +68,7 @@ class LatestStatusHistoryRecord extends StatelessWidget {
                           } else {
                             final userName =
                                 '${userSnapshot.data?['userFirstName'] ?? ''} ${userSnapshot.data?['userLastName'] ?? ''}';
-                            final modifiedBy = userName;
+                            // final modifiedBy = userName;
 
                             return Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -126,41 +126,6 @@ class LatestStatusHistoryRecord extends StatelessWidget {
                                     ),
                                   ),
                                 ),
-                                // ListTile(
-                                //   leading: const Icon(
-                                //     Icons.history_rounded,
-                                //     size: 30.0,
-                                //   ),
-                                //   title: Text(
-                                //     '${latestStatusHistory.newStatus}',
-                                //     style: const TextStyle(
-                                //       fontSize: 18.0,
-                                //     ),
-                                //   ),
-                                //   subtitle: Column(
-                                //     crossAxisAlignment:
-                                //         CrossAxisAlignment.start,
-                                //     children: [
-                                //       Text(
-                                //         modifiedBy,
-                                //         style: const TextStyle(
-                                //           fontSize: 15.0,
-                                //         ),
-                                //       ),
-                                //       Text(
-                                //         latestStatusHistory.createdAt != null
-                                //             ? DateFormat.yMMMd()
-                                //                 .add_jm()
-                                //                 .format(latestStatusHistory
-                                //                     .createdAt as DateTime)
-                                //             : 'Unknown',
-                                //         style: const TextStyle(
-                                //           fontSize: 13.0,
-                                //         ),
-                                //       ),
-                                //     ],
-                                //   ),
-                                // ),
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [

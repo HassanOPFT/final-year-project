@@ -16,6 +16,30 @@ class AddressController {
 
   final _addressCollection =
       FirebaseFirestore.instance.collection(_addressCollectionName);
+  Future<String> createAddress(Address address) async {
+    try {
+      if (address.linkedObjectId == null) {
+        throw Exception('linkedObjectId is required');
+      }
+      final newAddress = await _addressCollection.add({
+        _linkedObjectIdFieldName: address.linkedObjectId ?? '',
+        _streetFieldName: address.street ?? '',
+        _cityFieldName: address.city ?? '',
+        _stateFieldName: address.state ?? '',
+        _postalCodeFieldName: address.postalCode ?? '',
+        _countryFieldName: address.country ?? '',
+        _longitudeFieldName: address.longitude ?? '',
+        _latitudeFieldName: address.latitude ?? '',
+        _labelFieldName: address.label ?? '',
+      });
+
+      return newAddress.id;
+    } on FirebaseException catch (_) {
+      rethrow;
+    } catch (_) {
+      rethrow;
+    }
+  }
 
   Future<List<Address>> getAddresses(String linkedObjectId) async {
     try {
@@ -52,24 +76,14 @@ class AddressController {
     );
   }
 
-  Future<String> createAddress(Address address) async {
+  Future<Address> getAddressById(String addressId) async {
     try {
-      if (address.linkedObjectId == null) {
-        throw Exception('linkedObjectId is required');
+      final doc = await _addressCollection.doc(addressId).get();
+      if (!doc.exists) {
+        throw Exception('Address not found');
       }
-      final newAddress = await _addressCollection.add({
-        _linkedObjectIdFieldName: address.linkedObjectId ?? '',
-        _streetFieldName: address.street ?? '',
-        _cityFieldName: address.city ?? '',
-        _stateFieldName: address.state ?? '',
-        _postalCodeFieldName: address.postalCode ?? '',
-        _countryFieldName: address.country ?? '',
-        _longitudeFieldName: address.longitude ?? '',
-        _latitudeFieldName: address.latitude ?? '',
-        _labelFieldName: address.label ?? '',
-      });
 
-      return newAddress.id;
+      return _fromMap(doc.id, doc.data()!);
     } on FirebaseException catch (_) {
       rethrow;
     } catch (_) {

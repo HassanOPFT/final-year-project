@@ -1,5 +1,10 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:prime/models/car.dart';
+import 'package:prime/providers/car_provider.dart';
+import 'package:prime/providers/user_provider.dart';
 import 'package:prime/utils/assets_paths.dart';
 import 'package:provider/provider.dart';
 
@@ -7,16 +12,20 @@ import '../models/address.dart';
 import '../providers/address_provider.dart';
 import '../providers/customer_provider.dart';
 import '../utils/navigate_with_animation.dart';
+import '../utils/snackbar.dart';
 import '../views/common/google_maps_screen.dart';
-import 'edit_address_bottom_sheet.dart';
+import 'bottom_sheet/edit_address_bottom_sheet.dart';
 
 class AddressDetailsTile extends StatelessWidget {
   final Address address;
   final bool isDefault;
+  final AddressPurpose addressPurpose;
+
   const AddressDetailsTile({
     super.key,
     required this.address,
     required this.isDefault,
+    required this.addressPurpose,
   });
 
   @override
@@ -60,7 +69,7 @@ class AddressDetailsTile extends StatelessWidget {
           ),
           addressId: address.id,
           linkedObjectId: address.linkedObjectId!,
-          addressPurpose: AddressPurpose.user,
+          addressPurpose: addressPurpose,
           addressAction: AddressAction.update,
         ),
       );
@@ -103,17 +112,52 @@ class AddressDetailsTile extends StatelessWidget {
     }
 
     Future<void> deleteAddress() async {
-      if (address.id == null || address.id!.isEmpty) {
-        return;
-      }
-      bool confirmDeletion = await confirmDeleteAddress();
-      if (!confirmDeletion) {
-        return;
-      }
-      await addressProvider.deleteAddress(address.id!);
+      try {
+        if (address.id == null || address.id!.isEmpty) {
+          return;
+        }
+        bool confirmDeletion = await confirmDeleteAddress();
+        if (!confirmDeletion) {
+          return;
+        }
+        await addressProvider.deleteAddress(address.id!);
+        // delete from user if the purpose is user
+        if (isDefault &&
+            address.linkedObjectId != null &&
+            addressPurpose == AddressPurpose.user) {
+          await customerProvider.deleteDefaultAddress(address.linkedObjectId!);
+        }
+        // delete from car if the purpose is car
+        if (address.linkedObjectId != null &&
+            addressPurpose == AddressPurpose.car) {
+          final carProvider = Provider.of<CarProvider>(
+            context,
+            listen: false,
+          );
+          await carProvider.deleteCarDefaultAddress(
+            carId: address.linkedObjectId ?? '',
+          );
+          // update car status
+          final userProvider = Provider.of<UserProvider>(
+            context,
+            listen: false,
+          );
 
-      if (isDefault && address.linkedObjectId != null) {
-        await customerProvider.deleteDefaultAddress(address.linkedObjectId!);
+          final currentUserId = userProvider.user?.userId ?? '';
+
+          await carProvider.updateCarStatus(
+            carId: address.linkedObjectId ?? '',
+            previousStatus: CarStatus.updated,
+            newStatus: CarStatus.updated,
+            modifiedById: currentUserId,
+            statusDescription: '',
+          );
+        }
+      } on Exception catch (_) {
+        buildFailureSnackbar(
+          context: context,
+          message: 'Failed to delete address',
+        );
       }
     }
 

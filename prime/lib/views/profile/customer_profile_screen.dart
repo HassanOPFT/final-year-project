@@ -38,6 +38,7 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
           const Divider(
             endIndent: 15,
             indent: 15,
+            thickness: 0.3,
           ),
           const EditProfileTile(),
           const ChangePasswordTile(),

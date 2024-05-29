@@ -25,6 +25,15 @@ class AddressProvider extends ChangeNotifier {
     }
   }
 
+  Future<Address> getAddressById(String addressId) async {
+    try {
+      final address = await _addressController.getAddressById(addressId);
+      return address;
+    } catch (_) {
+      rethrow;
+    }
+  }
+
   Future<void> updateAddress(Address address) async {
     try {
       await _addressController.updateAddress(address);

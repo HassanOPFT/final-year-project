@@ -17,6 +17,9 @@ class AdminVerificationDocumentTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (verificationDocumentId.isEmpty) {
+      return const Center(child: Text('No document associated'));
+    }
     final verificationDocumentProvider =
         Provider.of<VerificationDocumentProvider>(context);
 

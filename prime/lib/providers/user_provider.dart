@@ -38,9 +38,17 @@ class UserProvider extends ChangeNotifier {
 
         return userInfo;
       } else {
-        print('current user is null');
         throw Exception('User data not available.');
       }
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<User?> getUserDetails(String userId) async {
+    try {
+      final user = await _userController.getUserDetails(userId);
+      return user;
     } catch (e) {
       rethrow;
     }

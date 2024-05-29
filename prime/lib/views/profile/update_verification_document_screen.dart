@@ -1,10 +1,14 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
+import '../../models/car.dart';
 import '../../models/verification_document.dart';
+import '../../providers/car_provider.dart';
 import '../../providers/status_history_provider.dart';
 import '../../providers/verification_document_provider.dart';
 import '../../services/firebase/firebase_auth_service.dart';
@@ -191,11 +195,26 @@ class _UpdateVerificationDocumentScreenState
         verificationDocumentUrl: widget.verificationDocument.documentUrl,
         modifiedById: currentUserId,
       );
-
-      Provider.of<StatusHistoryProvider>(
+      if (widget.verificationDocument.linkedObjectType ==
+          VerificationDocumentLinkedObjectType.car) {
+        // update car status
+        final carProvider = Provider.of<CarProvider>(
           context,
           listen: false,
-        ).notify();
+        );
+        await carProvider.updateCarStatus(
+          carId: widget.verificationDocument.linkedObjectId ?? '',
+          previousStatus: CarStatus.updated,
+          newStatus: CarStatus.updated,
+          modifiedById: currentUserId,
+          statusDescription: '',
+        );
+      }
+
+      Provider.of<StatusHistoryProvider>(
+        context,
+        listen: false,
+      ).notify();
 
       setIsSubmitting(false);
       if (mounted) {
@@ -213,7 +232,7 @@ class _UpdateVerificationDocumentScreenState
         setIsSubmitting(false);
         buildFailureSnackbar(
           context: context,
-          message: 'Error while uploading Identity document. Please try again.',
+          message: 'Error while uploading document. Please try again.',
         );
       }
     }

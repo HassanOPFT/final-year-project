@@ -1,17 +1,15 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:prime/providers/car_provider.dart';
 import 'package:prime/utils/navigate_with_animation.dart';
 import 'package:prime/views/cars/manage_car_screen.dart';
 import 'package:prime/widgets/car_status_indicator.dart';
-import 'package:provider/provider.dart';
 
 import '../../models/car.dart';
 import '../custom_progress_indicator.dart';
 
-class HostCarCard extends StatelessWidget {
+class AdminCarCard extends StatelessWidget {
   final Car car;
-  const HostCarCard({
+  const AdminCarCard({
     super.key,
     required this.car,
   });
@@ -23,6 +21,7 @@ class HostCarCard extends StatelessWidget {
         context: context,
         screen: ManageCarScreen(
           carId: car.id ?? '',
+          isAdmin: true,
         ),
       ),
       child: Card(
@@ -117,16 +116,8 @@ class HostCarCard extends StatelessWidget {
                   Positioned(
                     top: 10.0,
                     right: 10.0,
-                    child: Consumer<CarProvider>(
-                      builder: (
-                        context,
-                        value,
-                        _,
-                      ) {
-                        return CarStatusIndicator(
-                          carStatus: car.status as CarStatus,
-                        );
-                      },
+                    child: CarStatusIndicator(
+                      carStatus: car.status as CarStatus,
                     ),
                   ),
                 ],

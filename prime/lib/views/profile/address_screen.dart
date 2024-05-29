@@ -9,6 +9,7 @@ import '../../widgets/floating_action_button/add_address_floating_action_button.
 import '../../widgets/custom_progress_indicator.dart';
 import '../../widgets/address_details_tile.dart';
 import '../../providers/user_provider.dart';
+import '../common/google_maps_screen.dart';
 
 class AddressScreen extends StatefulWidget {
   const AddressScreen({super.key});
@@ -83,6 +84,7 @@ class _AddressScreenState extends State<AddressScreen> {
                   return AddressDetailsTile(
                     address: address,
                     isDefault: isDefaultAddress,
+                    addressPurpose: AddressPurpose.user,
                   );
                 },
               );

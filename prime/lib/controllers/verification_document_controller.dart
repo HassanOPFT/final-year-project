@@ -387,6 +387,8 @@ class VerificationDocumentController {
         await FirebaseStorageService().deleteFile(newDocumentStoragePath);
         await _verificationDocumentCollection.doc(documentId).delete();
         newStatus = VerificationDocumentStatus.deletedByAdmin;
+        // delete all status history records for the car
+        await _statusHistoryController.deleteStatusHistories(documentId);
       } else {
         await _verificationDocumentCollection.doc(documentId).update({
           _statusFieldName: VerificationDocumentStatus.deletedByCustomer.name,

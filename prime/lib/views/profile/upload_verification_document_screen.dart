@@ -4,6 +4,8 @@ import 'package:intl/intl.dart';
 import 'package:prime/services/firebase/firebase_auth_service.dart';
 import 'package:provider/provider.dart';
 
+import '../../models/car.dart';
+import '../../providers/car_provider.dart';
 import '../../widgets/custom_progress_indicator.dart';
 import '../../models/verification_document.dart';
 import '../../providers/customer_provider.dart';
@@ -217,16 +219,198 @@ class _UploadVerificationDocumentScreenState
     }
   }
 
-  void uploadCarRegistration() {
-    // TODO: implement this method
+  Future<void> uploadCarRegistration() async {
+    try {
+      final verificationDocumentProvider =
+          Provider.of<VerificationDocumentProvider>(
+        context,
+        listen: false,
+      );
+      // get the current user from firebase auth service
+      final firebaseAuthService = FirebaseAuthService();
+      if (firebaseAuthService.currentUser == null) {
+        buildFailureSnackbar(
+          context: context,
+          message: 'Error while uploading car registration. Please try again.',
+        );
+        return;
+      }
+      final currentUserId = firebaseAuthService.currentUser!.uid;
+      final carRegistrationId =
+          await verificationDocumentProvider.createVerificationDocument(
+        widget.linkedObjectId,
+        VerificationDocumentLinkedObjectType.car,
+        widget.verificationDocumentType,
+        _selectedDate,
+        _selectedImage?.path,
+        currentUserId,
+      );
+      if (carRegistrationId.isNotEmpty &&
+          widget.linkedObjectId != null &&
+          mounted) {
+        final carProvider = Provider.of<CarProvider>(
+          context,
+          listen: false,
+        );
+        await carProvider.setCarRegistrationDocument(
+          carId: widget.linkedObjectId ?? '',
+          registrationDocumentId: carRegistrationId,
+        );
+
+        // update car status
+        await carProvider.updateCarStatus(
+          carId: widget.linkedObjectId ?? '',
+          previousStatus: CarStatus.updated,
+          newStatus: CarStatus.updated,
+          modifiedById: currentUserId,
+          statusDescription: '',
+        );
+      }
+      setIsSubmitting(false);
+      if (mounted) {
+        Navigator.of(context).pop();
+        buildSuccessSnackbar(
+          context: context,
+          message: 'Car registration uploaded successfully',
+        );
+      }
+    } on Exception catch (_) {
+      setIsSubmitting(false);
+      if (mounted) {
+        buildFailureSnackbar(
+          context: context,
+          message: 'Error while uploading car registration. Please try again.',
+        );
+      }
+    }
   }
 
-  void uploadCarInsurance() {
-    // TODO: implement this method
+  Future<void> uploadCarInsurance() async {
+    try {
+      final verificationDocumentProvider =
+          Provider.of<VerificationDocumentProvider>(
+        context,
+        listen: false,
+      );
+      final firebaseAuthService = FirebaseAuthService();
+      if (firebaseAuthService.currentUser == null) {
+        buildFailureSnackbar(
+          context: context,
+          message: 'Error while uploading car insurance. Please try again.',
+        );
+        return;
+      }
+      final currentUserId = firebaseAuthService.currentUser!.uid;
+      final carInsuranceId =
+          await verificationDocumentProvider.createVerificationDocument(
+        widget.linkedObjectId,
+        VerificationDocumentLinkedObjectType.car,
+        widget.verificationDocumentType,
+        _selectedDate,
+        _selectedImage?.path,
+        currentUserId,
+      );
+      if (carInsuranceId.isNotEmpty &&
+          widget.linkedObjectId != null &&
+          mounted) {
+        final carProvider = Provider.of<CarProvider>(
+          context,
+          listen: false,
+        );
+        await carProvider.setCarInsuranceDocument(
+          carId: widget.linkedObjectId ?? '',
+          insuranceDocumentId: carInsuranceId,
+        );
+
+        // update car status
+        await carProvider.updateCarStatus(
+          carId: widget.linkedObjectId ?? '',
+          previousStatus: CarStatus.updated,
+          newStatus: CarStatus.updated,
+          modifiedById: currentUserId,
+          statusDescription: '',
+        );
+      }
+      setIsSubmitting(false);
+      if (mounted) {
+        Navigator.of(context).pop();
+        buildSuccessSnackbar(
+          context: context,
+          message: 'Car insurance uploaded successfully',
+        );
+      }
+    } on Exception catch (_) {
+      setIsSubmitting(false);
+      if (mounted) {
+        buildFailureSnackbar(
+          context: context,
+          message: 'Error while uploading car insurance. Please try again.',
+        );
+      }
+    }
   }
 
-  void uploadCarRoadTax() {
-    // TODO: implement this method
+  Future<void> uploadCarRoadTax() async {
+    try {
+      final verificationDocumentProvider =
+          Provider.of<VerificationDocumentProvider>(
+        context,
+        listen: false,
+      );
+      final firebaseAuthService = FirebaseAuthService();
+      if (firebaseAuthService.currentUser == null) {
+        buildFailureSnackbar(
+          context: context,
+          message: 'Error while uploading car road tax. Please try again.',
+        );
+        return;
+      }
+      final currentUserId = firebaseAuthService.currentUser!.uid;
+      final carRoadTaxId =
+          await verificationDocumentProvider.createVerificationDocument(
+        widget.linkedObjectId,
+        VerificationDocumentLinkedObjectType.car,
+        widget.verificationDocumentType,
+        _selectedDate,
+        _selectedImage?.path,
+        currentUserId,
+      );
+      if (carRoadTaxId.isNotEmpty && widget.linkedObjectId != null && mounted) {
+        final carProvider = Provider.of<CarProvider>(
+          context,
+          listen: false,
+        );
+        await carProvider.setCarRoadTaxDocument(
+          carId: widget.linkedObjectId ?? '',
+          roadTaxDocumentId: carRoadTaxId,
+        );
+
+        // update car status
+        await carProvider.updateCarStatus(
+          carId: widget.linkedObjectId ?? '',
+          previousStatus: CarStatus.updated,
+          newStatus: CarStatus.updated,
+          modifiedById: currentUserId,
+          statusDescription: '',
+        );
+      }
+      setIsSubmitting(false);
+      if (mounted) {
+        Navigator.of(context).pop();
+        buildSuccessSnackbar(
+          context: context,
+          message: 'Car road tax uploaded successfully',
+        );
+      }
+    } on Exception catch (_) {
+      setIsSubmitting(false);
+      if (mounted) {
+        buildFailureSnackbar(
+          context: context,
+          message: 'Error while uploading car road tax. Please try again.',
+        );
+      }
+    }
   }
 
   void submitDocument() {

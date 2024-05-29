@@ -173,6 +173,164 @@ class CarController {
     }
   }
 
+  Future<List<Car>> getAllCars() async {
+    try {
+      final querySnapshot = await _carCollection.get();
+      final cars = querySnapshot.docs.map((doc) {
+        final data = doc.data();
+        return Car(
+          id: doc.id,
+          hostId: data[_hostIdFieldName],
+          hostBankAccountId: data[_hostBankAccountIdFieldName],
+          defaultAddressId: data[_defaultAddressIdFieldName],
+          manufacturer: data[_manufacturerFieldName],
+          model: data[_modelFieldName],
+          manufactureYear: data[_manufactureYearFieldName],
+          color: data[_colorFieldName],
+          engineType: EngineType.values.firstWhere(
+            (e) => e.name == data[_engineTypeFieldName],
+          ),
+          transmissionType: TransmissionType.values.firstWhere(
+            (e) => e.name == data[_transmissionFieldName],
+          ),
+          seats: data[_seatsFieldName],
+          carType: CarType.values.firstWhere(
+            (e) => e.name == data[_carTypeFieldName],
+          ),
+          hourPrice: data[_hourPriceFieldName],
+          dayPrice: data[_dayPriceFieldName],
+          imagesUrl: List<String>.from(data[_imagesUrlFieldName]),
+          description: data[_descriptionFieldName],
+          status: CarStatus.values.firstWhere(
+            (e) => e.name == data[_statusFieldName],
+          ),
+          registrationDocumentId: data[_registrationDocumentIdFieldName],
+          roadTaxDocumentId: data[_roadTaxDocumentIdFieldName],
+          insuranceDocumentId: data[_insuranceDocumentIdFieldName],
+          referenceNumber: data[_referenceNumberFieldName],
+          createdAt: (data[_createdAtFieldName] as Timestamp).toDate(),
+        );
+      }).toList();
+      return cars;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<void> updateCarStatus({
+    required String carId,
+    required CarStatus previousStatus,
+    required CarStatus newStatus,
+    required String modifiedById,
+    String statusDescription = '',
+  }) async {
+    try {
+      final docRef = _carCollection.doc(carId);
+
+      await docRef.update({
+        _statusFieldName: newStatus.name,
+      });
+
+      // create status history record for the car
+      await _statusHistoryController.createStatusHistory(
+        StatusHistory(
+          linkedObjectId: carId,
+          linkedObjectType: 'Car',
+          linkedObjectSubtype: '',
+          previousStatus: previousStatus.getCarStatusString(),
+          newStatus: newStatus.getCarStatusString(),
+          statusDescription: statusDescription,
+          modifiedById: modifiedById,
+        ),
+      );
+    } on FirebaseException catch (_) {
+      rethrow;
+    } catch (_) {
+      rethrow;
+    }
+  }
+
+  Future<void> setCarRegistrationDocument({
+    required String carId,
+    required String registrationDocumentId,
+  }) async {
+    try {
+      await _carCollection.doc(carId).update({
+        _registrationDocumentIdFieldName: registrationDocumentId,
+      });
+    } on FirebaseException catch (_) {
+      rethrow;
+    } catch (_) {
+      rethrow;
+    }
+  }
+
+  Future<void> deleteCarRegistrationDocument({required String carId}) async {
+    try {
+      await _carCollection.doc(carId).update({
+        _registrationDocumentIdFieldName: '',
+      });
+    } on FirebaseException catch (_) {
+      rethrow;
+    } catch (_) {
+      rethrow;
+    }
+  }
+
+  Future<void> setCarRoadTaxDocument({
+    required String carId,
+    required String roadTaxDocumentId,
+  }) async {
+    try {
+      await _carCollection.doc(carId).update({
+        _roadTaxDocumentIdFieldName: roadTaxDocumentId,
+      });
+    } on FirebaseException catch (_) {
+      rethrow;
+    } catch (_) {
+      rethrow;
+    }
+  }
+
+  Future<void> deleteCarRoadTaxDocument(String carId) async {
+    try {
+      await _carCollection.doc(carId).update({
+        _roadTaxDocumentIdFieldName: '',
+      });
+    } on FirebaseException catch (_) {
+      rethrow;
+    } catch (_) {
+      rethrow;
+    }
+  }
+
+  Future<void> setCarInsuranceDocument({
+    required String carId,
+    required String insuranceDocumentId,
+  }) async {
+    try {
+      await _carCollection.doc(carId).update({
+        _insuranceDocumentIdFieldName: insuranceDocumentId,
+      });
+    } on FirebaseException catch (_) {
+      rethrow;
+    } catch (_) {
+      rethrow;
+    }
+  }
+
+  Future<void> deleteCarInsuranceDocument(String carId) async {
+    try {
+      await _carCollection.doc(carId).update({
+        _insuranceDocumentIdFieldName: '',
+      });
+    } on FirebaseException catch (_) {
+      rethrow;
+    } catch (_) {
+      rethrow;
+    }
+  }
+
   Future<bool> hasCarsWithHostId(String hostId) async {
     try {
       if (hostId.isEmpty) {
@@ -262,6 +420,91 @@ class CarController {
       }
     }
     return imagesUrls;
+  }
+
+  Future<void> setCarDefaultAddress({
+    required String carId,
+    required String addressId,
+  }) async {
+    try {
+      await _carCollection.doc(carId).update({
+        _defaultAddressIdFieldName: addressId,
+      });
+    } on FirebaseException catch (_) {
+      rethrow;
+    } catch (_) {
+      rethrow;
+    }
+  }
+
+  Future<void> deleteCarDefaultAddress(String carId) async {
+    try {
+      await _carCollection.doc(carId).update({
+        _defaultAddressIdFieldName: '',
+      });
+    } on FirebaseException catch (_) {
+      rethrow;
+    } catch (_) {
+      rethrow;
+    }
+  }
+
+  String _extractCarImageStoragePathFromUrl(String imageUrl) {
+    final uri = Uri.parse(imageUrl);
+    final pathSegments = uri.pathSegments;
+    final index = pathSegments.indexWhere((segment) => segment == 'o');
+    if (index != -1 && index + 1 < pathSegments.length) {
+      final encodedPath = pathSegments.sublist(index + 1).join('/');
+      return Uri.decodeFull(encodedPath);
+    }
+    throw Exception('Invalid image URL: $imageUrl');
+  }
+
+  // delete car
+  Future<void> deleteCar({
+    required String carId,
+    required bool isAdmin,
+    required String modifiedById,
+    String? statusDescription = '',
+  }) async {
+    try {
+      final car = await getCarById(carId);
+      if (car == null) {
+        throw Exception('Car not found');
+      }
+
+      if (isAdmin) {
+        if (car.imagesUrl != null && car.imagesUrl!.isNotEmpty) {
+          for (final imageUrl in car.imagesUrl!) {
+            final storagePath = _extractCarImageStoragePathFromUrl(imageUrl);
+            await FirebaseStorageService().deleteFile(storagePath);
+          }
+        }
+        await _carCollection.doc(carId).delete();
+        // delete all status history records for the car
+        await _statusHistoryController.deleteStatusHistories(carId);
+      } else {
+        await _carCollection.doc(carId).update({
+          _statusFieldName: CarStatus.deletedByHost.name,
+        });
+
+        await _statusHistoryController.createStatusHistory(
+          StatusHistory(
+            linkedObjectId: carId,
+            linkedObjectType: 'Car',
+            linkedObjectSubtype: '',
+            previousStatus: car.status?.getCarStatusString() ?? '',
+            newStatus: CarStatus.deletedByHost.getCarStatusString(),
+            statusDescription: statusDescription,
+            modifiedById: modifiedById,
+          ),
+        );
+      }
+    } on FirebaseException catch (_) {
+      rethrow;
+    } catch (_) {
+      rethrow;
+    }
   }
 
   // Future<String> _uploadCarDocument(String? carId, String folder, File document) async {

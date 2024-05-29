@@ -28,6 +28,7 @@ class AdminProfileScreen extends StatelessWidget {
           const Divider(
             endIndent: 15,
             indent: 15,
+            thickness: 0.3,
           ),
           const EditProfileTile(),
           const ChangePasswordTile(),

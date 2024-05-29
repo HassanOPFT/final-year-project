@@ -46,7 +46,7 @@ class VerificationDocumentHistoryScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Verification Document History'),
+        title: const Text('Status History'),
       ),
       body: FutureBuilder<Map<String, dynamic>>(
         future: combinedFuture,

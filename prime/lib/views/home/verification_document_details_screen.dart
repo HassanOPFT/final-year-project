@@ -1,10 +1,16 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:prime/models/status_history.dart';
+import 'package:prime/widgets/copy_text.dart';
 import 'package:prime/widgets/latest_status_history_record.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
+import '../../models/car.dart';
+import '../../providers/car_provider.dart';
+import '../../providers/customer_provider.dart';
 import '../../providers/status_history_provider.dart';
 import '../../utils/assets_paths.dart';
 import '../../utils/snackbar.dart';
@@ -40,6 +46,7 @@ class VerificationDocumentDetailsScreen extends StatelessWidget {
         Provider.of<VerificationDocumentProvider>(
       context,
     );
+
     void updateVerificationDocument(VerificationDocument verificationDocument) {
       animatedPushNavigation(
         context: context,
@@ -181,7 +188,7 @@ class VerificationDocumentDetailsScreen extends StatelessWidget {
       }
 
       if (rejectReason.isEmpty) {
-        buildFailureSnackbar(
+        buildAlertSnackbar(
           context: context,
           message:
               'Reason for rejection is required to reject document. please try again.',
@@ -205,7 +212,7 @@ class VerificationDocumentDetailsScreen extends StatelessWidget {
           context: context,
           message: 'Document rejected successfully',
         );
-      } on Exception catch (e) {
+      } on Exception catch (_) {
         buildFailureSnackbar(
           context: context,
           message: 'Error rejecting document. Please try again later.',
@@ -262,7 +269,7 @@ class VerificationDocumentDetailsScreen extends StatelessWidget {
           context: context,
           message: 'Document halted successfully',
         );
-      } on Exception catch (e) {
+      } on Exception catch (_) {
         buildFailureSnackbar(
           context: context,
           message: 'Error halting document. Please try again later.',
@@ -300,7 +307,7 @@ class VerificationDocumentDetailsScreen extends StatelessWidget {
           context: context,
           message: 'Unhalt requested successfully',
         );
-      } on Exception catch (e) {
+      } on Exception catch (_) {
         buildFailureSnackbar(
           context: context,
           message: 'Error requesting unhalt. Please try again later.',
@@ -320,7 +327,7 @@ class VerificationDocumentDetailsScreen extends StatelessWidget {
         if (firebaseAuthService.currentUser == null) {
           buildFailureSnackbar(
             context: context,
-            message: 'Error while unhalting document. Please try again.',
+            message: 'Error while un-halting document. Please try again.',
           );
           return;
         }
@@ -336,12 +343,12 @@ class VerificationDocumentDetailsScreen extends StatelessWidget {
         );
         buildSuccessSnackbar(
           context: context,
-          message: 'Document unhalted successfully',
+          message: 'Document un-halted successfully',
         );
-      } on Exception catch (e) {
+      } on Exception catch (_) {
         buildFailureSnackbar(
           context: context,
-          message: 'Error unhalting document. Please try again later.',
+          message: 'Error un-halting document. Please try again later.',
         );
       }
     }
@@ -410,7 +417,6 @@ class VerificationDocumentDetailsScreen extends StatelessWidget {
           return;
         }
         final currentUserId = firebaseAuthService.currentUser!.uid;
-        // final userRole = userProvider.user?.userRole ?? UserRole.customer;
         await verificationDocumentProvider.deleteVerificationDocument(
           documentId: verificationDocument.id!,
           referenceNumber: verificationDocument.referenceNumber ?? '',
@@ -421,6 +427,56 @@ class VerificationDocumentDetailsScreen extends StatelessWidget {
               verificationDocument.status as VerificationDocumentStatus,
           modifiedById: currentUserId,
         );
+        // update car status
+        if (verificationDocument.linkedObjectType ==
+            VerificationDocumentLinkedObjectType.car) {
+          final carProvider = Provider.of<CarProvider>(
+            context,
+            listen: false,
+          );
+          await carProvider.updateCarStatus(
+            carId: verificationDocument.linkedObjectId ?? '',
+            previousStatus: CarStatus.updated,
+            newStatus: CarStatus.updated,
+            modifiedById: currentUserId,
+            statusDescription: '',
+          );
+          // delete the document id from the object
+          if (verificationDocument.documentType ==
+              VerificationDocumentType.carInsurance) {
+            await carProvider.deleteCarInsuranceDocument(
+              carId: verificationDocument.linkedObjectId ?? '',
+            );
+          } else if (verificationDocument.documentType ==
+              VerificationDocumentType.carRegistration) {
+            await carProvider.deleteCarRegistrationDocument(
+              carId: verificationDocument.linkedObjectId ?? '',
+            );
+          } else if (verificationDocument.documentType ==
+              VerificationDocumentType.carRoadTax) {
+            await carProvider.deleteCarRoadTaxDocument(
+              carId: verificationDocument.linkedObjectId ?? '',
+            );
+          } else if (verificationDocument.documentType ==
+              VerificationDocumentType.identity) {
+            final customerProvider = Provider.of<CustomerProvider>(
+              context,
+              listen: false,
+            );
+            await customerProvider.deleteIdentityDocumentId(
+              verificationDocument.linkedObjectId ?? '',
+            );
+          } else if (verificationDocument.documentType ==
+              VerificationDocumentType.drivingLicense) {
+            final customerProvider = Provider.of<CustomerProvider>(
+              context,
+              listen: false,
+            );
+            await customerProvider.deleteLicenseDocumentId(
+              verificationDocument.linkedObjectId ?? '',
+            );
+          }
+        }
         // call notify of status history provider
         Provider.of<StatusHistoryProvider>(
           context,
@@ -618,32 +674,37 @@ class VerificationDocumentDetailsScreen extends StatelessWidget {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 5.0),
-                    const Divider(),
-                    const SizedBox(height: 5.0),
+                    const SizedBox(height: 15.0),
+                    LatestStatusHistoryRecord(
+                      fetchStatusHistory: getMostRecentStatusHistory,
+                      linkedObjectId:
+                          verificationDocument.id ?? verificationDocumentId,
+                    ),
+                    const SizedBox(height: 15.0),
+                    const Divider(thickness: 0.3),
+                    const SizedBox(height: 15.0),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'Ref No:',
+                          'Ref Number',
                           style: TextStyle(
                             color: Theme.of(context).hintColor,
                             fontSize: 16.0,
                           ),
                         ),
-                        Text(
-                          verificationDocument.referenceNumber ?? 'N/A',
-                          style: const TextStyle(
-                            fontSize: 16.0,
-                          ),
-                        ),
+                        CopyText(
+                          text: verificationDocument.referenceNumber ?? 'N/A',
+                          fontSize: 16.0,
+                        )
                       ],
                     ),
+                    const SizedBox(height: 10.0),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'Created At:',
+                          'Added on',
                           style: TextStyle(
                             color: Theme.of(context).hintColor,
                             fontSize: 16.0,
@@ -657,12 +718,6 @@ class VerificationDocumentDetailsScreen extends StatelessWidget {
                           ),
                         ),
                       ],
-                    ),
-                    const Divider(height: 40.0),
-                    LatestStatusHistoryRecord(
-                      fetchStatusHistory: getMostRecentStatusHistory,
-                      linkedObjectId:
-                          verificationDocument.id ?? verificationDocumentId,
                     ),
                   ],
                 ),

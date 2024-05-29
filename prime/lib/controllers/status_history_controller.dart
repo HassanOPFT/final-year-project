@@ -89,4 +89,18 @@ class StatusHistoryController {
       rethrow;
     }
   }
+
+  Future<void> deleteStatusHistories(String linkedObjectId) async {
+    try {
+      QuerySnapshot snapshot = await _collection
+          .where(_linkedObjectIdFieldName, isEqualTo: linkedObjectId)
+          .get();
+
+      for (DocumentSnapshot doc in snapshot.docs) {
+        await doc.reference.delete();
+      }
+    } catch (_) {
+      rethrow;
+    }
+  }
 }

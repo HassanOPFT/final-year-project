@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
@@ -13,7 +11,7 @@ import 'package:path/path.dart' as p;
 import '../controllers/user_controller.dart';
 import '../services/firebase/firebase_auth_service.dart';
 import '../utils/snackbar.dart';
-import 'edit_profile_bottom_sheet.dart';
+import 'bottom_sheet/edit_profile_bottom_sheet.dart';
 
 class ProfileAvatar extends StatefulWidget {
   const ProfileAvatar({super.key});
@@ -95,10 +93,6 @@ class _ProfileAvatarState extends State<ProfileAvatar> {
       final imageCropper = ImageCropper();
       final croppedFile = await imageCropper.cropImage(
         sourcePath: pickedFile.path,
-        // aspectRatio: const CropAspectRatio(
-        //   ratioX: 1,
-        //   ratioY: 1,
-        // ),
       );
 
       if (croppedFile == null) return;

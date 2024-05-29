@@ -51,7 +51,6 @@ class UserDetailsTile extends StatelessWidget {
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Activity Status Indicator
           Container(
             width: 10,
             height: 10,

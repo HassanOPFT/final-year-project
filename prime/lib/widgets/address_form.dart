@@ -1,7 +1,12 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../models/car.dart';
 import '../providers/address_provider.dart';
+import '../providers/car_provider.dart';
+import '../providers/user_provider.dart';
 import 'custom_progress_indicator.dart';
 import '../models/address.dart';
 import '../providers/customer_provider.dart';
@@ -190,8 +195,111 @@ class _AddressFormState extends State<AddressForm> {
     }
   }
 
-  void _createCarAddress(Address address, bool defaultAddress) async {}
-  void _updateCarAddress(Address address, bool defaultAddress) async {}
+  void _createCarAddress(Address address, bool defaultAddress) async {
+    try {
+      updateSaveAddressLoading(true);
+      final addressProvider = Provider.of<AddressProvider>(
+        context,
+        listen: false,
+      );
+      final newAddressId = await addressProvider.createAddress(address);
+      // Set default address if selected
+      if (defaultAddress) {
+        if (mounted) {
+          final carProvider = Provider.of<CarProvider>(
+            context,
+            listen: false,
+          );
+          await carProvider.setCarDefaultAddress(
+            carId: address.linkedObjectId as String,
+            addressId: newAddressId,
+          );
+          final userProvider = Provider.of<UserProvider>(
+            context,
+            listen: false,
+          );
+
+          final currentUserId = userProvider.user?.userId ?? '';
+
+          await carProvider.updateCarStatus(
+            carId: address.linkedObjectId ?? '',
+            previousStatus: CarStatus.updated,
+            newStatus: CarStatus.updated,
+            modifiedById: currentUserId,
+            statusDescription: '',
+          );
+        }
+      }
+      updateSaveAddressLoading(false);
+      if (mounted) {
+        popTwoTimes();
+        buildSuccessSnackbar(
+          context: context,
+          message: 'Address saved successfully.',
+        );
+      }
+    } catch (e) {
+      updateSaveAddressLoading(false);
+      if (mounted) {
+        popOneTime();
+        buildFailureSnackbar(
+          context: context,
+          message:
+              'Error occurred while saving address. Please try again later.',
+        );
+      }
+    }
+  }
+
+  void _updateCarAddress(Address address, bool defaultAddress) async {
+    try {
+      updateSaveAddressLoading(true);
+      final addressProvider = Provider.of<AddressProvider>(
+        context,
+        listen: false,
+      );
+      await addressProvider.updateAddress(address);
+
+      final userProvider = Provider.of<UserProvider>(
+        context,
+        listen: false,
+      );
+
+      final currentUserId = userProvider.user?.userId ?? '';
+
+      final carProvider = Provider.of<CarProvider>(
+        context,
+        listen: false,
+      );
+
+      await carProvider.updateCarStatus(
+        carId: address.linkedObjectId ?? '',
+        previousStatus: CarStatus.updated,
+        newStatus: CarStatus.updated,
+        modifiedById: currentUserId,
+        statusDescription: '',
+      );
+
+      updateSaveAddressLoading(false);
+      if (mounted) {
+        popTwoTimes();
+        buildSuccessSnackbar(
+          context: context,
+          message: 'Address updated successfully.',
+        );
+      }
+    } catch (e) {
+      updateSaveAddressLoading(false);
+      if (mounted) {
+        popOneTime();
+        buildFailureSnackbar(
+          context: context,
+          message:
+              'Error occurred while updating address. Please try again later.',
+        );
+      }
+    }
+  }
 
   void _saveAddress() async {
     if (!_formKey.currentState!.validate()) {
@@ -368,17 +476,18 @@ class _AddressFormState extends State<AddressForm> {
               controller: countryController,
             ),
             const SizedBox(height: 5.0),
-            CheckboxListTile(
-              title: const Text('Save as Default Address'),
-              value: _defaultAddress,
-              onChanged: (newValue) {
-                setState(() {
-                  _defaultAddress = newValue ?? false;
-                });
-              },
-              controlAffinity: ListTileControlAffinity.leading,
-            ),
-            const SizedBox(height: 5.0),
+            if (widget.addressPurpose == AddressPurpose.user)
+              CheckboxListTile(
+                title: const Text('Save as Default Address'),
+                value: _defaultAddress,
+                onChanged: (newValue) {
+                  setState(() {
+                    _defaultAddress = newValue ?? false;
+                  });
+                },
+                controlAffinity: ListTileControlAffinity.leading,
+              ),
+            const SizedBox(height: 10.0),
             SizedBox(
               height: 50.0,
               child: saveAddressLoading

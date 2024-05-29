@@ -13,7 +13,7 @@ class SectionDivider extends StatelessWidget {
       return Expanded(
         child: Divider(
           color: Theme.of(context).dividerColor,
-          thickness: 1,
+          thickness: 0.3,
           indent: 10,
           endIndent: 10,
         ),

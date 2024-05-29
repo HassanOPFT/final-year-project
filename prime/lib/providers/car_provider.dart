@@ -46,11 +46,112 @@ class CarProvider extends ChangeNotifier {
     }
   }
 
-  // get car by car id
   Future<Car?> getCarById(String carId) async {
     try {
       final car = await _carController.getCarById(carId);
       return car;
+    } catch (_) {
+      rethrow;
+    }
+  }
+
+  Future<List<Car>> getAllCars() async {
+    try {
+      final cars = await _carController.getAllCars();
+      return cars;
+    } catch (_) {
+      rethrow;
+    }
+  }
+
+  Future<void> updateCarStatus({
+    required String carId,
+    required CarStatus previousStatus,
+    required CarStatus newStatus,
+    required String modifiedById,
+    String statusDescription = '',
+  }) async {
+    try {
+      await _carController.updateCarStatus(
+        carId: carId,
+        newStatus: newStatus,
+        previousStatus: previousStatus,
+        modifiedById: modifiedById,
+        statusDescription: statusDescription,
+      );
+      notifyListeners();
+    } catch (_) {
+      rethrow;
+    }
+  }
+
+  Future<void> setCarRegistrationDocument({
+    required String carId,
+    required String registrationDocumentId,
+  }) async {
+    try {
+      await _carController.setCarRegistrationDocument(
+        carId: carId,
+        registrationDocumentId: registrationDocumentId,
+      );
+      notifyListeners();
+    } catch (_) {
+      rethrow;
+    }
+  }
+
+  Future<void> deleteCarRegistrationDocument({required String carId}) async {
+    try {
+      await _carController.deleteCarRegistrationDocument(carId: carId);
+      notifyListeners();
+    } catch (_) {
+      rethrow;
+    }
+  }
+
+  Future<void> setCarInsuranceDocument({
+    required String carId,
+    required String insuranceDocumentId,
+  }) async {
+    try {
+      await _carController.setCarInsuranceDocument(
+        carId: carId,
+        insuranceDocumentId: insuranceDocumentId,
+      );
+      notifyListeners();
+    } catch (_) {
+      rethrow;
+    }
+  }
+
+  Future<void> deleteCarInsuranceDocument({required String carId}) async {
+    try {
+      await _carController.deleteCarInsuranceDocument(carId);
+      notifyListeners();
+    } catch (_) {
+      rethrow;
+    }
+  }
+
+  Future<void> setCarRoadTaxDocument({
+    required String carId,
+    required String roadTaxDocumentId,
+  }) async {
+    try {
+      await _carController.setCarRoadTaxDocument(
+        carId: carId,
+        roadTaxDocumentId: roadTaxDocumentId,
+      );
+      notifyListeners();
+    } catch (_) {
+      rethrow;
+    }
+  }
+
+  Future<void> deleteCarRoadTaxDocument({required String carId}) async {
+    try {
+      await _carController.deleteCarRoadTaxDocument(carId);
+      notifyListeners();
     } catch (_) {
       rethrow;
     }
@@ -69,6 +170,49 @@ class CarProvider extends ChangeNotifier {
     try {
       final hasCars = await _carController.hasCarsWithHostId(hostId);
       return hasCars;
+    } catch (_) {
+      rethrow;
+    }
+  }
+
+  Future<void> setCarDefaultAddress({
+    required String carId,
+    required String addressId,
+  }) async {
+    try {
+      await _carController.setCarDefaultAddress(
+        carId: carId,
+        addressId: addressId,
+      );
+      notifyListeners();
+    } catch (_) {
+      rethrow;
+    }
+  }
+
+  Future<void> deleteCarDefaultAddress({required String carId}) async {
+    try {
+      await _carController.deleteCarDefaultAddress(carId);
+      notifyListeners();
+    } catch (_) {
+      rethrow;
+    }
+  }
+
+  Future<void> deleteCar({
+    required String carId,
+    required bool isAdmin,
+    required String modifiedById,
+    String? statusDescription = '',
+  }) async {
+    try {
+      await _carController.deleteCar(
+        carId: carId,
+        isAdmin: isAdmin,
+        modifiedById: modifiedById,
+        statusDescription: statusDescription,
+      );
+      notifyListeners();
     } catch (_) {
       rethrow;
     }

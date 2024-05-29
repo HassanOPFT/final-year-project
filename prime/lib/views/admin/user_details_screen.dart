@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:prime/utils/launch_core_service_util.dart';
 import 'package:prime/views/profile/view_full_image_screen.dart';
+import 'package:prime/widgets/copy_text.dart';
 import '../../controllers/user_controller.dart';
 import '../../models/user.dart';
 import '../../utils/navigate_with_animation.dart';
@@ -100,8 +101,15 @@ class UserDetailsScreen extends StatelessWidget {
                       'Role: ${user.userRole?.toReadableString()}',
                     ),
                     const SizedBox(height: 10.0),
-                    SelectableText(
-                      'Ref No: ${user.userReferenceNumber}',
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        const Text('Ref No'),
+                        const SizedBox(width: 5.0),
+                        CopyText(
+                          text: user.userReferenceNumber ?? 'N/A',
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 10.0),
                     Text(
