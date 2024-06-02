@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart';
-import 'package:prime/widgets/address_details_tile.dart';
+import 'package:prime/widgets/tiles/address_details_tile.dart';
 import 'package:provider/provider.dart';
 
 import '../models/address.dart';

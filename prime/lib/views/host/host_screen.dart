@@ -23,7 +23,7 @@ class HostScreen extends StatelessWidget {
         title: const Text('Host'),
       ),
       body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 5.0),
+        padding: const EdgeInsets.symmetric(horizontal: 5.0, vertical: 5.0),
         child: FutureBuilder<List<Car>>(
           future: carProvider.getCarsByHostId(
             firebaseAuthService.currentUser?.uid ?? '',
@@ -36,14 +36,24 @@ class HostScreen extends StatelessWidget {
                 child: Text('Error loading cars. Please try again later.'),
               );
             } else if (snapshot.hasData && snapshot.data!.isNotEmpty) {
-              final carsList = snapshot.data!;
-              return ListView.builder(
-                itemCount: carsList.length,
-                itemBuilder: (context, index) {
-                  final car = carsList[index];
-                  return HostCarCard(car: car);
-                },
-              );
+              final carsList = snapshot.data!
+                  .where((car) => car.status != CarStatus.deletedByHost)
+                  .toList();
+              if (carsList.isNotEmpty) {
+                return ListView.builder(
+                  itemCount: carsList.length,
+                  itemBuilder: (context, index) {
+                    final car = carsList[index];
+                    return HostCarCard(car: car);
+                  },
+                );
+              } else {
+                return const NoDataFound(
+                  title: 'No Cars Found!',
+                  subTitle:
+                      'Add your car if you want to rent it to customers and become a host now!',
+                );
+              }
             } else {
               return const NoDataFound(
                 title: 'No Cars Found!',

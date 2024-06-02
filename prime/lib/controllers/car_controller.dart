@@ -92,8 +92,8 @@ class CarController {
           linkedObjectId: newCar.id,
           linkedObjectType: 'Car',
           linkedObjectSubtype: '',
-          previousStatus: CarStatus.uploaded.name,
-          newStatus: newCarStatus.name,
+          previousStatus: CarStatus.uploaded.getCarStatusString(),
+          newStatus: newCarStatus.getCarStatusString(),
           statusDescription: '',
           modifiedById: hostId,
         ),
@@ -110,8 +110,8 @@ class CarController {
           linkedObjectId: newCar.id,
           linkedObjectType: 'Car',
           linkedObjectSubtype: '',
-          previousStatus: newCarStatus.name,
-          newStatus: CarStatus.pendingApproval.name,
+          previousStatus: newCarStatus.getCarStatusString(),
+          newStatus: CarStatus.pendingApproval.getCarStatusString(),
           statusDescription: '',
           modifiedById: hostId,
         ),
@@ -213,6 +213,73 @@ class CarController {
       }).toList();
       return cars;
     } catch (e) {
+      rethrow;
+    }
+  }
+
+  // create update car method
+  Future<void> updateCar({
+    required String carId,
+    required String manufacturer,
+    required String model,
+    required int manufactureYear,
+    required String color,
+    required EngineType engineType,
+    required TransmissionType transmissionType,
+    required int seats,
+    required CarType carType,
+    required double hourPrice,
+    required double dayPrice,
+    required List<String> carImagesPaths,
+    required String? description,
+    required String modifiedById,
+    required CarStatus previousStatus,
+    required String referenceNumber,
+  }) async {
+    try {
+      final List<String> urls =
+          carImagesPaths.where((path) => path.startsWith('http')).toList();
+      final List<String> localFiles =
+          carImagesPaths.where((path) => !path.startsWith('http')).toList();
+
+      final List<String> uploadedUrls = await _uploadCarImages(
+        referenceNumber,
+        localFiles,
+      );
+
+      final List<String> combinedUrls = [...urls, ...uploadedUrls];
+
+      await _carCollection.doc(carId).update({
+        _manufacturerFieldName: manufacturer,
+        _modelFieldName: model,
+        _manufactureYearFieldName: manufactureYear,
+        _colorFieldName: color,
+        _engineTypeFieldName: engineType.name,
+        _transmissionFieldName: transmissionType.name,
+        _seatsFieldName: seats,
+        _carTypeFieldName: carType.name,
+        _hourPriceFieldName: hourPrice,
+        _dayPriceFieldName: dayPrice,
+        _imagesUrlFieldName: combinedUrls,
+        _descriptionFieldName: description,
+        _statusFieldName: CarStatus.updated.name,
+      });
+
+      // create status history record for the car
+      await _statusHistoryController.createStatusHistory(
+        StatusHistory(
+          linkedObjectId: carId,
+          linkedObjectType: 'Car',
+          linkedObjectSubtype: '',
+          previousStatus: previousStatus.getCarStatusString(),
+          newStatus: CarStatus.updated.getCarStatusString(),
+          statusDescription: '',
+          modifiedById: modifiedById,
+        ),
+      );
+    } on FirebaseException catch (_) {
+      rethrow;
+    } catch (_) {
       rethrow;
     }
   }

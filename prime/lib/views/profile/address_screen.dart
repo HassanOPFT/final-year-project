@@ -7,7 +7,7 @@ import '../../models/address.dart';
 import '../../providers/address_provider.dart';
 import '../../widgets/floating_action_button/add_address_floating_action_button.dart';
 import '../../widgets/custom_progress_indicator.dart';
-import '../../widgets/address_details_tile.dart';
+import '../../widgets/tiles/address_details_tile.dart';
 import '../../providers/user_provider.dart';
 import '../common/google_maps_screen.dart';
 

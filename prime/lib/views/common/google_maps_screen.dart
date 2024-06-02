@@ -79,13 +79,16 @@ class _GoogleMapsScreenState extends State<GoogleMapsScreen> {
     _updateMapMarker(latLng);
 
     final geocodingPlatformInstance = GeocodingPlatform.instance;
+
     if (geocodingPlatformInstance != null) {
       final address = Address();
+
       final addresses =
           await geocodingPlatformInstance.placemarkFromCoordinates(
         latLng.latitude,
         latLng.longitude,
       );
+
       if (addresses.isNotEmpty) {
         address.street = addresses[0].street;
         address.city = addresses[0].locality;
@@ -152,6 +155,11 @@ class _GoogleMapsScreenState extends State<GoogleMapsScreen> {
   }
 
   _selectAddressWarning() {
+    // print selected address
+    print('#' * 30);
+    print('Selected Address: $_selectedAddress');
+    print('#' * 30);
+
     buildAlertSnackbar(
       context: context,
       message: 'Please select a valid address first.',

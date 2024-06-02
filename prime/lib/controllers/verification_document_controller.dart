@@ -405,9 +405,9 @@ class VerificationDocumentController {
         modifiedById: modifiedById,
       );
       // delete all StatusHistory records for the document
-      // await _statusHistoryController.deleteStatusHistoriesByLinkedObjectId(
-      //   documentId,
-      // );
+      await _statusHistoryController.deleteStatusHistories(
+        documentId,
+      );
     } on FirebaseException catch (_) {
       rethrow;
     } catch (_) {

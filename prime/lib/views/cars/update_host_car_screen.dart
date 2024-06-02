@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:prime/utils/assets_paths.dart';
 import 'package:prime/utils/snackbar.dart';
 import 'package:prime/widgets/custom_progress_indicator.dart';
-import 'package:prime/widgets/images/upload_car_images.dart';
+import 'package:prime/widgets/images/update_car_images.dart';
 import 'package:provider/provider.dart';
 
 import '../../models/car.dart';
@@ -16,23 +16,27 @@ import '../../providers/verification_document_provider.dart';
 import '../../services/firebase/firebase_auth_service.dart';
 import '../../widgets/section_divider.dart';
 
-class AddCarScreen extends StatefulWidget {
-  const AddCarScreen({super.key});
+class UpdateHostCarScreen extends StatefulWidget {
+  final Car car;
+  const UpdateHostCarScreen({
+    super.key,
+    required this.car,
+  });
 
   @override
-  State<AddCarScreen> createState() => _AddCarScreenState();
+  State<UpdateHostCarScreen> createState() => _UpdateCarScreenState();
 }
 
-class _AddCarScreenState extends State<AddCarScreen> {
+class _UpdateCarScreenState extends State<UpdateHostCarScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _car = Car();
+  Car? car;
   List<String>? _imagePaths;
   final currentUserId = FirebaseAuthService().currentUser?.uid;
-  bool _addCarLoading = false;
+  bool _updateCarLoading = false;
 
-  void setAddCarLoading(bool value) {
+  void setUpdateCarLoading(bool value) {
     setState(() {
-      _addCarLoading = value;
+      _updateCarLoading = value;
     });
   }
 
@@ -52,10 +56,25 @@ class _AddCarScreenState extends State<AddCarScreen> {
   final _engineTypeFocusNode = FocusNode();
   final _transmissionTypeFocusNode = FocusNode();
   final _seatsFocusNode = FocusNode();
-  final _carTypeFocusNode = FocusNode();
+  final carTypeFocusNode = FocusNode();
   final _hourPriceFocusNode = FocusNode();
   final _dayPriceFocusNode = FocusNode();
   final _descriptionFocusNode = FocusNode();
+
+  @override
+  void initState() {
+    car = widget.car;
+    _manufacturerController.text = car?.manufacturer ?? '';
+    _modelController.text = car?.model ?? '';
+    _yearController.text = car?.manufactureYear?.toString() ?? '';
+    _colorController.text = car?.color ?? '';
+    _seatsController.text = car?.seats?.toString() ?? '';
+    _hourPriceController.text = car?.hourPrice?.toString() ?? '';
+    _dayPriceController.text = car?.dayPrice?.toString() ?? '';
+    _descriptionController.text = car?.description ?? '';
+    _imagePaths = car?.imagesUrl ?? [];
+    super.initState();
+  }
 
   @override
   void dispose() {
@@ -74,7 +93,7 @@ class _AddCarScreenState extends State<AddCarScreen> {
     _engineTypeFocusNode.dispose();
     _transmissionTypeFocusNode.dispose();
     _seatsFocusNode.dispose();
-    _carTypeFocusNode.dispose();
+    carTypeFocusNode.dispose();
     _hourPriceFocusNode.dispose();
     _dayPriceFocusNode.dispose();
     _descriptionFocusNode.dispose();
@@ -161,17 +180,17 @@ class _AddCarScreenState extends State<AddCarScreen> {
     }
   }
 
-  Future<void> _addCar() async {
+  Future<void> _updateCar() async {
     try {
       // validate if the user has a approved identity in the database
       final hasApprovedIdentity = await hasApprovedIdentityDocument();
       if (!hasApprovedIdentity) {
-        setAddCarLoading(false);
+        setUpdateCarLoading(false);
         if (mounted) {
           buildAlertSnackbar(
             context: context,
             message:
-                'You need to have an approved identity document to add a car.',
+                'You need to have an approved identity document to update the car.',
           );
         }
         return;
@@ -180,12 +199,12 @@ class _AddCarScreenState extends State<AddCarScreen> {
       // validate if the user has a bank account in the database
       final hasBankAccountRecord = await hasBankAccount();
       if (!hasBankAccountRecord) {
-        setAddCarLoading(false);
+        setUpdateCarLoading(false);
         if (mounted) {
           buildAlertSnackbar(
             context: context,
             message:
-                'You need to have a bank account or complete bank account details to add a car.',
+                'You need to have a bank account or complete bank account details to update the car.',
           );
         }
         return;
@@ -207,51 +226,46 @@ class _AddCarScreenState extends State<AddCarScreen> {
         return;
       }
 
-      setAddCarLoading(true);
-      final bankAccountProvider = Provider.of<BankAccountProvider>(
-        context,
-        listen: false,
-      );
-      final userBankAccount =
-          await bankAccountProvider.getBankAccountByHostId(currentUserId ?? '');
-      final hostBankAccountId = userBankAccount?.id ?? '';
+      setUpdateCarLoading(true);
 
       final carProvider = Provider.of<CarProvider>(
         context,
         listen: false,
       );
 
-      await carProvider.createCar(
-        hostId: currentUserId ?? '',
-        hostBankAccountId: hostBankAccountId,
-        manufacturer: _car.manufacturer ?? '',
-        model: _car.model ?? '',
-        manufactureYear: _car.manufactureYear ?? 0,
-        color: _car.color ?? '',
-        engineType: _car.engineType ?? EngineType.gasoline,
-        transmissionType: _car.transmissionType ?? TransmissionType.automatic,
-        seats: _car.seats ?? 0,
-        carType: _car.carType ?? CarType.sedan,
-        hourPrice: _car.hourPrice ?? 0.0,
-        dayPrice: _car.dayPrice ?? 0.0,
+      await carProvider.updateCar(
+        carId: widget.car.id ?? '',
+        manufacturer: car?.manufacturer ?? '',
+        model: car?.model ?? '',
+        manufactureYear: car?.manufactureYear ?? 0,
+        color: car?.color ?? '',
+        engineType: car?.engineType ?? EngineType.gasoline,
+        transmissionType: car?.transmissionType ?? TransmissionType.automatic,
+        seats: car?.seats ?? 0,
+        carType: car?.carType ?? CarType.sedan,
+        hourPrice: car?.hourPrice ?? 0.0,
+        dayPrice: car?.dayPrice ?? 0.0,
         carImagesPaths: _imagePaths ?? [],
-        description: _car.description,
+        description: car?.description,
+        modifiedById: currentUserId ?? '',
+        previousStatus: car?.status ?? CarStatus.pendingApproval,
+        referenceNumber: car?.referenceNumber ?? '',
       );
-      setAddCarLoading(false);
+
+      setUpdateCarLoading(false);
       if (mounted) {
         buildSuccessSnackbar(
           context: context,
-          message:
-              'Car added successfully. Please proceed to add the verification documents.',
+          message: 'Car Updated successfully.',
         );
         Navigator.of(context).pop();
       }
     } catch (_) {
-      setAddCarLoading(false);
+      setUpdateCarLoading(false);
       if (mounted) {
         buildFailureSnackbar(
           context: context,
-          message: 'Error while adding car. Please try again later.',
+          message: 'Error while updating car. Please try again later.',
         );
       }
     }
@@ -260,7 +274,7 @@ class _AddCarScreenState extends State<AddCarScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Add New Car')),
+      appBar: AppBar(title: const Text('Update Car')),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -270,13 +284,6 @@ class _AddCarScreenState extends State<AddCarScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const SectionDivider(sectionTitle: 'Car Details'),
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 10.0),
-                  child: Text(
-                    'Please fill out the following details to add a new car. Once the car is created, you will need to provide the registration, insurance, road tax, and address of the car.',
-                    textAlign: TextAlign.start,
-                  ),
-                ),
                 const SizedBox(height: 20.0),
                 TextFormField(
                   controller: _manufacturerController,
@@ -294,7 +301,7 @@ class _AddCarScreenState extends State<AddCarScreen> {
                   onFieldSubmitted: (_) {
                     FocusScope.of(context).requestFocus(_modelFocusNode);
                   },
-                  onChanged: (value) => _car.manufacturer = value.trim(),
+                  onChanged: (value) => car?.manufacturer = value.trim(),
                 ),
                 const SizedBox(height: 15.0),
                 TextFormField(
@@ -307,13 +314,13 @@ class _AddCarScreenState extends State<AddCarScreen> {
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(15),
                     ),
-                    prefixIcon: const Icon(Icons.directions_car),
+                    prefixIcon: const Icon(Icons.directions_car_rounded),
                   ),
                   validator: _validateField,
                   onFieldSubmitted: (_) {
                     FocusScope.of(context).requestFocus(_yearFocusNode);
                   },
-                  onChanged: (value) => _car.model = value.trim(),
+                  onChanged: (value) => car?.model = value.trim(),
                 ),
                 const SizedBox(height: 15.0),
                 TextFormField(
@@ -347,7 +354,7 @@ class _AddCarScreenState extends State<AddCarScreen> {
                     FocusScope.of(context).requestFocus(_colorFocusNode);
                   },
                   onChanged: (value) =>
-                      _car.manufactureYear = int.tryParse(value),
+                      car?.manufactureYear = int.tryParse(value),
                 ),
                 const SizedBox(height: 15.0),
                 TextFormField(
@@ -366,11 +373,12 @@ class _AddCarScreenState extends State<AddCarScreen> {
                   onFieldSubmitted: (_) {
                     FocusScope.of(context).requestFocus(_engineTypeFocusNode);
                   },
-                  onChanged: (value) => _car.color = value.trim(),
+                  onChanged: (value) => car?.color = value.trim(),
                 ),
                 const SizedBox(height: 15.0),
                 DropdownButtonFormField<EngineType>(
                   focusNode: _engineTypeFocusNode,
+                  value: car?.engineType,
                   decoration: InputDecoration(
                     labelText: 'Engine Type',
                     border: OutlineInputBorder(
@@ -393,7 +401,7 @@ class _AddCarScreenState extends State<AddCarScreen> {
                             child: Text(type.engineTypeString),
                           ))
                       .toList(),
-                  onChanged: (value) => _car.engineType = value,
+                  onChanged: (value) => car?.engineType = value,
                   validator: (value) {
                     if (value == null) {
                       return 'Please select an engine type';
@@ -404,6 +412,7 @@ class _AddCarScreenState extends State<AddCarScreen> {
                 const SizedBox(height: 15.0),
                 DropdownButtonFormField<TransmissionType>(
                   focusNode: _transmissionTypeFocusNode,
+                  value: car?.transmissionType,
                   decoration: InputDecoration(
                     labelText: 'Transmission',
                     border: OutlineInputBorder(
@@ -426,7 +435,7 @@ class _AddCarScreenState extends State<AddCarScreen> {
                             child: Text(type.transmissionTypeString),
                           ))
                       .toList(),
-                  onChanged: (value) => _car.transmissionType = value,
+                  onChanged: (value) => car?.transmissionType = value,
                   validator: (value) {
                     if (value == null) {
                       return 'Please select a transmission type';
@@ -469,19 +478,20 @@ class _AddCarScreenState extends State<AddCarScreen> {
                     return null;
                   },
                   onFieldSubmitted: (_) {
-                    FocusScope.of(context).requestFocus(_carTypeFocusNode);
+                    FocusScope.of(context).requestFocus(carTypeFocusNode);
                   },
-                  onChanged: (value) => _car.seats = int.tryParse(value),
+                  onChanged: (value) => car?.seats = int.tryParse(value),
                 ),
                 const SizedBox(height: 15.0),
                 DropdownButtonFormField<CarType>(
-                  focusNode: _carTypeFocusNode,
+                  focusNode: carTypeFocusNode,
+                  value: car?.carType,
                   decoration: InputDecoration(
                     labelText: 'Car Type',
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(15),
                     ),
-                    prefixIcon: const Icon(Icons.directions_car),
+                    prefixIcon: const Icon(Icons.directions_car_rounded),
                   ),
                   items: CarType.values
                       .map((type) => DropdownMenuItem(
@@ -489,7 +499,7 @@ class _AddCarScreenState extends State<AddCarScreen> {
                             child: Text(type.getCarTypeString()),
                           ))
                       .toList(),
-                  onChanged: (value) => _car.carType = value,
+                  onChanged: (value) => car?.carType = value,
                   validator: (value) {
                     if (value == null) {
                       return 'Please select a car type';
@@ -511,7 +521,7 @@ class _AddCarScreenState extends State<AddCarScreen> {
                   ),
                   maxLines: 3,
                   validator: (_) => null,
-                  onChanged: (value) => _car.description = value.trim(),
+                  onChanged: (value) => car?.description = value.trim(),
                 ),
                 const SizedBox(height: 20.0),
                 const SectionDivider(sectionTitle: 'Car Pricing'),
@@ -554,7 +564,7 @@ class _AddCarScreenState extends State<AddCarScreen> {
                   onFieldSubmitted: (_) {
                     FocusScope.of(context).requestFocus(_dayPriceFocusNode);
                   },
-                  onChanged: (value) => _car.hourPrice = double.tryParse(value),
+                  onChanged: (value) => car?.hourPrice = double.tryParse(value),
                 ),
                 const SizedBox(height: 15.0),
                 TextFormField(
@@ -585,7 +595,7 @@ class _AddCarScreenState extends State<AddCarScreen> {
                     }
                     return null;
                   },
-                  onChanged: (value) => _car.dayPrice = double.tryParse(value),
+                  onChanged: (value) => car?.dayPrice = double.tryParse(value),
                 ),
                 const SizedBox(height: 20.0),
                 const SectionDivider(sectionTitle: 'Car Images'),
@@ -597,16 +607,19 @@ class _AddCarScreenState extends State<AddCarScreen> {
                   ),
                 ),
                 const SizedBox(height: 20.0),
-                UploadCarImages(onImagesChanged: _updateImagePaths),
+                UpdateCarImages(
+                  onImagesChanged: _updateImagePaths,
+                  initialImageUrls: car?.imagesUrl ?? [],
+                ),
                 const SizedBox(height: 30.0),
                 SizedBox(
                   height: 50.0,
-                  child: _addCarLoading
+                  child: _updateCarLoading
                       ? const CustomProgressIndicator()
                       : FilledButton(
-                          onPressed: _addCar,
+                          onPressed: _updateCar,
                           child: const Text(
-                            'Add Car',
+                            'Update Car',
                             style: TextStyle(
                               fontSize: 20,
                             ),

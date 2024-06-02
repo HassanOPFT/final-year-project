@@ -8,13 +8,13 @@ import 'package:prime/providers/user_provider.dart';
 import 'package:prime/utils/assets_paths.dart';
 import 'package:provider/provider.dart';
 
-import '../models/address.dart';
-import '../providers/address_provider.dart';
-import '../providers/customer_provider.dart';
-import '../utils/navigate_with_animation.dart';
-import '../utils/snackbar.dart';
-import '../views/common/google_maps_screen.dart';
-import 'bottom_sheet/edit_address_bottom_sheet.dart';
+import '../../models/address.dart';
+import '../../providers/address_provider.dart';
+import '../../providers/customer_provider.dart';
+import '../../utils/navigate_with_animation.dart';
+import '../../utils/snackbar.dart';
+import '../../views/common/google_maps_screen.dart';
+import '../bottom_sheet/edit_address_bottom_sheet.dart';
 
 class AddressDetailsTile extends StatelessWidget {
   final Address address;

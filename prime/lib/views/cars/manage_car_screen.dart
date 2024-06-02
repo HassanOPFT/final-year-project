@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:prime/providers/address_provider.dart';
@@ -19,13 +21,16 @@ import '../../providers/car_provider.dart';
 import '../../providers/status_history_provider.dart';
 import '../../providers/user_provider.dart';
 import '../../providers/verification_document_provider.dart';
+import '../../services/firebase/firebase_auth_service.dart';
 import '../../utils/assets_paths.dart';
+import '../../utils/navigate_with_animation.dart';
 import '../../widgets/card/car_feature_card.dart';
 import '../../widgets/copy_text.dart';
 import '../../widgets/host_car_address.dart';
 import '../../widgets/images/car_images_carousel.dart';
 import '../../widgets/latest_status_history_record.dart';
 import '../../widgets/tiles/manage_verification_document_tile.dart';
+import 'update_host_car_screen.dart';
 
 class ManageCarScreen extends StatelessWidget {
   final String carId;
@@ -39,6 +44,16 @@ class ManageCarScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final carProvider = Provider.of<CarProvider>(
+      context,
+      listen: false,
+    );
+    final currentUserId = FirebaseAuthService().currentUser?.uid ?? '';
+    final userProvider = Provider.of<UserProvider>(
+      context,
+      listen: false,
+    );
+
     Padding buildSectionTitle({required String sectionTitle}) {
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 20.0),
@@ -64,6 +79,357 @@ class ManageCarScreen extends StatelessWidget {
         return mostRecentStatusHistory;
       } catch (_) {
         return null;
+      }
+    }
+
+    void updateCar(Car car) {
+      animatedPushNavigation(
+        context: context,
+        screen: UpdateHostCarScreen(car: car),
+      );
+    }
+
+    Future<bool> confirmDeleteCar() async {
+      bool isConfirmed = await showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Confirm Deletion'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Image.asset(
+                  AssetsPaths.binImage, // Change to your bin image path
+                  height: 200.0,
+                ),
+                const Text(
+                  'Are you sure you want to delete this car? This action cannot be undone.',
+                  style: TextStyle(fontSize: 16.0),
+                ),
+              ],
+            ),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text('Delete'),
+              ),
+            ],
+          );
+        },
+      );
+
+      return isConfirmed;
+    }
+
+    Future<void> deleteCar(Car car) async {
+      bool confirmDeletion = await confirmDeleteCar();
+      if (!confirmDeletion) {
+        return;
+      }
+
+      try {
+        if (currentUserId.isEmpty || car.id == null || car.id!.isEmpty) {
+          throw Exception(
+            'Error deleting car. Please provide valid current user id and car id.',
+          );
+        }
+
+        final currentUserRole = await userProvider.getUserRole(currentUserId);
+        final bool isAdmin = currentUserRole == UserRole.primaryAdmin ||
+            currentUserRole == UserRole.secondaryAdmin;
+
+        // delete car
+        await carProvider.deleteCar(
+          carId: car.id ?? '',
+          isAdmin: isAdmin,
+          modifiedById: currentUserId,
+        );
+
+        if (isAdmin) {
+          // delete associated address
+          final verificationDocumentProvider =
+              Provider.of<VerificationDocumentProvider>(
+            context,
+            listen: false,
+          );
+
+          // delete car registration document if exists
+          if (car.registrationDocumentId != null &&
+              car.registrationDocumentId!.isNotEmpty) {
+            final registrationDocument =
+                await verificationDocumentProvider.getVerificationDocumentById(
+              car.registrationDocumentId ?? '',
+            );
+            await verificationDocumentProvider.deleteVerificationDocument(
+              documentId: car.registrationDocumentId ?? '',
+              referenceNumber: registrationDocument?.referenceNumber ?? '',
+              documentType: registrationDocument?.documentType
+                  as VerificationDocumentType,
+              userRole: currentUserRole,
+              previousStatus:
+                  registrationDocument?.status as VerificationDocumentStatus,
+              modifiedById: currentUserId,
+            );
+          }
+          // delete car road tax document if exists
+          if (car.roadTaxDocumentId != null &&
+              car.roadTaxDocumentId!.isNotEmpty) {
+            final roadTaxDocument =
+                await verificationDocumentProvider.getVerificationDocumentById(
+              car.roadTaxDocumentId ?? '',
+            );
+            await verificationDocumentProvider.deleteVerificationDocument(
+              documentId: car.roadTaxDocumentId ?? '',
+              referenceNumber: roadTaxDocument?.referenceNumber ?? '',
+              documentType:
+                  roadTaxDocument?.documentType as VerificationDocumentType,
+              userRole: currentUserRole,
+              previousStatus:
+                  roadTaxDocument?.status as VerificationDocumentStatus,
+              modifiedById: currentUserId,
+            );
+          }
+          // delete car insurance document if exists
+          if (car.insuranceDocumentId != null &&
+              car.insuranceDocumentId!.isNotEmpty) {
+            final insuranceDocument =
+                await verificationDocumentProvider.getVerificationDocumentById(
+              car.insuranceDocumentId ?? '',
+            );
+            await verificationDocumentProvider.deleteVerificationDocument(
+              documentId: car.insuranceDocumentId ?? '',
+              referenceNumber: insuranceDocument?.referenceNumber ?? '',
+              documentType:
+                  insuranceDocument?.documentType as VerificationDocumentType,
+              userRole: currentUserRole,
+              previousStatus:
+                  insuranceDocument?.status as VerificationDocumentStatus,
+              modifiedById: currentUserId,
+            );
+          }
+        }
+        Navigator.of(context).pop();
+        buildSuccessSnackbar(
+          context: context,
+          message: 'Car deleted successfully.',
+        );
+      } catch (e) {
+        print('#' * 30);
+        print('Error deleting car: $e');
+        print('#' * 30);
+        // Close the loading dialog
+        // Navigator.of(context, rootNavigator: true).pop();
+        buildFailureSnackbar(
+          context: context,
+          message: 'Error deleting car. Please try again later.',
+        );
+      }
+    }
+
+    Future<void> approveCar(Car car) async {
+      try {
+        await carProvider.updateCarStatus(
+          carId: car.id ?? '',
+          previousStatus: car.status as CarStatus,
+          newStatus: CarStatus.approved,
+          modifiedById: currentUserId,
+          statusDescription: '',
+        );
+        buildSuccessSnackbar(
+          context: context,
+          message: 'Car approved successfully.',
+        );
+      } catch (_) {
+        buildFailureSnackbar(
+          context: context,
+          message: 'Error approving car. Please try again later.',
+        );
+      }
+    }
+
+    Future<String?> showReasonDialog({
+      required String title,
+      required String hintText,
+    }) async {
+      final TextEditingController reasonController = TextEditingController();
+      final formKey = GlobalKey<FormState>();
+
+      return showDialog<String>(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(15),
+            ),
+            title: Text(title),
+            content: SizedBox(
+              width: MediaQuery.of(context).size.width, // Set the width
+              child: Form(
+                key: formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextFormField(
+                      controller: reasonController,
+                      textInputAction: TextInputAction.done,
+                      keyboardType: TextInputType.text,
+                      decoration: InputDecoration(
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        labelText: hintText,
+                      ),
+                      validator: (value) {
+                        if (value == null ||
+                            value.isEmpty ||
+                            value.trim().isEmpty) {
+                          return 'Please enter a reason.';
+                        }
+                        return null;
+                      },
+                      onFieldSubmitted: (_) {
+                        if (formKey.currentState!.validate()) {
+                          Navigator.of(context).pop(reasonController.text);
+                        }
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop(null);
+                },
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () {
+                  if (formKey.currentState!.validate()) {
+                    Navigator.of(context).pop(reasonController.text);
+                  }
+                },
+                child: const Text('Submit'),
+              ),
+            ],
+          );
+        },
+      );
+    }
+
+    Future<void> rejectCar(Car car) async {
+      final rejectReason = await showReasonDialog(
+        title: 'Reject Car',
+        hintText: 'Enter reason for rejecting car',
+      );
+      if (rejectReason == null) {
+        return;
+      }
+      try {
+        await carProvider.updateCarStatus(
+          carId: car.id ?? '',
+          previousStatus: car.status as CarStatus,
+          newStatus: CarStatus.rejected,
+          modifiedById: currentUserId,
+          statusDescription: rejectReason,
+        );
+        buildSuccessSnackbar(
+          context: context,
+          message: 'Car rejected Successfully.',
+        );
+      } catch (_) {
+        buildFailureSnackbar(
+          context: context,
+          message: 'Error rejecting car. Please try again later.',
+        );
+      }
+    }
+
+    Future<void> haltCar(Car car) async {
+      String? haltReason = '';
+      if (isAdmin) {
+        haltReason = await showReasonDialog(
+          title: 'Halt Reason',
+          hintText: 'Enter reason for halting',
+        );
+
+        if (haltReason == null) {
+          return;
+        }
+
+        if (haltReason.isEmpty) {
+          buildFailureSnackbar(
+            context: context,
+            message:
+                'Reason for halting is required to halt document. please try again.',
+          );
+          return;
+        }
+      }
+      try {
+        await carProvider.updateCarStatus(
+          carId: car.id ?? '',
+          previousStatus: car.status as CarStatus,
+          newStatus: isAdmin ? CarStatus.haltedByAdmin : CarStatus.haltedByHost,
+          modifiedById: currentUserId,
+          statusDescription: haltReason,
+        );
+        buildSuccessSnackbar(
+          context: context,
+          message: 'Car deleted successfully.',
+        );
+      } on Exception catch (_) {
+        buildFailureSnackbar(
+          context: context,
+          message: 'Error halting car. Please try again later.',
+        );
+      }
+    }
+
+    Future<void> requestUnhaltCar(Car car) async {
+      try {
+        await carProvider.updateCarStatus(
+          carId: car.id ?? '',
+          previousStatus: car.status as CarStatus,
+          newStatus: CarStatus.unhaltRequested,
+          modifiedById: currentUserId,
+          statusDescription: '',
+        );
+        buildSuccessSnackbar(
+          context: context,
+          message: 'Car unhalt requested successfully.',
+        );
+      } catch (_) {
+        buildFailureSnackbar(
+          context: context,
+          message: 'Error requesting car unhalt. Please try again later.',
+        );
+      }
+    }
+
+    Future<void> unhaltCar(Car car) async {
+      try {
+        await carProvider.updateCarStatus(
+          carId: car.id ?? '',
+          previousStatus: car.status as CarStatus,
+          newStatus: CarStatus.pendingApproval,
+          modifiedById: currentUserId,
+          statusDescription: '',
+        );
+        buildSuccessSnackbar(
+          context: context,
+          message: 'Car un-halted successfully.',
+        );
+      } catch (_) {
+        buildFailureSnackbar(
+          context: context,
+          message: 'Error un-halting car. Please try again later.',
+        );
       }
     }
 
@@ -106,8 +472,15 @@ class ManageCarScreen extends StatelessWidget {
         showDragHandle: true,
         builder: (BuildContext context) {
           return EditCarBottomSheet(
-            isAdmin: isAdmin,
             car: car,
+            updateCar: updateCar,
+            deleteCar: deleteCar,
+            approveCar: approveCar,
+            rejectCar: rejectCar,
+            haltCar: haltCar,
+            requestUnhaltCar: requestUnhaltCar,
+            unhaltCar: unhaltCar,
+            isAdmin: isAdmin,
           );
         },
       );
@@ -270,6 +643,16 @@ class ManageCarScreen extends StatelessWidget {
                             ),
                             title: Text(
                               '${user.userFirstName ?? ''} ${user.userLastName ?? ''}',
+                              style: const TextStyle(
+                                fontSize: 20.0,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            subtitle: Text(
+                              user.userPhoneNumber ?? 'N/A',
+                              style: const TextStyle(
+                                fontSize: 16.0,
+                              ),
                             ),
                           );
                         }

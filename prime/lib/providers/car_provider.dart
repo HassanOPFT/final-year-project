@@ -64,6 +64,50 @@ class CarProvider extends ChangeNotifier {
     }
   }
 
+  // update car method
+  Future<void> updateCar({
+    required String carId,
+    required String manufacturer,
+    required String model,
+    required int manufactureYear,
+    required String color,
+    required EngineType engineType,
+    required TransmissionType transmissionType,
+    required int seats,
+    required CarType carType,
+    required double hourPrice,
+    required double dayPrice,
+    required List<String> carImagesPaths,
+    required String? description,
+    required String modifiedById,
+    required CarStatus previousStatus,
+    required String referenceNumber,
+  }) async {
+    try {
+      await _carController.updateCar(
+        carId: carId,
+        manufacturer: manufacturer,
+        model: model,
+        manufactureYear: manufactureYear,
+        color: color,
+        engineType: engineType,
+        transmissionType: transmissionType,
+        seats: seats,
+        carType: carType,
+        hourPrice: hourPrice,
+        dayPrice: dayPrice,
+        carImagesPaths: carImagesPaths,
+        description: description,
+        modifiedById: modifiedById,
+        previousStatus: previousStatus,
+        referenceNumber: referenceNumber,
+      );
+      notifyListeners();
+    } catch (_) {
+      rethrow;
+    }
+  }
+
   Future<void> updateCarStatus({
     required String carId,
     required CarStatus previousStatus,
