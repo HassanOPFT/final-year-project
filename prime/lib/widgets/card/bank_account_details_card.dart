@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:prime/providers/car_provider.dart';
@@ -166,7 +168,10 @@ class BankAccountDetailsCard extends StatelessWidget {
               onPressed: deleteBankAccount,
               child: const Text(
                 'Delete Bank Account',
-                style: TextStyle(fontSize: 20),
+                style: TextStyle(
+                  fontSize: 20,
+                  color: Colors.red,
+                ),
               ),
             ),
           ),

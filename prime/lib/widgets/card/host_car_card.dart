@@ -7,6 +7,7 @@ import 'package:prime/widgets/car_status_indicator.dart';
 import 'package:provider/provider.dart';
 
 import '../../models/car.dart';
+import '../../providers/status_history_provider.dart';
 import '../custom_progress_indicator.dart';
 
 class HostCarCard extends StatelessWidget {
@@ -46,7 +47,7 @@ class HostCarCard extends StatelessWidget {
                             '${car.manufacturer} ${car.model} ',
                             style: const TextStyle(
                               fontWeight: FontWeight.bold,
-                              fontSize: 26.0,
+                              fontSize: 24.0,
                             ),
                           ),
                           Text(
@@ -100,7 +101,7 @@ class HostCarCard extends StatelessWidget {
                 children: [
                   SizedBox(
                     width: double.infinity,
-                    height: 250,
+                    height: 200,
                     child: car.imagesUrl != null
                         ? ClipRRect(
                             borderRadius: BorderRadius.circular(15.0),
@@ -120,10 +121,11 @@ class HostCarCard extends StatelessWidget {
                   Positioned(
                     top: 10.0,
                     right: 10.0,
-                    child: Consumer<CarProvider>(
+                    child: Consumer2<CarProvider, StatusHistoryProvider>(
                       builder: (
                         context,
-                        value,
+                        carProvider,
+                        anotherProvider,
                         _,
                       ) {
                         return CarStatusIndicator(

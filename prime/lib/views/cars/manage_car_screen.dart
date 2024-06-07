@@ -217,12 +217,7 @@ class ManageCarScreen extends StatelessWidget {
           context: context,
           message: 'Car deleted successfully.',
         );
-      } catch (e) {
-        print('#' * 30);
-        print('Error deleting car: $e');
-        print('#' * 30);
-        // Close the loading dialog
-        // Navigator.of(context, rootNavigator: true).pop();
+      } catch (_) {
         buildFailureSnackbar(
           context: context,
           message: 'Error deleting car. Please try again later.',
@@ -231,6 +226,7 @@ class ManageCarScreen extends StatelessWidget {
     }
 
     Future<void> approveCar(Car car) async {
+      // TODO: Check for car documents if approved and if address is provided
       try {
         await carProvider.updateCarStatus(
           carId: car.id ?? '',
@@ -492,7 +488,7 @@ class ManageCarScreen extends StatelessWidget {
         Provider.of<VerificationDocumentProvider>(context);
 
     return FutureBuilder<Car?>(
-      future: Provider.of<CarProvider>(context).getCarById(carId),
+      future: carProvider.getCarById(carId),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Scaffold(
@@ -554,13 +550,13 @@ class ManageCarScreen extends StatelessWidget {
                                 '${car.manufacturer} ${car.model} ',
                                 style: const TextStyle(
                                   fontWeight: FontWeight.bold,
-                                  fontSize: 28.0,
+                                  fontSize: 24.0,
                                 ),
                               ),
                               Text(
                                 '${car.manufactureYear} ',
                                 style: const TextStyle(
-                                  fontSize: 18.0,
+                                  fontSize: 16.0,
                                 ),
                               ),
                             ],
@@ -601,7 +597,6 @@ class ManageCarScreen extends StatelessWidget {
                         ),
                       ],
                     ),
-                    // car description text
                     const SizedBox(height: 16.0),
                     Text(
                       car.description ?? 'No description provided',
@@ -683,7 +678,7 @@ class ManageCarScreen extends StatelessWidget {
                           featureIcon: Image.asset(
                             AssetsPaths.carSeatIcon,
                             width: 25.0,
-                            height: 20.0,
+                            height: 25.0,
                             color: Theme.of(context).colorScheme.onBackground,
                           ),
                           featureName: 'Seats',
@@ -709,11 +704,11 @@ class ManageCarScreen extends StatelessWidget {
                             color: Theme.of(context).colorScheme.onBackground,
                           ),
                           featureName: 'Engine Type',
-                          featureValue: car.engineType?.name ?? 'N/A',
+                          featureValue:
+                              car.engineType?.engineTypeString ?? 'N/A',
                         ),
                       ],
                     ),
-
                     buildSectionTitle(sectionTitle: 'Address'),
                     if (!isAdmin)
                       HostCarAddress(

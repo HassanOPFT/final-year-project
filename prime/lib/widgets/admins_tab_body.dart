@@ -18,10 +18,13 @@ class AdminsTabBody extends StatelessWidget {
     }
     final userProvider = Provider.of<UserProvider>(context);
     return FutureBuilder<List<User>>(
-      future: userProvider.getUsers([
-        UserRole.primaryAdmin.name,
-        UserRole.secondaryAdmin.name,
-      ]),
+      future: userProvider.getUsers(
+        usersRoles: [
+          UserRole.primaryAdmin.name,
+          UserRole.secondaryAdmin.name,
+        ],
+        currentUserId: currentUserId,
+      ),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());

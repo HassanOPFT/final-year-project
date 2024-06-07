@@ -155,11 +155,6 @@ class _GoogleMapsScreenState extends State<GoogleMapsScreen> {
   }
 
   _selectAddressWarning() {
-    // print selected address
-    print('#' * 30);
-    print('Selected Address: $_selectedAddress');
-    print('#' * 30);
-
     buildAlertSnackbar(
       context: context,
       message: 'Please select a valid address first.',

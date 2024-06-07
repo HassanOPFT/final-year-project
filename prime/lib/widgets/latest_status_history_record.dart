@@ -4,7 +4,7 @@ import 'package:prime/utils/navigate_with_animation.dart';
 import 'package:prime/widgets/custom_progress_indicator.dart';
 import '../../models/status_history.dart';
 import '../controllers/user_controller.dart';
-import '../views/home/verification_document_history_screen.dart';
+import '../views/profile/verification_document_history_screen.dart';
 
 class LatestStatusHistoryRecord extends StatelessWidget {
   final Future<StatusHistory?> Function(String verificationDocumentId)

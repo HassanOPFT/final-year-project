@@ -129,10 +129,15 @@ class UserProvider extends ChangeNotifier {
     }
   }
 
-  // get customer
-  Future<List<User>> getUsers(List<String> usersRoles) async {
+  Future<List<User>> getUsers({
+    required List<String> usersRoles,
+    required String currentUserId,
+  }) async {
     try {
-      final customers = await _userController.getUsers(usersRoles);
+      final customers = await _userController.getUsers(
+        usersRoles: usersRoles,
+        currentUserId: currentUserId,
+      );
       return customers;
     } catch (e) {
       rethrow;

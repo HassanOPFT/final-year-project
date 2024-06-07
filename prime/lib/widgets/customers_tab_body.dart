@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/user_provider.dart';
 import '../models/user.dart';
+import '../services/firebase/firebase_auth_service.dart';
 import 'no_data_found.dart';
 import 'tiles/user_details_tile.dart';
 
@@ -10,13 +11,21 @@ class CustomersTabBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final firebaseAuthService = FirebaseAuthService();
+    String currentUserId = '';
+    if (firebaseAuthService.currentUser != null) {
+      currentUserId = firebaseAuthService.currentUser?.uid as String;
+    }
     final userProvider = Provider.of<UserProvider>(context);
 
     return FutureBuilder<List<User>>(
-      future: userProvider.getUsers([
-        UserRole.customer.name,
-        UserRole.host.name,
-      ]),
+      future: userProvider.getUsers(
+        usersRoles: [
+          UserRole.customer.name,
+          UserRole.host.name,
+        ],
+        currentUserId: currentUserId,
+      ),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());

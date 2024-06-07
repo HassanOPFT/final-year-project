@@ -49,7 +49,7 @@ class CarFeatureCard extends StatelessWidget {
     } else if (featureIcon is Image) {
       return featureIcon;
     } else {
-      return const SizedBox.shrink(); // Return an empty widget if the featureIcon is not of the expected type
+      return const SizedBox.shrink();
     }
   }
 }

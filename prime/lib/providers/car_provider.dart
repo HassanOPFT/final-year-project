@@ -64,6 +64,21 @@ class CarProvider extends ChangeNotifier {
     }
   }
 
+  Future<List<Car>> getCarsByStatusAndUserId({
+    required List<String> carStatusList,
+    required String currentUserId,
+  }) async {
+    try {
+      final cars = await _carController.getCarsByStatusAndUserId(
+        carStatusList: carStatusList,
+        currentUserId: currentUserId,
+      );
+      return cars;
+    } catch (_) {
+      rethrow;
+    }
+  }
+
   // update car method
   Future<void> updateCar({
     required String carId,

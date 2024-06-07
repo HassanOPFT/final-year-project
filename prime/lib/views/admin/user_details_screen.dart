@@ -113,7 +113,7 @@ class UserDetailsScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 10.0),
                     Text(
-                      'Date Joined: ${DateFormat.yMMMd().add_jm().format(user.createdAt as DateTime)}',
+                      'Date Joined ${DateFormat.yMMMd().add_jm().format(user.createdAt as DateTime)}',
                     ),
                   ],
                 ),

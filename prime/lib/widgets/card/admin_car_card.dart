@@ -1,8 +1,10 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:prime/providers/status_history_provider.dart';
 import 'package:prime/utils/navigate_with_animation.dart';
 import 'package:prime/views/cars/manage_car_screen.dart';
 import 'package:prime/widgets/car_status_indicator.dart';
+import 'package:provider/provider.dart';
 
 import '../../models/car.dart';
 import '../custom_progress_indicator.dart';
@@ -42,7 +44,7 @@ class AdminCarCard extends StatelessWidget {
                             '${car.manufacturer} ${car.model} ',
                             style: const TextStyle(
                               fontWeight: FontWeight.bold,
-                              fontSize: 26.0,
+                              fontSize: 24.0,
                             ),
                           ),
                           Text(
@@ -96,7 +98,7 @@ class AdminCarCard extends StatelessWidget {
                 children: [
                   SizedBox(
                     width: double.infinity,
-                    height: 250,
+                    height: 200,
                     child: car.imagesUrl != null
                         ? ClipRRect(
                             borderRadius: BorderRadius.circular(15.0),
@@ -116,8 +118,12 @@ class AdminCarCard extends StatelessWidget {
                   Positioned(
                     top: 10.0,
                     right: 10.0,
-                    child: CarStatusIndicator(
-                      carStatus: car.status as CarStatus,
+                    child: Consumer<StatusHistoryProvider>(
+                      builder: (context, statusHistoryProvider, _) {
+                        return CarStatusIndicator(
+                          carStatus: car.status as CarStatus,
+                        );
+                      },
                     ),
                   ),
                 ],

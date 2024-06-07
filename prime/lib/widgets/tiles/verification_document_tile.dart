@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import '../../../models/verification_document.dart';
 import '../../../providers/verification_document_provider.dart';
 import '../../../utils/navigate_with_animation.dart';
-import '../../views/home/verification_document_details_screen.dart';
+import '../../views/profile/verification_document_details_screen.dart';
 import '../verification_document_status_indicator.dart';
 
 class VerificationDocumentTile extends StatelessWidget {

@@ -243,17 +243,21 @@ class UserController {
     }
   }
 
-  Future<List<User>> getUsers(List<String> usersRoles) async {
+  Future<List<User>> getUsers({
+    required List<String> usersRoles,
+    required String currentUserId,
+  }) async {
     try {
-      QuerySnapshot<Map<String, dynamic>> querySnapshot =
-          await _userCollection.where(
-        _roleFieldName,
-        whereIn: usersRoles,
-      ).get();
+      QuerySnapshot<Map<String, dynamic>> querySnapshot = await _userCollection
+          .where(
+            _roleFieldName,
+            whereIn: usersRoles,
+          )
+          .get();
 
-      List<User> customers = [];
+      List<User> users = [];
       if (querySnapshot.docs.isNotEmpty) {
-        customers = querySnapshot.docs.map((doc) {
+        users = querySnapshot.docs.map((doc) {
           Map<String, dynamic> data = doc.data();
           return User(
             userId: doc.id,
@@ -279,7 +283,9 @@ class UserController {
         }).toList();
       }
 
-      return customers;
+      users.removeWhere((user) => user.userId == currentUserId);
+
+      return users;
     } catch (_) {
       rethrow;
     }

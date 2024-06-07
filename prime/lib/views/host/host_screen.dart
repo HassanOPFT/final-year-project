@@ -42,6 +42,9 @@ class HostScreen extends StatelessWidget {
               if (carsList.isNotEmpty) {
                 return ListView.builder(
                   itemCount: carsList.length,
+                  padding: EdgeInsets.only(
+                    bottom: MediaQuery.of(context).padding.bottom + 80.0,
+                  ),
                   itemBuilder: (context, index) {
                     final car = carsList[index];
                     return HostCarCard(car: car);

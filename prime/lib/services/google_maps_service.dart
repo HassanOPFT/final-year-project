@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:prime/models/address.dart';
@@ -99,59 +98,11 @@ class GoogleMapsService {
     final addressResult = jsonResponse['result'] as Map<String, dynamic>;
     return _addressFromJson(addressResult);
   }
+
+  String generateLocationPreviewImage({
+    required double latitude,
+    required double longitude,
+  }) {
+    return 'https://maps.googleapis.com/maps/api/staticmap?center=$latitude,$longitude&zoom=16&size=420x200&maptype=roadmap&markers=color:red%7Clabel:A%7C$latitude,$longitude&key=$_apiKey&scale=2';
+  }
 }
-
-  // final String key = '<yourkeyhere>';
-
-  // Future<List<AutoCompleteResult>> searchPlaces(String searchInput) async {
-  //   final String url =
-  //       'https://maps.googleapis.com/maps/api/place/autocomplete/json?input=$searchInput&types=geocode&key=$key';
-
-  //   var response = await http.get(Uri.parse(url));
-
-  //   var json = convert.jsonDecode(response.body);
-
-  //   var autoCompleteResults = json['predictions'] as List;
-
-  //   return autoCompleteResults.map((e) => AutoCompleteResult.fromJson(e)).toList();
-  // }
-
-  // static String generateLocationPreviewImage({
-  //   required double latitude,
-  //   required double longitude,
-  // }) {
-  //   return 'https://maps.googleapis.com/maps/api/staticmap?center=$latitude,$longitude&zoom=16&size=600x300&maptype=roadmap&markers=color:red%7Clabel:A%7C$latitude,$longitude&key=$GOOGLE_API_KEY';
-  // }
-
-  // static Future<String> getPlaceAddress(double lat, double lng) async {
-  //   final url = Uri.parse(
-  //       'https://maps.googleapis.com/maps/api/geocode/json?latlng=$lat,$lng&key=$GOOGLE_API_KEY');
-  //   final response = await http.get(url);
-  //   return json.decode(response.body)['autoCompleteResults'][0]['formatted_address'];
-  // }
-
-  // Future<dynamic> getPlaceNearby(LatLng coords, int radius) async {
-  //   var lat = coords.latitude;
-  //   var lng = coords.longitude;
-
-  //   final String url =
-  //       'https://maps.googleapis.com/maps/api/place/nearbysearch/json?&location=$lat,$lng&radius=$radius&key=$key';
-
-  //   var response = await http.get(Uri.parse(url));
-
-  //   var json = convert.jsonDecode(response.body);
-
-  //   return json;
-  // }
-
-  // Future<dynamic> getMorePlaceDetails(String token) async {
-  //   final String url =
-  //       'https://maps.googleapis.com/maps/api/place/nearbysearch/json?&pagetoken=$token&key=$key';
-
-  //   var response = await http.get(Uri.parse(url));
-
-  //   var json = convert.jsonDecode(response.body);
-
-  //   return json;
-  // }
-// }

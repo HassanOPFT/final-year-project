@@ -4,7 +4,7 @@ class VerificationDocument {
   VerificationDocumentLinkedObjectType? linkedObjectType;
   String? documentUrl;
   VerificationDocumentType? documentType;
-  VerificationDocumentStatus? status; // replace with status history id
+  VerificationDocumentStatus? status;
   DateTime? expiryDate;
   String? referenceNumber;
   DateTime? createdAt;

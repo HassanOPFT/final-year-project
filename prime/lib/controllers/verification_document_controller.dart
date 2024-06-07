@@ -394,20 +394,15 @@ class VerificationDocumentController {
           _statusFieldName: VerificationDocumentStatus.deletedByCustomer.name,
         });
         newStatus = VerificationDocumentStatus.deletedByCustomer;
+        // Create StatusHistory record
+        await _createStatusHistory(
+          linkedObjectId: documentId,
+          linkedObjectType: documentType.name,
+          previousStatus: previousStatus.getStatusString(),
+          newStatus: newStatus.getStatusString(),
+          modifiedById: modifiedById,
+        );
       }
-
-      // Create StatusHistory record
-      await _createStatusHistory(
-        linkedObjectId: documentId,
-        linkedObjectType: documentType.name,
-        previousStatus: previousStatus.getStatusString(),
-        newStatus: newStatus.getStatusString(),
-        modifiedById: modifiedById,
-      );
-      // delete all StatusHistory records for the document
-      await _statusHistoryController.deleteStatusHistories(
-        documentId,
-      );
     } on FirebaseException catch (_) {
       rethrow;
     } catch (_) {
