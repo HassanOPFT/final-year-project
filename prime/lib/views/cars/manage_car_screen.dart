@@ -32,6 +32,8 @@ import '../../widgets/latest_status_history_record.dart';
 import '../../widgets/tiles/manage_verification_document_tile.dart';
 import 'update_host_car_screen.dart';
 
+// TODO: status indicator is not updating in real time, check the provider
+
 class ManageCarScreen extends StatelessWidget {
   final String carId;
   final bool isAdmin;
@@ -44,10 +46,7 @@ class ManageCarScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final carProvider = Provider.of<CarProvider>(
-      context,
-      listen: false,
-    );
+    final carProvider = Provider.of<CarProvider>(context);
     final currentUserId = FirebaseAuthService().currentUser?.uid ?? '';
     final userProvider = Provider.of<UserProvider>(
       context,
@@ -126,6 +125,7 @@ class ManageCarScreen extends StatelessWidget {
     }
 
     Future<void> deleteCar(Car car) async {
+      // TODO: the role needs to be updated if the host doesn't have other cars
       bool confirmDeletion = await confirmDeleteCar();
       if (!confirmDeletion) {
         return;
@@ -263,7 +263,7 @@ class ManageCarScreen extends StatelessWidget {
             ),
             title: Text(title),
             content: SizedBox(
-              width: MediaQuery.of(context).size.width, // Set the width
+              width: MediaQuery.of(context).size.width,
               child: Form(
                 key: formKey,
                 child: Column(
@@ -377,7 +377,7 @@ class ManageCarScreen extends StatelessWidget {
         );
         buildSuccessSnackbar(
           context: context,
-          message: 'Car deleted successfully.',
+          message: 'Car halted successfully.',
         );
       } on Exception catch (_) {
         buildFailureSnackbar(

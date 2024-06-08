@@ -55,6 +55,14 @@ class CarProvider extends ChangeNotifier {
     }
   }
 
+  Stream<CarStatus> listenToCarStatus(String carId) {
+    try {
+      return _carController.listenToCarStatus(carId);
+    } on Exception catch (_) {
+      rethrow;
+    }
+  }
+
   Future<List<Car>> getAllCars() async {
     try {
       final cars = await _carController.getAllCars();
@@ -77,6 +85,16 @@ class CarProvider extends ChangeNotifier {
     } catch (_) {
       rethrow;
     }
+  }
+
+  Stream<List<Car>> getCarsByStatusAndUserIdStream({
+    required List<String> carStatusList,
+    required String currentUserId,
+  }) {
+    return _carController.getCarsByStatusAndUserIdStream(
+      carStatusList: carStatusList,
+      currentUserId: currentUserId,
+    );
   }
 
   // update car method

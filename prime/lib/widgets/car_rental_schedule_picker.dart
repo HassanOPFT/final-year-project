@@ -21,10 +21,19 @@ class CarRentalSchedulePicker extends StatefulWidget {
 }
 
 class _CarRentalSchedulePickerState extends State<CarRentalSchedulePicker> {
-  DateTime? _pickUpDateTime = DateTime.now().add(const Duration(hours: 1));
-  DateTime? _dropOffDateTime = DateTime.now().add(const Duration(hours: 2));
+  DateTime? _pickUpDateTime = DateTime.now()
+      .add(const Duration(hours: 1))
+      .copyWith(second: 0, millisecond: 0, microsecond: 0);
+  DateTime? _dropOffDateTime = DateTime.now()
+      .add(const Duration(hours: 2))
+      .copyWith(second: 0, millisecond: 0, microsecond: 0);
 
   Future<void> _continueToPayment() async {
+    // TODO: When a user selects dates to rent a car, the system checks for overlapping rentals and determines availability.
+    // TODO: If the car is available for the selected dates, the user can proceed with the rental;
+    // TODO: otherwise, they are informed of the unavailability with exact dates when it's not available.
+    // TODO: don't forget to update the fetching and allowing to display cars with currently rented and has upcoming rentals, specially the stream listeners
+
     if (_pickUpDateTime == null || _dropOffDateTime == null) {
       buildAlertSnackbar(
         context: context,
@@ -88,6 +97,8 @@ class _CarRentalSchedulePickerState extends State<CarRentalSchedulePicker> {
             picked.day,
             pickedTime.hour,
             pickedTime.minute,
+            0, // seconds
+            0, // milliseconds
           );
           _updateDropOffDateTime();
         });
@@ -117,6 +128,8 @@ class _CarRentalSchedulePickerState extends State<CarRentalSchedulePicker> {
             picked.day,
             pickedTime.hour,
             pickedTime.minute,
+            0, // seconds
+            0, // milliseconds
           );
         });
       }
@@ -183,7 +196,7 @@ class _CarRentalSchedulePickerState extends State<CarRentalSchedulePicker> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 20.0),
+      padding: const EdgeInsets.only(top: 20.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [

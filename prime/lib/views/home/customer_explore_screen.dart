@@ -23,9 +23,9 @@ class CustomerExploreScreen extends StatelessWidget {
         title: const AppLogo(height: 120),
       ),
       body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 5.0, vertical: 5.0),
-        child: FutureBuilder<List<Car>>(
-          future: carProvider.getCarsByStatusAndUserId(
+        padding: const EdgeInsets.all(5.0),
+        child: StreamBuilder<List<Car>>(
+          stream: carProvider.getCarsByStatusAndUserIdStream(
             carStatusList: [
               CarStatus.approved.name,
             ],

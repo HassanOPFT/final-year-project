@@ -192,4 +192,49 @@ class CustomerController {
       rethrow;
     }
   }
+
+  Future<void> setStripeCustomerId({
+    required String userId,
+    required String stripeCustomerId,
+  }) async {
+    try {
+      if (userId.isEmpty || stripeCustomerId.isEmpty) {
+        throw Exception('Invalid userId or stripeCustomerId');
+      }
+      await _customerCollection.doc(userId).update(
+        {
+          _stripeCustomerIdFieldName: stripeCustomerId,
+        },
+      );
+    } catch (_) {
+      rethrow;
+    }
+  }
+
+  Future<String> getStripeCustomerId(String userId) async {
+    try {
+      if (userId.isEmpty) {
+        throw Exception('Invalid userId');
+      }
+      final customer = await _customerCollection.doc(userId).get();
+      return customer.get(_stripeCustomerIdFieldName) as String;
+    } catch (_) {
+      rethrow;
+    }
+  }
+
+  Future<void> deleteStripeCustomerId(String userId) async {
+    try {
+      if (userId.isEmpty) {
+        throw Exception('Invalid userId');
+      }
+      await _customerCollection.doc(userId).update(
+        {
+          _stripeCustomerIdFieldName: '',
+        },
+      );
+    } catch (_) {
+      rethrow;
+    }
+  }
 }

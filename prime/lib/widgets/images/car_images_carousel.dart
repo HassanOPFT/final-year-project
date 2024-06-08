@@ -112,8 +112,8 @@ class _CarImagesCarouselState extends State<CarImagesCarousel> {
                   key: Key("Indicator$index"),
                   active: _currentPage == index,
                   color: _currentPage == index
-                      ? Theme.of(context).colorScheme.tertiary
-                      : Theme.of(context).colorScheme.tertiaryContainer,
+                      ? Theme.of(context).colorScheme.primary
+                      : Theme.of(context).colorScheme.primaryContainer,
                   animation: true,
                   sizeIndicator: const IndicatorModel.animation(
                     width: 15.0,

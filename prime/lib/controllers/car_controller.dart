@@ -173,6 +173,16 @@ class CarController {
     }
   }
 
+  Stream<CarStatus> listenToCarStatus(String carId) {
+    return _carCollection.doc(carId).snapshots().map((snapshot) {
+      final data = snapshot.data();
+      if (data == null) {
+        throw Exception('Car not found');
+      }
+      return CarStatus.values.firstWhere((e) => e.name == data[_statusFieldName]);
+    });
+  }
+
   Future<List<Car>> getAllCars() async {
     try {
       final querySnapshot = await _carCollection.get();
@@ -271,6 +281,55 @@ class CarController {
     } catch (e) {
       rethrow;
     }
+  }
+
+  Stream<List<Car>> getCarsByStatusAndUserIdStream({
+    required List<String> carStatusList,
+    required String currentUserId,
+  }) {
+    final carStatusValues = carStatusList
+        .map((status) => CarStatus.values.firstWhere((e) => e.name == status))
+        .toList();
+
+    return _carCollection
+        .where(_statusFieldName, whereIn: carStatusValues.map((e) => e.name))
+        .where(_hostIdFieldName, isNotEqualTo: currentUserId)
+        .snapshots()
+        .map((snapshot) => snapshot.docs.map((doc) {
+              final data = doc.data();
+              return Car(
+                id: doc.id,
+                hostId: data[_hostIdFieldName],
+                hostBankAccountId: data[_hostBankAccountIdFieldName],
+                defaultAddressId: data[_defaultAddressIdFieldName],
+                manufacturer: data[_manufacturerFieldName],
+                model: data[_modelFieldName],
+                manufactureYear: data[_manufactureYearFieldName],
+                color: data[_colorFieldName],
+                engineType: EngineType.values.firstWhere(
+                  (e) => e.name == data[_engineTypeFieldName],
+                ),
+                transmissionType: TransmissionType.values.firstWhere(
+                  (e) => e.name == data[_transmissionFieldName],
+                ),
+                seats: data[_seatsFieldName],
+                carType: CarType.values.firstWhere(
+                  (e) => e.name == data[_carTypeFieldName],
+                ),
+                hourPrice: data[_hourPriceFieldName],
+                dayPrice: data[_dayPriceFieldName],
+                imagesUrl: List<String>.from(data[_imagesUrlFieldName]),
+                description: data[_descriptionFieldName],
+                status: CarStatus.values.firstWhere(
+                  (e) => e.name == data[_statusFieldName],
+                ),
+                registrationDocumentId: data[_registrationDocumentIdFieldName],
+                roadTaxDocumentId: data[_roadTaxDocumentIdFieldName],
+                insuranceDocumentId: data[_insuranceDocumentIdFieldName],
+                referenceNumber: data[_referenceNumberFieldName],
+                createdAt: (data[_createdAtFieldName] as Timestamp).toDate(),
+              );
+            }).toList());
   }
 
   Future<void> updateCar({

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:prime/providers/bank_account_provider.dart';
 import 'package:prime/providers/car_provider.dart';
 import 'package:provider/provider.dart';
@@ -32,7 +33,18 @@ Future<void> main() async {
     DeviceOrientation.portraitDown,
   ]);
   await dotenv.load();
+  _stripeInitialization();
   runApp(const MyApp());
+}
+
+void _stripeInitialization() {
+  String? stripePublishableKey = dotenv.env['STRIPE_PUBLISHABLE_KEY'];
+  if (stripePublishableKey != null) {
+    Stripe.publishableKey = stripePublishableKey;
+  } else {
+    debugPrint('Stripe publishable key is not found');
+    throw Exception('Stripe publishable key is not found');
+  }
 }
 
 class MyApp extends StatelessWidget {

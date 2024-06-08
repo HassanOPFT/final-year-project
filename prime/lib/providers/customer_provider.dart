@@ -106,4 +106,37 @@ class CustomerProvider extends ChangeNotifier {
       rethrow;
     }
   }
+
+  Future<void> setStripeAccountId({
+    required String userId,
+    required String stripeCustomerId,
+  }) async {
+    try {
+      await _customerController.setStripeCustomerId(
+        userId: userId,
+        stripeCustomerId: stripeCustomerId,
+      );
+      notifyListeners();
+    } on Exception catch (_) {
+      rethrow;
+    }
+  }
+
+  Future<String> getStripeAccountId(String userId) async {
+    try {
+      final accountId = await _customerController.getStripeCustomerId(userId);
+      return accountId;
+    } on Exception catch (_) {
+      rethrow;
+    }
+  }
+
+  Future<void> deleteStripeAccountId(String userId) async {
+    try {
+      await _customerController.deleteStripeCustomerId(userId);
+      notifyListeners();
+    } on Exception catch (_) {
+      rethrow;
+    }
+  }
 }

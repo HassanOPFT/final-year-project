@@ -162,6 +162,7 @@ class _AddCarScreenState extends State<AddCarScreen> {
   }
 
   Future<void> _addCar() async {
+    // TODO: the customer role needs to be changed to host
     try {
       // validate if the user has a approved identity in the database
       final hasApprovedIdentity = await hasApprovedIdentityDocument();
