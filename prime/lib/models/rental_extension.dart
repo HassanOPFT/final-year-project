@@ -3,7 +3,7 @@ class RentalExtension {
   String? carRentalId;
   DateTime? startDate;
   DateTime? endDate;
-  String? stripePaymentMethodId;
+  String? stripeChargeId;
   String? referenceNumber;
   DateTime? createdAt;
 
@@ -12,7 +12,7 @@ class RentalExtension {
     this.carRentalId,
     this.startDate,
     this.endDate,
-    this.stripePaymentMethodId,
+    this.stripeChargeId,
     this.referenceNumber,
     this.createdAt,
   });

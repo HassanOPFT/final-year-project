@@ -81,7 +81,8 @@ class VerificationDocumentController {
       // Create StatusHistory record
       await _createStatusHistory(
         linkedObjectId: newDocument.id,
-        linkedObjectType: documentType.name,
+        linkedObjectType: linkedObjectType.name,
+        linkedObjectSubtype: documentType.name,
         previousStatus: VerificationDocumentStatus.uploaded.getStatusString(),
         newStatus: VerificationDocumentStatus.uploaded.getStatusString(),
         modifiedById: modifiedById,
@@ -95,7 +96,8 @@ class VerificationDocumentController {
       // Create StatusHistory record for pendingApproval status
       await _createStatusHistory(
         linkedObjectId: newDocument.id,
-        linkedObjectType: documentType.name,
+        linkedObjectType: linkedObjectType.name,
+        linkedObjectSubtype: documentType.name,
         previousStatus: VerificationDocumentStatus.uploaded.getStatusString(),
         newStatus: VerificationDocumentStatus.pendingApproval.getStatusString(),
         modifiedById: modifiedById,
@@ -274,6 +276,7 @@ class VerificationDocumentController {
           .update(newData);
 
       // Create StatusHistory record
+      // TODO: add object type as user or car, sub type is the type of the document
       await _createStatusHistory(
         linkedObjectId: verificationDocumentId,
         linkedObjectType: documentType.name,
@@ -305,6 +308,7 @@ class VerificationDocumentController {
       });
 
       // Create StatusHistory record
+      // TODO: add object type as user or car, sub type is the type of the document
       await _createStatusHistory(
         linkedObjectId: verificationDocumentId,
         linkedObjectType: documentType.name,
@@ -395,6 +399,7 @@ class VerificationDocumentController {
         });
         newStatus = VerificationDocumentStatus.deletedByCustomer;
         // Create StatusHistory record
+        // TODO: add object type as user or car, sub type is the type of the document
         await _createStatusHistory(
           linkedObjectId: documentId,
           linkedObjectType: documentType.name,

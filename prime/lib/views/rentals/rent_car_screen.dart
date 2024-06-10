@@ -210,6 +210,7 @@ class RentCarScreen extends StatelessWidget {
                                     child: Text('User details not available.'));
                               } else {
                                 final user = snapshot.data!;
+                                // TODO: add verified text and icon
                                 return ListTile(
                                   leading: ClipOval(
                                     child: user.userProfileUrl != null

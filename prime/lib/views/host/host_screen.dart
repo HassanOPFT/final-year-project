@@ -21,6 +21,7 @@ class HostScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Host'),
+        automaticallyImplyLeading: false,
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 5.0, vertical: 5.0),

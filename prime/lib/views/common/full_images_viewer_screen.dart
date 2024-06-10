@@ -89,8 +89,8 @@ class _FullScreenImageViewerState extends State<FullImagesViewerScreen> {
                         key: Key("Indicator$index"),
                         active: _currentPage == index,
                         color: _currentPage == index
-                            ? Theme.of(context).colorScheme.tertiary
-                            : Theme.of(context).colorScheme.tertiaryContainer,
+                            ? Theme.of(context).colorScheme.primary
+                            : Theme.of(context).colorScheme.primaryContainer,
                         animation: true,
                         sizeIndicator: const IndicatorModel.animation(
                           width: 15.0,
@@ -105,23 +105,6 @@ class _FullScreenImageViewerState extends State<FullImagesViewerScreen> {
                   ),
                 ),
               ),
-              // Row(
-              //   mainAxisAlignment: MainAxisAlignment.center,
-              //   children: List.generate(
-              //     widget.imagesUrl.length,
-              //     (index) => Container(
-              //       width: 8,
-              //       height: 8,
-              //       margin: const EdgeInsets.symmetric(horizontal: 4),
-              //       decoration: BoxDecoration(
-              //         shape: BoxShape.circle,
-              //         color: _currentPage == index
-              //             ? Theme.of(context).colorScheme.secondary
-              //             : Theme.of(context).colorScheme.secondaryContainer,
-              //       ),
-              //     ),
-              //   ),
-              // ),
             ),
           ],
         ),

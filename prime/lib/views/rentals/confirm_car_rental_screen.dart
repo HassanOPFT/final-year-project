@@ -6,18 +6,19 @@ import 'package:flutter_stripe/flutter_stripe.dart' hide Address;
 import 'package:intl/intl.dart';
 import 'package:prime/models/car.dart';
 import 'package:prime/providers/customer_provider.dart';
-import 'package:prime/providers/theme_provider.dart';
 import 'package:prime/providers/user_provider.dart';
 import 'package:prime/services/firebase/firebase_auth_service.dart';
 import 'package:prime/services/stripe/stripe_payment_intents.dart';
+import 'package:prime/utils/navigate_with_animation.dart';
 import 'package:prime/utils/snackbar.dart';
+import 'package:prime/views/rentals/car_rental_confirmation_screen.dart';
 import 'package:prime/widgets/custom_progress_indicator.dart';
 import 'package:provider/provider.dart';
 import '../../models/address.dart';
 import '../../providers/address_provider.dart';
 import '../../providers/car_provider.dart';
+import '../../providers/car_rental_provider.dart';
 import '../../services/stripe/stripe_customer.dart';
-import '../../widgets/tiles/payment_method_selector.dart';
 
 class ConfirmCarRentalScreen extends StatefulWidget {
   final String carId;
@@ -71,7 +72,7 @@ class _ConfirmCarRentalScreenState extends State<ConfirmCarRentalScreen> {
           }
           return FutureBuilder<Car?>(
             future: carProvider.getCarById(widget.carId),
-            builder: (BuildContext context, AsyncSnapshot<Car?> snapshot) {
+            builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const CustomProgressIndicator();
               } else if (snapshot.hasError) {
@@ -92,14 +93,16 @@ class _ConfirmCarRentalScreenState extends State<ConfirmCarRentalScreen> {
               days = duration.inDays;
               hours = duration.inHours % 24;
               totalForDays = days * (car.dayPrice ?? 0.0);
+              totalForDays = double.parse(totalForDays.toStringAsFixed(1));
               totalForHours = hours * (car.hourPrice ?? 0.0);
+              totalForHours = double.parse(totalForHours.toStringAsFixed(1));
               totalPrice = totalForDays + totalForHours;
 
               final durationText =
                   '${days > 0 ? '$days days' : ''}${days > 0 && hours > 0 ? ' and ' : ''}${hours > 0 ? '$hours hours' : ''}';
 
               return Padding(
-                padding: const EdgeInsets.all(15.0),
+                padding: const EdgeInsets.symmetric(horizontal: 15.0),
                 child: Column(
                   children: [
                     Expanded(
@@ -107,190 +110,183 @@ class _ConfirmCarRentalScreenState extends State<ConfirmCarRentalScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            _buildCarDetailsCard(
-                              context,
-                              car.imagesUrl!.first,
-                              car.manufacturer ?? 'N/A',
-                              car.model ?? 'N/A',
-                              car.color ?? 'N/A',
-                              totalPrice.toString(),
+                            Container(
+                              padding: const EdgeInsets.all(16.0),
+                              decoration: BoxDecoration(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .primary
+                                    .withOpacity(0.08),
+                                borderRadius: BorderRadius.circular(16.0),
+                              ),
+                              child: Column(
+                                children: [
+                                  Row(
+                                    children: [
+                                      ClipRRect(
+                                        borderRadius:
+                                            BorderRadius.circular(16.0),
+                                        child: CachedNetworkImage(
+                                          imageUrl: car.imagesUrl!.first,
+                                          width: 100,
+                                          height: 100,
+                                          fit: BoxFit.cover,
+                                          placeholder: (context, url) =>
+                                              const CustomProgressIndicator(),
+                                          errorWidget: (context, url, error) =>
+                                              const Center(
+                                                  child: Icon(Icons.error)),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 20.0),
+                                      Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            '${car.manufacturer ?? 'N/A'} ${car.model ?? 'N/A'}',
+                                            style: const TextStyle(
+                                              fontSize: 20.0,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 8.0),
+                                          _buildIconTextRow(
+                                            context,
+                                            Icons.color_lens,
+                                            car.color ?? 'N/A',
+                                          ),
+                                          const SizedBox(height: 8.0),
+                                          _buildIconTextRow(
+                                            context,
+                                            Icons.attach_money,
+                                            totalPrice.toString(),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
                             ),
                             _buildSectionTitle('Pick-Up & Drop-Off'),
-                            _buildPickUpDropOffCard(
-                                context, car.defaultAddressId ?? ''),
-                            _buildSectionTitle('Pricing'),
-                            _buildPricingCard(
-                              hours.toString(),
-                              car.hourPrice ?? 0.0,
-                              days.toString(),
-                              car.dayPrice ?? 0.0,
-                              durationText,
-                              totalForDays,
-                              totalForHours,
-                              totalPrice,
+                            Container(
+                              padding: const EdgeInsets.all(16.0),
+                              decoration: BoxDecoration(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .primary
+                                    .withOpacity(0.08),
+                                borderRadius: BorderRadius.circular(16.0),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  FutureBuilder<Address?>(
+                                    future:
+                                        Provider.of<AddressProvider>(context)
+                                            .getAddressById(
+                                      car.defaultAddressId ?? '',
+                                    ),
+                                    builder: (context, snapshot) {
+                                      String address = '';
+                                      if (snapshot.connectionState ==
+                                          ConnectionState.waiting) {
+                                        return const CustomProgressIndicator();
+                                      } else if (snapshot.hasError) {
+                                        address = 'N/A';
+                                      } else if (!snapshot.hasData ||
+                                          snapshot.data == null) {
+                                        address = 'N/A';
+                                      }
+                                      final defaultAddress = snapshot.data!;
+                                      address = defaultAddress.toString();
+                                      return _buildLocationIconTextRow(
+                                        context,
+                                        Icons.location_on,
+                                        address,
+                                      );
+                                    },
+                                  ),
+                                  const SizedBox(height: 20.0),
+                                  _buildIconTextRowWithDate(
+                                    context,
+                                    Icons.access_time,
+                                    'Pick-Up Time',
+                                    widget.pickUpDateTime ?? DateTime.now(),
+                                  ),
+                                  const SizedBox(height: 20.0),
+                                  _buildIconTextRowWithDate(
+                                    context,
+                                    Icons.access_time,
+                                    'Drop-Off Time',
+                                    widget.dropOffDateTime ?? DateTime.now(),
+                                  ),
+                                ],
+                              ),
                             ),
-                            _buildSectionTitle('Payment Method'),
-                            const PaymentMethodSelector(),
+                            _buildSectionTitle('Pricing'),
+                            Container(
+                              padding: const EdgeInsets.all(16.0),
+                              decoration: BoxDecoration(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .primary
+                                    .withOpacity(0.08),
+                                borderRadius: BorderRadius.circular(16.0),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  _buildPricingRow(
+                                    'Hourly Rate',
+                                    '${car.hourPrice ?? 0.0} per hour',
+                                  ),
+                                  _buildPricingRow(
+                                    'Daily Rate',
+                                    '${car.dayPrice ?? 0.0} per day',
+                                  ),
+                                  _buildPricingRow(
+                                    'Duration',
+                                    durationText,
+                                  ),
+                                  const Divider(thickness: 0.3),
+                                  _buildAmountDetails(
+                                    'Total for ${hours.toString()} hours',
+                                    'RM$totalForHours',
+                                  ),
+                                  _buildAmountDetails(
+                                    'Total for ${days.toString()} days',
+                                    'RM$totalForDays',
+                                  ),
+                                  const Divider(thickness: 0.3),
+                                  _buildAmountDetails(
+                                    'Total Rent',
+                                    'RM$totalPrice',
+                                    isTotal: true,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            // TODO: Implement payment method selection
+                            // _buildSectionTitle('Payment Method'),
+                            // const PaymentMethodSelector(),
                           ],
                         ),
                       ),
                     ),
                     const SizedBox(height: 10.0),
-                    _buildConfirmAndPayButton(totalPrice: totalPrice),
+                    ConfirmAndPayButton(
+                      car: car,
+                      totalPrice: totalPrice,
+                      confirmAndPay: confirmAndPay,
+                    ),
                   ],
                 ),
               );
             },
           );
         },
-      ),
-    );
-  }
-
-  Widget _buildCarDetailsCard(
-    BuildContext context,
-    String carImage,
-    String carManufacturer,
-    String carModel,
-    String carColor,
-    String rentTotal,
-  ) {
-    return Container(
-      padding: const EdgeInsets.all(16.0),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.primary.withOpacity(0.08),
-        borderRadius: BorderRadius.circular(16.0),
-      ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(16.0),
-                child: CachedNetworkImage(
-                  imageUrl: carImage,
-                  width: 100,
-                  height: 100,
-                  fit: BoxFit.cover,
-                  placeholder: (context, url) =>
-                      const CustomProgressIndicator(),
-                  errorWidget: (context, url, error) =>
-                      const Center(child: Icon(Icons.error)),
-                ),
-              ),
-              const SizedBox(width: 20.0),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '$carManufacturer $carModel',
-                    style: const TextStyle(
-                      fontSize: 20.0,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 8.0),
-                  _buildIconTextRow(
-                    context,
-                    Icons.color_lens,
-                    carColor,
-                  ),
-                  const SizedBox(height: 8.0),
-                  _buildIconTextRow(
-                    context,
-                    Icons.attach_money,
-                    rentTotal,
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPickUpDropOffCard(
-      BuildContext context, String carDefaultAddressId) {
-    return Container(
-      padding: const EdgeInsets.all(16.0),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.primary.withOpacity(0.08),
-        borderRadius: BorderRadius.circular(16.0),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          FutureBuilder<Address?>(
-            future: Provider.of<AddressProvider>(context)
-                .getAddressById(carDefaultAddressId),
-            builder: (context, snapshot) {
-              String address = '';
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const CustomProgressIndicator();
-              } else if (snapshot.hasError) {
-                address = 'N/A';
-              } else if (!snapshot.hasData || snapshot.data == null) {
-                address = 'N/A';
-              }
-              final defaultAddress = snapshot.data!;
-              // address =
-              //     '${defaultAddress.street}, ${defaultAddress.city}, ${defaultAddress.state}';
-              address = defaultAddress.toString();
-              return _buildLocationIconTextRow(
-                context,
-                Icons.location_on,
-                address,
-              );
-            },
-          ),
-          const SizedBox(height: 20.0),
-          _buildIconTextRowWithDate(
-            context,
-            Icons.access_time,
-            'Pick-Up Time',
-            widget.pickUpDateTime ?? DateTime.now(),
-          ),
-          const SizedBox(height: 20.0),
-          _buildIconTextRowWithDate(
-            context,
-            Icons.access_time,
-            'Drop-Off Time',
-            widget.dropOffDateTime ?? DateTime.now(),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPricingCard(
-    String hours,
-    double hourPrice,
-    String days,
-    double dayPrice,
-    String durationText,
-    double daysTotalPrice,
-    double hoursTotalPrice,
-    double totalPrice,
-  ) {
-    return Container(
-      padding: const EdgeInsets.all(16.0),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.primary.withOpacity(0.08),
-        borderRadius: BorderRadius.circular(16.0),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildPricingRow('Hourly Rate', '$hourPrice per hour'),
-          _buildPricingRow('Daily Rate', '$dayPrice per day'),
-          _buildPricingRow('Duration', durationText),
-          const Divider(thickness: 0.3),
-          _buildAmountDetails('Total for $hours hours', 'RM$hoursTotalPrice'),
-          _buildAmountDetails('Total for $days days', 'RM$daysTotalPrice'),
-          const Divider(thickness: 0.3),
-          _buildAmountDetails('Total Rent', 'RM$totalPrice', isTotal: true),
-        ],
       ),
     );
   }
@@ -352,15 +348,25 @@ class _ConfirmCarRentalScreenState extends State<ConfirmCarRentalScreen> {
     }
   }
 
-  Future<void> _confirmAndPay({required double totalPrice}) async {
-    debugPrint('#' * 25);
-    debugPrint('Confirm and Pay');
-    debugPrint('#' * 25);
-    // TODO: Stripe accepts int only, see how to handle this
+  Future<void> confirmAndPay({
+    required double totalPrice,
+    required String carName,
+    required String carImage,
+    required String carAddressId,
+    required String carColor,
+    required CarStatus carStatus,
+  }) async {
+    // check both dates
+    if (widget.pickUpDateTime == null || widget.dropOffDateTime == null) {
+      buildAlertSnackbar(
+        context: context,
+        message: 'Please select pick-up and drop-off dates.',
+      );
+      return;
+    }
+
     try {
-      // get the current user id from firebase auth service
       final userId = FirebaseAuthService().currentUser?.uid ?? '';
-      // get user details from user provider
       final user = await Provider.of<UserProvider>(
         context,
         listen: false,
@@ -368,7 +374,6 @@ class _ConfirmCarRentalScreenState extends State<ConfirmCarRentalScreen> {
       final customerName = '${user?.userFirstName} ${user?.userLastName}';
       final customerEmail = user?.userEmail ?? '';
       final customerPhone = user?.userPhoneNumber ?? '';
-      // create a method to check if current user has a stripe customer id, if not create one and then return the customer id
       final stripeCustomerId = await getOrCreateStripeCustomerId(
         userId,
         customerName,
@@ -383,14 +388,12 @@ class _ConfirmCarRentalScreenState extends State<ConfirmCarRentalScreen> {
       );
       int totalAmountInCents = (totalPrice * 100).toInt();
 
-      final paymentIntent = await StripePaymentIntents().createPaymentIntent(
+      final paymentIntentObject = StripePaymentIntents();
+      final paymentIntent = await paymentIntentObject.createPaymentIntent(
         amount: totalAmountInCents.toString(),
         currency: 'MYR',
         customerId: stripeCustomerId,
       );
-      print('##############################');
-      print('Payment Intent: $paymentIntent');
-      print('##############################');
 
       final billingDetails = BillingDetails(
         name: customerName,
@@ -398,12 +401,6 @@ class _ConfirmCarRentalScreenState extends State<ConfirmCarRentalScreen> {
         phone: customerPhone,
         address: null,
       );
-
-      print('#' * 30);
-      print('Payment Intent Customer: ${paymentIntent['customer']}');
-      print('Payment Intent Ephemeral Key: ${paymentIntent['ephemeralKey']}');
-      print('Payment Intent Client Secret: ${paymentIntent['client_secret']}');
-      print('#' * 30);
 
       await Stripe.instance.initPaymentSheet(
         paymentSheetParameters: SetupPaymentSheetParameters(
@@ -422,12 +419,61 @@ class _ConfirmCarRentalScreenState extends State<ConfirmCarRentalScreen> {
               captureMethod: CaptureMethod.Automatic,
             ),
           ),
-          style: ThemeMode.dark,
           billingDetails: billingDetails,
         ),
       );
 
       await Stripe.instance.presentPaymentSheet();
+
+      final successfulPaymentIntent = await paymentIntentObject
+          .getPaymentIntent(paymentIntentId: paymentIntent['id']);
+
+      // get the charge ID from the payment intent
+      final chargeId = successfulPaymentIntent['latest_charge'];
+
+      final carRentalProvider = Provider.of<CarRentalProvider>(
+        context,
+        listen: false,
+      );
+
+      final carRentalId = await carRentalProvider.createCarRental(
+        carId: widget.carId,
+        customerId: userId,
+        startDate: widget.pickUpDateTime!,
+        endDate: widget.dropOffDateTime!,
+        stripeChargeId: chargeId,
+      );
+
+      // update the car status
+      final carProvider = Provider.of<CarProvider>(
+        context,
+        listen: false,
+      );
+      carProvider.updateCarStatus(
+        carId: widget.carId,
+        previousStatus: carStatus,
+        newStatus: CarStatus.upcomingRental,
+        modifiedById: userId,
+      );
+
+      final carAddress = await Provider.of<AddressProvider>(
+        context,
+        listen: false,
+      ).getAddressById(carAddressId);
+
+      animatedPushReplacementNavigation(
+        context: context,
+        screen: CarRentalConfirmationScreen(
+          carName: carName,
+          carImage: carImage,
+          carColor: carColor,
+          carAddress: carAddress.toString(),
+          pickUpTime: widget.pickUpDateTime ?? DateTime.now(),
+          dropOffTime: widget.dropOffDateTime ?? DateTime.now(),
+          totalPrice: totalPrice.toString(),
+          carRentalId: carRentalId,
+        ),
+      );
 
       if (mounted) {
         buildSuccessSnackbar(
@@ -437,9 +483,6 @@ class _ConfirmCarRentalScreenState extends State<ConfirmCarRentalScreen> {
       }
     } on Exception catch (e) {
       if (e is StripeException) {
-        // print e
-        // filter the error code and display the appropriate message based on this enum FailureCode { Failed, Canceled, Timeout }
-        // create a switch for the FailureCode enum
         String message =
             'Error occurred while processing payment. Please try again.';
         switch (e.error.code) {
@@ -457,7 +500,6 @@ class _ConfirmCarRentalScreenState extends State<ConfirmCarRentalScreen> {
                 'Error occurred while processing payment. Please try again.';
             break;
         }
-        debugPrint('Error from Stripe: ${e.error.code}');
         buildFailureSnackbar(
           context: context,
           message: message,
@@ -469,22 +511,6 @@ class _ConfirmCarRentalScreenState extends State<ConfirmCarRentalScreen> {
         );
       }
     }
-  }
-
-  Widget _buildConfirmAndPayButton({required double totalPrice}) {
-    return SizedBox(
-      width: double.infinity,
-      height: 50.0,
-      child: FilledButton(
-        onPressed: () => _confirmAndPay(totalPrice: totalPrice),
-        child: const Text(
-          'Confirm & Pay',
-          style: TextStyle(
-            fontSize: 20.0,
-          ),
-        ),
-      ),
-    );
   }
 
   Widget _buildIconTextRow(
@@ -503,7 +529,7 @@ class _ConfirmCarRentalScreenState extends State<ConfirmCarRentalScreen> {
         Text(
           text,
           style: const TextStyle(
-            fontSize: 18.0,
+            fontSize: 16.0,
           ),
         ),
       ],
@@ -526,7 +552,7 @@ class _ConfirmCarRentalScreenState extends State<ConfirmCarRentalScreen> {
           child: Text(
             text,
             style: const TextStyle(
-              fontSize: 18.0,
+              fontSize: 16.0,
             ),
           ),
         ),
@@ -550,7 +576,7 @@ class _ConfirmCarRentalScreenState extends State<ConfirmCarRentalScreen> {
         Text(
           label,
           style: const TextStyle(
-            fontSize: 18.0,
+            fontSize: 16.0,
           ),
         ),
         const Spacer(),
@@ -573,7 +599,7 @@ class _ConfirmCarRentalScreenState extends State<ConfirmCarRentalScreen> {
           Text(
             label,
             style: const TextStyle(
-              fontSize: 18.0,
+              fontSize: 16.0,
             ),
           ),
           Text(
@@ -600,7 +626,7 @@ class _ConfirmCarRentalScreenState extends State<ConfirmCarRentalScreen> {
           Text(
             title,
             style: TextStyle(
-              fontSize: 18.0,
+              fontSize: 16.0,
               fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
             ),
           ),
@@ -612,6 +638,68 @@ class _ConfirmCarRentalScreenState extends State<ConfirmCarRentalScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class ConfirmAndPayButton extends StatefulWidget {
+  final Car car;
+  final double totalPrice;
+  final Future<void> Function({
+    required String carAddressId,
+    required String carColor,
+    required String carImage,
+    required String carName,
+    required CarStatus carStatus,
+    required double totalPrice,
+  }) confirmAndPay;
+  const ConfirmAndPayButton({
+    super.key,
+    required this.car,
+    required this.totalPrice,
+    required this.confirmAndPay,
+  });
+
+  @override
+  State<ConfirmAndPayButton> createState() => _ConfirmAndPayButtonState();
+}
+
+class _ConfirmAndPayButtonState extends State<ConfirmAndPayButton> {
+  @override
+  Widget build(BuildContext context) {
+    bool isButtonLoading = false;
+    setIsButtonLoading(bool value) {
+      setState(() {
+        isButtonLoading = value;
+      });
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10.0),
+      child: SizedBox(
+        width: double.infinity,
+        height: 50.0,
+        child: isButtonLoading
+            ? const CustomProgressIndicator()
+            : FilledButton(
+                onPressed: () {
+                  widget.confirmAndPay(
+                    totalPrice: widget.totalPrice,
+                    carName: '${widget.car.manufacturer} ${widget.car.model}',
+                    carImage: widget.car.imagesUrl!.first,
+                    carAddressId: widget.car.defaultAddressId ?? '',
+                    carColor: widget.car.color ?? 'N/A',
+                    carStatus: widget.car.status ?? CarStatus.approved,
+                  );
+                },
+                child: const Text(
+                  'Confirm & Pay',
+                  style: TextStyle(
+                    fontSize: 20.0,
+                  ),
+                ),
+              ),
       ),
     );
   }

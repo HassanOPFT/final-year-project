@@ -27,6 +27,7 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Profile'),
+        automaticallyImplyLeading: false,
       ),
       body: ListView(
         padding: const EdgeInsets.symmetric(vertical: 10),

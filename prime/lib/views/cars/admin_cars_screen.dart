@@ -17,6 +17,7 @@ class AdminCarsScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Cars'),
+        automaticallyImplyLeading: false,
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 5.0),

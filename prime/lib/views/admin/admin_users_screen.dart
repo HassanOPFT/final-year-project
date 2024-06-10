@@ -13,6 +13,7 @@ class AdminUsersScreen extends StatelessWidget {
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Users'),
+          automaticallyImplyLeading: false,
           bottom: const TabBar(
             tabs: [
               Tab(

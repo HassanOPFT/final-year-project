@@ -5,11 +5,13 @@ import '../utils/assets_paths.dart';
 class AppLogo extends StatelessWidget {
   final double? height;
   final double? width;
+  final double? scale;
 
   const AppLogo({
     super.key,
     this.height,
     this.width,
+    this.scale,
   });
 
   @override
@@ -21,6 +23,7 @@ class AppLogo extends StatelessWidget {
       fit: BoxFit.cover,
       filterQuality: FilterQuality.medium,
       color: Theme.of(context).colorScheme.primary,
+      scale: scale,
     );
   }
 }

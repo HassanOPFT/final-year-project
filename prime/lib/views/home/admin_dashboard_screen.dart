@@ -12,6 +12,7 @@ class AdminDashboardScreen extends StatelessWidget {
       appBar: AppBar(
         centerTitle: true,
         title: const AppLogo(height: 120),
+        automaticallyImplyLeading: false,
       ),
       body: const Center(
         child: Text('Dashboard'),

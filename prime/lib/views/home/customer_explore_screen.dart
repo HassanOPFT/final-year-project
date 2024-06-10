@@ -20,10 +20,11 @@ class CustomerExploreScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
-        title: const AppLogo(height: 120),
+        title: const AppLogo(height: 120.0),
+        automaticallyImplyLeading: false,
       ),
       body: Padding(
-        padding: const EdgeInsets.all(5.0),
+        padding: const EdgeInsets.symmetric(horizontal: 5.0),
         child: StreamBuilder<List<Car>>(
           stream: carProvider.getCarsByStatusAndUserIdStream(
             carStatusList: [

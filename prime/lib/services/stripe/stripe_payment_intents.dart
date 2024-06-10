@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 
 class StripePaymentIntents {
   static const String _baseUrl = 'https://api.stripe.com/v1/payment_intents';
-  String _getStripAPIKey() => dotenv.env['STRIPE_SECRET_KEY'] ?? '';
+  String _getStripeAPIKey() => dotenv.env['STRIPE_SECRET_KEY'] ?? '';
 
   Future<Map<String, dynamic>> _handleResponse(http.Response response) async {
     if (response.statusCode >= 200 && response.statusCode < 300) {
@@ -21,7 +21,7 @@ class StripePaymentIntents {
     String customerId = '',
   }) async {
     try {
-      String apiKey = _getStripAPIKey();
+      String apiKey = _getStripeAPIKey();
       Map<String, dynamic> body = {
         'amount': amount,
         'currency': currency,
@@ -52,7 +52,7 @@ class StripePaymentIntents {
     required Map<String, dynamic> body,
   }) async {
     try {
-      String apiKey = _getStripAPIKey();
+      String apiKey = _getStripeAPIKey();
 
       http.Response response = await http.post(
         Uri.parse('$_baseUrl/$paymentIntentId'),
@@ -75,7 +75,7 @@ class StripePaymentIntents {
     required String paymentIntentId,
   }) async {
     try {
-      String apiKey = _getStripAPIKey();
+      String apiKey = _getStripeAPIKey();
 
       http.Response response = await http.get(
         Uri.parse('$_baseUrl/$paymentIntentId'),
@@ -97,7 +97,7 @@ class StripePaymentIntents {
     String setupFutureUsage = 'off_session',
   }) async {
     try {
-      String apiKey = _getStripAPIKey();
+      String apiKey = _getStripeAPIKey();
 
       Map<String, dynamic> body = {
         // 'payment_method': 'pm_1OyJRE06sxMdZTBdDq7u6nO1',
@@ -125,7 +125,7 @@ class StripePaymentIntents {
     String cancellationReason = '',
   }) async {
     try {
-      String apiKey = _getStripAPIKey();
+      String apiKey = _getStripeAPIKey();
 
       Map<String, dynamic> body = {'cancellation_reason': cancellationReason};
       http.Response response = await http.post(
