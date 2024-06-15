@@ -10,9 +10,12 @@ import '../utils/snackbar.dart';
 class CarRentalSchedulePicker extends StatefulWidget {
   final String carId;
 
+  final void Function() stopListeningToCarStatus;
+
   const CarRentalSchedulePicker({
     super.key,
     required this.carId,
+    required this.stopListeningToCarStatus,
   });
 
   @override
@@ -64,6 +67,8 @@ class _CarRentalSchedulePickerState extends State<CarRentalSchedulePicker> {
       );
       return;
     }
+
+    widget.stopListeningToCarStatus();
 
     animatedPushNavigation(
       context: context,

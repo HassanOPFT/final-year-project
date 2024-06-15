@@ -10,6 +10,9 @@ import '../../widgets/custom_progress_indicator.dart';
 import '../../widgets/navigation_bar/customer_navigation_bar.dart';
 import '../../widgets/no_data_found.dart';
 
+// TODO: location based listing of cars should be provided, nearest cars should be shown first
+// TODO: add a search bar to search cars by name, model, etc.
+
 class CustomerExploreScreen extends StatelessWidget {
   const CustomerExploreScreen({super.key});
 

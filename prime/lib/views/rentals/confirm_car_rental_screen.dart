@@ -1,5 +1,7 @@
 // ignore_for_file: use_build_context_synchronously
 
+import 'dart:async';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_stripe/flutter_stripe.dart' hide Address;
@@ -20,6 +22,9 @@ import '../../providers/car_provider.dart';
 import '../../providers/car_rental_provider.dart';
 import '../../services/stripe/stripe_customer.dart';
 
+// TODO: The system should provide rental agreements that outline the terms and conditions of the rental,
+// including any liabilities or responsibilities of the owner or renter.
+
 class ConfirmCarRentalScreen extends StatefulWidget {
   final String carId;
   final DateTime? pickUpDateTime;
@@ -37,6 +42,46 @@ class ConfirmCarRentalScreen extends StatefulWidget {
 }
 
 class _ConfirmCarRentalScreenState extends State<ConfirmCarRentalScreen> {
+  StreamSubscription<CarStatus>? _carStatusSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+    _startListeningToCarStatus();
+  }
+
+  void _startListeningToCarStatus() {
+    final carProvider = Provider.of<CarProvider>(context, listen: false);
+    _carStatusSubscription = carProvider.listenToCarStatus(widget.carId).listen(
+      (status) {
+        // If the car status is not approved, pop the screen
+        if (status != CarStatus.approved) {
+          WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+            Navigator.of(context).pop();
+          });
+        }
+      },
+      onError: (_) {
+        WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+          Navigator.of(context).pop();
+        });
+      },
+    );
+  }
+
+  void _stopListeningToCarStatus() {
+    if (_carStatusSubscription != null) {
+      _carStatusSubscription!.cancel();
+      _carStatusSubscription = null;
+    }
+  }
+
+  @override
+  void dispose() {
+    _stopListeningToCarStatus();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final carProvider = Provider.of<CarProvider>(context);
@@ -50,8 +95,8 @@ class _ConfirmCarRentalScreenState extends State<ConfirmCarRentalScreen> {
       appBar: AppBar(
         title: const Text('Confirm Car Rental'),
       ),
-      body: StreamBuilder<CarStatus>(
-        stream: carProvider.listenToCarStatus(widget.carId),
+      body: FutureBuilder<Car?>(
+        future: carProvider.getCarById(widget.carId),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const CustomProgressIndicator();
@@ -64,227 +109,203 @@ class _ConfirmCarRentalScreenState extends State<ConfirmCarRentalScreen> {
               child: Text('Car details is not available at the moment.'),
             );
           }
-          // If the car status is not approved, pop the screen
-          if (snapshot.data != CarStatus.approved) {
-            WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-              Navigator.of(context).pop();
-            });
-          }
-          return FutureBuilder<Car?>(
-            future: carProvider.getCarById(widget.carId),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const CustomProgressIndicator();
-              } else if (snapshot.hasError) {
-                return const Center(
-                  child: Text('Error occurred. Please try again later.'),
-                );
-              } else if (!snapshot.hasData || snapshot.data == null) {
-                return const Center(
-                  child: Text('Car details is not available at the moment.'),
-                );
-              }
-              final car = snapshot.data!;
+          final car = snapshot.data!;
 
-              // Calculate the total price
-              final duration =
-                  widget.dropOffDateTime!.difference(widget.pickUpDateTime!);
+          // Calculate the total price
+          final duration =
+              widget.dropOffDateTime!.difference(widget.pickUpDateTime!);
 
-              days = duration.inDays;
-              hours = duration.inHours % 24;
-              totalForDays = days * (car.dayPrice ?? 0.0);
-              totalForDays = double.parse(totalForDays.toStringAsFixed(1));
-              totalForHours = hours * (car.hourPrice ?? 0.0);
-              totalForHours = double.parse(totalForHours.toStringAsFixed(1));
-              totalPrice = totalForDays + totalForHours;
+          days = duration.inDays;
+          hours = duration.inHours % 24;
+          totalForDays = days * (car.dayPrice ?? 0.0);
+          totalForDays = double.parse(totalForDays.toStringAsFixed(1));
+          totalForHours = hours * (car.hourPrice ?? 0.0);
+          totalForHours = double.parse(totalForHours.toStringAsFixed(1));
+          totalPrice = totalForDays + totalForHours;
 
-              final durationText =
-                  '${days > 0 ? '$days days' : ''}${days > 0 && hours > 0 ? ' and ' : ''}${hours > 0 ? '$hours hours' : ''}';
+          final durationText =
+              '${days > 0 ? '$days days' : ''}${days > 0 && hours > 0 ? ' and ' : ''}${hours > 0 ? '$hours hours' : ''}';
 
-              return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 15.0),
-                child: Column(
-                  children: [
-                    Expanded(
-                      child: SingleChildScrollView(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(16.0),
-                              decoration: BoxDecoration(
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .primary
-                                    .withOpacity(0.08),
-                                borderRadius: BorderRadius.circular(16.0),
-                              ),
-                              child: Column(
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 15.0),
+            child: Column(
+              children: [
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(16.0),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .primary
+                                .withOpacity(0.08),
+                            borderRadius: BorderRadius.circular(16.0),
+                          ),
+                          child: Column(
+                            children: [
+                              Row(
                                 children: [
-                                  Row(
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(16.0),
+                                    child: CachedNetworkImage(
+                                      imageUrl: car.imagesUrl!.first,
+                                      width: 100,
+                                      height: 100,
+                                      fit: BoxFit.cover,
+                                      placeholder: (context, url) =>
+                                          const CustomProgressIndicator(),
+                                      errorWidget: (context, url, error) =>
+                                          const Center(
+                                              child: Icon(Icons.error)),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 20.0),
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
-                                      ClipRRect(
-                                        borderRadius:
-                                            BorderRadius.circular(16.0),
-                                        child: CachedNetworkImage(
-                                          imageUrl: car.imagesUrl!.first,
-                                          width: 100,
-                                          height: 100,
-                                          fit: BoxFit.cover,
-                                          placeholder: (context, url) =>
-                                              const CustomProgressIndicator(),
-                                          errorWidget: (context, url, error) =>
-                                              const Center(
-                                                  child: Icon(Icons.error)),
+                                      Text(
+                                        '${car.manufacturer ?? 'N/A'} ${car.model ?? 'N/A'}',
+                                        style: const TextStyle(
+                                          fontSize: 20.0,
+                                          fontWeight: FontWeight.bold,
                                         ),
                                       ),
-                                      const SizedBox(width: 20.0),
-                                      Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            '${car.manufacturer ?? 'N/A'} ${car.model ?? 'N/A'}',
-                                            style: const TextStyle(
-                                              fontSize: 20.0,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 8.0),
-                                          _buildIconTextRow(
-                                            context,
-                                            Icons.color_lens,
-                                            car.color ?? 'N/A',
-                                          ),
-                                          const SizedBox(height: 8.0),
-                                          _buildIconTextRow(
-                                            context,
-                                            Icons.attach_money,
-                                            totalPrice.toString(),
-                                          ),
-                                        ],
+                                      const SizedBox(height: 8.0),
+                                      _buildIconTextRow(
+                                        context,
+                                        Icons.color_lens,
+                                        car.color ?? 'N/A',
+                                      ),
+                                      const SizedBox(height: 8.0),
+                                      _buildIconTextRow(
+                                        context,
+                                        Icons.attach_money,
+                                        totalPrice.toString(),
                                       ),
                                     ],
                                   ),
                                 ],
                               ),
-                            ),
-                            _buildSectionTitle('Pick-Up & Drop-Off'),
-                            Container(
-                              padding: const EdgeInsets.all(16.0),
-                              decoration: BoxDecoration(
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .primary
-                                    .withOpacity(0.08),
-                                borderRadius: BorderRadius.circular(16.0),
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  FutureBuilder<Address?>(
-                                    future:
-                                        Provider.of<AddressProvider>(context)
-                                            .getAddressById(
-                                      car.defaultAddressId ?? '',
-                                    ),
-                                    builder: (context, snapshot) {
-                                      String address = '';
-                                      if (snapshot.connectionState ==
-                                          ConnectionState.waiting) {
-                                        return const CustomProgressIndicator();
-                                      } else if (snapshot.hasError) {
-                                        address = 'N/A';
-                                      } else if (!snapshot.hasData ||
-                                          snapshot.data == null) {
-                                        address = 'N/A';
-                                      }
-                                      final defaultAddress = snapshot.data!;
-                                      address = defaultAddress.toString();
-                                      return _buildLocationIconTextRow(
-                                        context,
-                                        Icons.location_on,
-                                        address,
-                                      );
-                                    },
-                                  ),
-                                  const SizedBox(height: 20.0),
-                                  _buildIconTextRowWithDate(
-                                    context,
-                                    Icons.access_time,
-                                    'Pick-Up Time',
-                                    widget.pickUpDateTime ?? DateTime.now(),
-                                  ),
-                                  const SizedBox(height: 20.0),
-                                  _buildIconTextRowWithDate(
-                                    context,
-                                    Icons.access_time,
-                                    'Drop-Off Time',
-                                    widget.dropOffDateTime ?? DateTime.now(),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            _buildSectionTitle('Pricing'),
-                            Container(
-                              padding: const EdgeInsets.all(16.0),
-                              decoration: BoxDecoration(
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .primary
-                                    .withOpacity(0.08),
-                                borderRadius: BorderRadius.circular(16.0),
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  _buildPricingRow(
-                                    'Hourly Rate',
-                                    '${car.hourPrice ?? 0.0} per hour',
-                                  ),
-                                  _buildPricingRow(
-                                    'Daily Rate',
-                                    '${car.dayPrice ?? 0.0} per day',
-                                  ),
-                                  _buildPricingRow(
-                                    'Duration',
-                                    durationText,
-                                  ),
-                                  const Divider(thickness: 0.3),
-                                  _buildAmountDetails(
-                                    'Total for ${hours.toString()} hours',
-                                    'RM$totalForHours',
-                                  ),
-                                  _buildAmountDetails(
-                                    'Total for ${days.toString()} days',
-                                    'RM$totalForDays',
-                                  ),
-                                  const Divider(thickness: 0.3),
-                                  _buildAmountDetails(
-                                    'Total Rent',
-                                    'RM$totalPrice',
-                                    isTotal: true,
-                                  ),
-                                ],
-                              ),
-                            ),
-                            // TODO: Implement payment method selection
-                            // _buildSectionTitle('Payment Method'),
-                            // const PaymentMethodSelector(),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
+                        _buildSectionTitle('Pick-Up & Drop-Off'),
+                        Container(
+                          padding: const EdgeInsets.all(16.0),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .primary
+                                .withOpacity(0.08),
+                            borderRadius: BorderRadius.circular(16.0),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              FutureBuilder<Address?>(
+                                future: Provider.of<AddressProvider>(context)
+                                    .getAddressById(
+                                  car.defaultAddressId ?? '',
+                                ),
+                                builder: (context, snapshot) {
+                                  String address = '';
+                                  if (snapshot.connectionState ==
+                                      ConnectionState.waiting) {
+                                    return const CustomProgressIndicator();
+                                  } else if (snapshot.hasError) {
+                                    address = 'N/A';
+                                  } else if (!snapshot.hasData ||
+                                      snapshot.data == null) {
+                                    address = 'N/A';
+                                  }
+                                  final defaultAddress = snapshot.data!;
+                                  address = defaultAddress.toString();
+                                  return _buildLocationIconTextRow(
+                                    context,
+                                    Icons.location_on,
+                                    address,
+                                  );
+                                },
+                              ),
+                              const SizedBox(height: 20.0),
+                              _buildIconTextRowWithDate(
+                                context,
+                                Icons.access_time,
+                                'Pick-Up Time',
+                                widget.pickUpDateTime ?? DateTime.now(),
+                              ),
+                              const SizedBox(height: 20.0),
+                              _buildIconTextRowWithDate(
+                                context,
+                                Icons.access_time,
+                                'Drop-Off Time',
+                                widget.dropOffDateTime ?? DateTime.now(),
+                              ),
+                            ],
+                          ),
+                        ),
+                        _buildSectionTitle('Pricing'),
+                        Container(
+                          padding: const EdgeInsets.all(16.0),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .primary
+                                .withOpacity(0.08),
+                            borderRadius: BorderRadius.circular(16.0),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _buildPricingRow(
+                                'Hourly Rate',
+                                '${car.hourPrice ?? 0.0} per hour',
+                              ),
+                              _buildPricingRow(
+                                'Daily Rate',
+                                '${car.dayPrice ?? 0.0} per day',
+                              ),
+                              _buildPricingRow(
+                                'Duration',
+                                durationText,
+                              ),
+                              const Divider(thickness: 0.3),
+                              _buildAmountDetails(
+                                'Total for ${hours.toString()} hours',
+                                'RM$totalForHours',
+                              ),
+                              _buildAmountDetails(
+                                'Total for ${days.toString()} days',
+                                'RM$totalForDays',
+                              ),
+                              const Divider(thickness: 0.3),
+                              _buildAmountDetails(
+                                'Total Rent',
+                                'RM$totalPrice',
+                                isTotal: true,
+                              ),
+                            ],
+                          ),
+                        ),
+                        // TODO: Implement payment method selection
+                        // _buildSectionTitle('Payment Method'),
+                        // const PaymentMethodSelector(),
+                      ],
                     ),
-                    const SizedBox(height: 10.0),
-                    ConfirmAndPayButton(
-                      car: car,
-                      totalPrice: totalPrice,
-                      confirmAndPay: confirmAndPay,
-                    ),
-                  ],
+                  ),
                 ),
-              );
-            },
+                const SizedBox(height: 10.0),
+                ConfirmAndPayButton(
+                  car: car,
+                  totalPrice: totalPrice,
+                  confirmAndPay: confirmAndPay,
+                ),
+              ],
+            ),
           );
         },
       ),
@@ -364,6 +385,8 @@ class _ConfirmCarRentalScreenState extends State<ConfirmCarRentalScreen> {
       );
       return;
     }
+
+    _stopListeningToCarStatus();
 
     try {
       final userId = FirebaseAuthService().currentUser?.uid ?? '';

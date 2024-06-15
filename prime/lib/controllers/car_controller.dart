@@ -585,7 +585,7 @@ class CarController {
     String carReferenceNumber,
     List<String> carImagesPaths,
   ) async {
-    // car-images/${referenceNumber}/somethingHere.jpg all images in the carId folder
+    // car-images/${referenceNumber}/somethingHere.jpg all images in the car-images folder
     final storageService = FirebaseStorageService();
     final imagesUrls = <String>[];
 

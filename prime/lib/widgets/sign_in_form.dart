@@ -88,6 +88,7 @@ class _SignInFormState extends State<SignInForm> {
             );
           }
         } catch (e) {
+          // TODO: filter the error messages and display human informative messages
           if (mounted) {
             buildFailureSnackbar(
               context: context,

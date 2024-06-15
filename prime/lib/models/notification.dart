@@ -21,3 +21,4 @@ class Notification {
     this.createdAt,
   });
 }
+// create enum for linkedObjectType

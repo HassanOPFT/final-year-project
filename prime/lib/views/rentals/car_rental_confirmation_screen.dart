@@ -12,6 +12,8 @@ import '../../models/car_rental.dart';
 import '../../providers/car_rental_provider.dart';
 import '../../widgets/custom_progress_indicator.dart';
 
+// TODO: Rental Receipt
+
 class CarRentalConfirmationScreen extends StatelessWidget {
   final String carName;
   final String carImage;

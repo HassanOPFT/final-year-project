@@ -32,7 +32,7 @@ import '../../widgets/latest_status_history_record.dart';
 import '../../widgets/tiles/manage_verification_document_tile.dart';
 import 'update_host_car_screen.dart';
 
-// TODO: status indicator is not updating in real time, check the provider
+// TODO: add car rental history, total earnings, how many rentals, etc
 
 class ManageCarScreen extends StatelessWidget {
   final String carId;
