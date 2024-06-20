@@ -76,7 +76,7 @@ class UserDetailsTile extends StatelessWidget {
       onTap: () {
         animatedPushNavigation(
           context: context,
-          screen: UserDetailsScreen(user: user),
+          screen: UserDetailsScreen(userId: user.userId ?? ''),
         );
       },
     );

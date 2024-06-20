@@ -3,7 +3,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:prime/models/status_history.dart';
-import 'package:prime/widgets/copy_text.dart';
 import 'package:prime/widgets/latest_status_history_record.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -14,12 +13,14 @@ import '../../providers/customer_provider.dart';
 import '../../providers/status_history_provider.dart';
 import '../../utils/assets_paths.dart';
 import '../../utils/snackbar.dart';
+import '../../widgets/created_at_row.dart';
 import '../../widgets/custom_progress_indicator.dart';
 import '../../models/user.dart';
 import '../../providers/user_provider.dart';
 import '../../providers/verification_document_provider.dart';
 import '../../services/firebase/firebase_auth_service.dart';
 import '../../utils/navigate_with_animation.dart';
+import '../../widgets/reference_number_row.dart';
 import 'update_verification_document_screen.dart';
 import 'view_full_image_screen.dart';
 import '../../models/verification_document.dart';
@@ -108,7 +109,7 @@ class VerificationDocumentDetailsScreen extends StatelessWidget {
             ),
             title: Text(title),
             content: SizedBox(
-              width: MediaQuery.of(context).size.width, // Set the width
+              width: MediaQuery.of(context).size.width,
               child: Form(
                 key: formKey,
                 child: Column(
@@ -683,41 +684,13 @@ class VerificationDocumentDetailsScreen extends StatelessWidget {
                     const SizedBox(height: 15.0),
                     const Divider(thickness: 0.3),
                     const SizedBox(height: 15.0),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Ref Number',
-                          style: TextStyle(
-                            color: Theme.of(context).hintColor,
-                            fontSize: 16.0,
-                          ),
-                        ),
-                        CopyText(
-                          text: verificationDocument.referenceNumber ?? 'N/A',
-                          fontSize: 16.0,
-                        )
-                      ],
+                    ReferenceNumberRow(
+                      referenceNumber: verificationDocument.referenceNumber,
                     ),
                     const SizedBox(height: 10.0),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Added on',
-                          style: TextStyle(
-                            color: Theme.of(context).hintColor,
-                            fontSize: 16.0,
-                          ),
-                        ),
-                        Text(
-                          DateFormat.yMMMd().add_jm().format(
-                              verificationDocument.createdAt as DateTime),
-                          style: const TextStyle(
-                            fontSize: 16.0,
-                          ),
-                        ),
-                      ],
+                    CreatedAtRow(
+                      labelText: 'Added On',
+                      createdAt: verificationDocument.createdAt,
                     ),
                   ],
                 ),

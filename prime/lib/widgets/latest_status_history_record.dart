@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:prime/utils/navigate_with_animation.dart';
+import 'package:prime/views/profile/status_history_screen.dart';
 import 'package:prime/widgets/custom_progress_indicator.dart';
 import '../../models/status_history.dart';
 import '../controllers/user_controller.dart';
-import '../views/profile/verification_document_history_screen.dart';
 
 class LatestStatusHistoryRecord extends StatelessWidget {
   final Future<StatusHistory?> Function(String verificationDocumentId)
@@ -133,8 +133,8 @@ class LatestStatusHistoryRecord extends StatelessWidget {
                                       onPressed: () => animatedPushNavigation(
                                         context: context,
                                         screen:
-                                            VerificationDocumentHistoryScreen(
-                                          verificationDocumentId:
+                                            StatusHistoryScreen(
+                                          linkedObjectId:
                                               latestStatusHistory
                                                       .linkedObjectId ??
                                                   '',

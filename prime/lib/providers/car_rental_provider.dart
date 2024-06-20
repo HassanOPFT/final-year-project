@@ -64,4 +64,33 @@ class CarRentalProvider with ChangeNotifier {
       rethrow;
     }
   }
+
+  Future<List<CarRental>> getCarRentalsByCarIdAndStatuses(
+    String carId,
+    List<CarRentalStatus> statuses,
+  ) async {
+    try {
+      final carRentals =
+          await _carRentalController.getCarRentalsByCarIdAndStatuses(
+        carId,
+        statuses,
+      );
+      return carRentals;
+    } catch (_) {
+      rethrow;
+    }
+  }
+
+  Future<List<CarRental>> getCarRentalsByStatuses(
+    List<CarRentalStatus> statuses,
+  ) async {
+    try {
+      final carRentals = await _carRentalController.getCarRentalsByStatuses(
+        statuses,
+      );
+      return carRentals;
+    } catch (_) {
+      rethrow;
+    }
+  }
 }

@@ -6,12 +6,12 @@ import 'package:prime/providers/status_history_provider.dart';
 import 'package:prime/widgets/custom_progress_indicator.dart';
 import 'package:provider/provider.dart';
 
-class VerificationDocumentHistoryScreen extends StatelessWidget {
-  final String verificationDocumentId;
+class StatusHistoryScreen extends StatelessWidget {
+  final String linkedObjectId;
 
-  const VerificationDocumentHistoryScreen({
+  const StatusHistoryScreen({
     super.key,
-    required this.verificationDocumentId,
+    required this.linkedObjectId,
   });
 
   @override
@@ -21,7 +21,7 @@ class VerificationDocumentHistoryScreen extends StatelessWidget {
     final userController = UserController();
 
     final Future<List<StatusHistory>> statusHistoryList =
-        statusHistoryProvider.getStatusHistoryList(verificationDocumentId);
+        statusHistoryProvider.getStatusHistoryList(linkedObjectId);
 
     Future<Map<String, String?>> fetchUserNames(
         List<StatusHistory> histories) async {

@@ -4,8 +4,15 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:prime/utils/navigate_with_animation.dart';
 import 'package:prime/views/rentals/confirm_car_rental_screen.dart';
+import 'package:provider/provider.dart';
 
+import '../models/verification_document.dart';
+import '../providers/customer_provider.dart';
+import '../providers/user_provider.dart';
+import '../providers/verification_document_provider.dart';
+import '../services/firebase/firebase_auth_service.dart';
 import '../utils/snackbar.dart';
+import 'customer_documents_rent_status_checker.dart';
 
 class CarRentalSchedulePicker extends StatefulWidget {
   final String carId;
@@ -31,11 +38,155 @@ class _CarRentalSchedulePickerState extends State<CarRentalSchedulePicker> {
       .add(const Duration(hours: 2))
       .copyWith(second: 0, millisecond: 0, microsecond: 0);
 
+  final currentUserId = FirebaseAuthService().currentUser?.uid;
+
+  Future<bool> hasApprovedIdentityDocument() async {
+    try {
+      if (currentUserId == null || currentUserId!.isEmpty) {
+        return false;
+      }
+      final customerProvider = Provider.of<CustomerProvider>(
+        context,
+        listen: false,
+      );
+
+      final identityDocumentId = await customerProvider.getIdentityDocumentId(
+        currentUserId ?? '',
+      );
+
+      if (identityDocumentId.isEmpty) {
+        return false;
+      }
+
+      // Check the status of the identity document
+      final verificationDocumentProvider =
+          Provider.of<VerificationDocumentProvider>(
+        context,
+        listen: false,
+      );
+      final identityDocument = await verificationDocumentProvider
+          .getVerificationDocumentById(identityDocumentId);
+
+      if (identityDocument == null ||
+          identityDocument.status != VerificationDocumentStatus.approved) {
+        // Identity document is not approved
+        return false;
+      }
+
+      return true;
+    } on Exception catch (_) {
+      rethrow;
+    }
+  }
+
+  Future<bool> hasApprovedDrivingLicenseDocument() async {
+    try {
+      if (currentUserId == null || currentUserId!.isEmpty) {
+        return false;
+      }
+
+      final customerProvider = Provider.of<CustomerProvider>(
+        context,
+        listen: false,
+      );
+      final drivingLicenseId = await customerProvider.getLicenseDocumentId(
+        currentUserId ?? '',
+      );
+
+      if (drivingLicenseId.isEmpty) {
+        return false;
+      }
+
+      // Check the status of the driving license document
+      final verificationDocumentProvider =
+          Provider.of<VerificationDocumentProvider>(
+        context,
+        listen: false,
+      );
+      final drivingLicenseDocument = await verificationDocumentProvider
+          .getVerificationDocumentById(drivingLicenseId);
+
+      if (drivingLicenseDocument == null ||
+          drivingLicenseDocument.status !=
+              VerificationDocumentStatus.approved) {
+        // driving license is not approved
+        return false;
+      }
+
+      return true;
+    } on Exception catch (_) {
+      rethrow;
+    }
+  }
+
+  // check if user has phone number in the database
+  Future<bool> hasPhoneNumber() async {
+    try {
+      final userProvider = Provider.of<UserProvider>(
+        context,
+        listen: false,
+      );
+
+      if (currentUserId == null || currentUserId!.isEmpty) {
+        return false;
+      }
+
+      final currentUser =
+          await userProvider.getUserDetails(currentUserId ?? '');
+
+      if (currentUser == null) {
+        return false;
+      }
+
+      if (currentUser.userPhoneNumber == null ||
+          currentUser.userPhoneNumber!.isEmpty) {
+        return false;
+      }
+
+      return true;
+    } on Exception catch (_) {
+      rethrow;
+    }
+  }
+
+  // TODO: When a user selects dates to rent a car, the system checks for overlapping rentals and determines availability.
+  // TODO: If the car is available for the selected dates, the user can proceed with the rental;
+  // TODO: otherwise, they are informed of the unavailability with exact dates when it's not available.
+  // TODO: don't forget to update the fetching and allowing to display cars with currently rented and has upcoming rentals, specially the stream listeners
+  // TODO: car rental can be extended also, check the rental extension collection in the database
   Future<void> _continueToPayment() async {
-    // TODO: When a user selects dates to rent a car, the system checks for overlapping rentals and determines availability.
-    // TODO: If the car is available for the selected dates, the user can proceed with the rental;
-    // TODO: otherwise, they are informed of the unavailability with exact dates when it's not available.
-    // TODO: don't forget to update the fetching and allowing to display cars with currently rented and has upcoming rentals, specially the stream listeners
+    // check for identity and driving license documents
+    final identityDocumentApproved = await hasApprovedIdentityDocument();
+
+    if (!identityDocumentApproved) {
+      buildAlertSnackbar(
+        context: context,
+        message: 'You need an approved identity document to rent a car.',
+      );
+      return;
+    }
+    // check license document
+    final drivingLicenseDocumentApproved =
+        await hasApprovedDrivingLicenseDocument();
+
+    if (!drivingLicenseDocumentApproved) {
+      buildAlertSnackbar(
+        context: context,
+        message: 'You need an approved driving license document to rent a car.',
+      );
+      return;
+    }
+
+    // check if user has phone number
+    final hasPhone = await hasPhoneNumber();
+    if (!hasPhone) {
+      buildAlertSnackbar(
+        context: context,
+        message:
+            'You need to add a phone number to your profile to rent a car.',
+      );
+      return;
+    }
 
     if (_pickUpDateTime == null || _dropOffDateTime == null) {
       buildAlertSnackbar(
@@ -216,7 +367,14 @@ class _CarRentalSchedulePickerState extends State<CarRentalSchedulePicker> {
             _dropOffDateTime,
             false,
           ),
-          const SizedBox(height: 50.0),
+          const SizedBox(height: 20.0),
+          CustomerDocumentsRentStatusChecker(
+            hasApprovedIdentityDocument: hasApprovedIdentityDocument,
+            hasApprovedDrivingLicenseDocument:
+                hasApprovedDrivingLicenseDocument,
+            hasPhoneNumber: hasPhoneNumber,
+          ),
+          const SizedBox(height: 30.0),
           SizedBox(
             height: 50.0,
             child: FilledButton(

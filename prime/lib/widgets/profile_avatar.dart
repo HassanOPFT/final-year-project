@@ -44,9 +44,11 @@ class _ProfileAvatarState extends State<ProfileAvatar> {
 
       if (userId != null) {
         await userController.deleteProfilePicture(userId!);
-        setState(() {
-          userProfileUrl = defaultProfileUrl;
-        });
+        if (mounted) {
+          setState(() {
+            userProfileUrl = defaultProfileUrl;
+          });
+        }
       } else {
         if (mounted) {
           buildFailureSnackbar(
@@ -106,9 +108,11 @@ class _ProfileAvatarState extends State<ProfileAvatar> {
           compressedFile.path,
           userId as String,
         );
-        setState(() {
-          userProfileUrl = newProfileImage;
-        });
+        if (mounted) {
+          setState(() {
+            userProfileUrl = newProfileImage;
+          });
+        }
       } else {
         if (mounted) {
           buildFailureSnackbar(
@@ -131,16 +135,20 @@ class _ProfileAvatarState extends State<ProfileAvatar> {
     if (userId != null) {
       final profileUrl =
           await userController.getUserProfilePicture(userId as String);
-      setState(() {
-        userProfileUrl = profileUrl ?? defaultProfileUrl;
-        if (userProfileUrl != null && userProfileUrl!.isEmpty) {
-          userProfileUrl = defaultProfileUrl;
-        }
-      });
+      if (mounted) {
+        setState(() {
+          userProfileUrl = profileUrl ?? defaultProfileUrl;
+          if (userProfileUrl != null && userProfileUrl!.isEmpty) {
+            userProfileUrl = defaultProfileUrl;
+          }
+        });
+      }
     } else {
-      setState(() {
-        userProfileUrl = defaultProfileUrl;
-      });
+      if (mounted) {
+        setState(() {
+          userProfileUrl = defaultProfileUrl;
+        });
+      }
     }
   }
 

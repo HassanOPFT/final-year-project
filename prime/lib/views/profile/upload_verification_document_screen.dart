@@ -489,7 +489,7 @@ class _UploadVerificationDocumentScreenState
                     Text(
                       documentTitle,
                       style: const TextStyle(
-                        fontSize: 32,
+                        fontSize: 32.0,
                       ),
                     ),
                     const SizedBox(height: 20.0),

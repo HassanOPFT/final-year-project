@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:prime/models/status_history.dart';
-import 'package:prime/models/user.dart';
 import 'package:prime/utils/generate_reference_number.dart';
 
 import '../models/car_rental.dart';
@@ -63,8 +62,8 @@ class CarRentalController {
           linkedObjectId: newCarRental.id,
           linkedObjectType: 'CarRental',
           linkedObjectSubtype: '',
-          previousStatus: newCarRentalStatus.getStatusString(UserRole.customer),
-          newStatus: newCarRentalStatus.getStatusString(UserRole.customer),
+          previousStatus: newCarRentalStatus.name,
+          newStatus: newCarRentalStatus.name,
           statusDescription: '',
           modifiedById: customerId,
         ),
@@ -141,6 +140,42 @@ class CarRentalController {
     try {
       final carRentals = await _carRentalCollection
           .where(_carIdFieldName, isEqualTo: carId)
+          .get();
+
+      return carRentals.docs
+          .map((carRental) => _fromMap(carRental.id, carRental.data()))
+          .toList();
+    } catch (_) {
+      rethrow;
+    }
+  }
+
+  Future<List<CarRental>> getCarRentalsByCarIdAndStatuses(
+    String carId,
+    List<CarRentalStatus> statuses,
+  ) async {
+    try {
+      final carRentals = await _carRentalCollection
+          .where(_carIdFieldName, isEqualTo: carId)
+          .where(_statusFieldName,
+              whereIn: statuses.map((status) => status.name).toList())
+          .get();
+
+      return carRentals.docs
+          .map((carRental) => _fromMap(carRental.id, carRental.data()))
+          .toList();
+    } catch (_) {
+      rethrow;
+    }
+  }
+
+  Future<List<CarRental>> getCarRentalsByStatuses(
+    List<CarRentalStatus> statuses,
+  ) async {
+    try {
+      final carRentals = await _carRentalCollection
+          .where(_statusFieldName,
+              whereIn: statuses.map((status) => status.name).toList())
           .get();
 
       return carRentals.docs

@@ -33,12 +33,12 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
         padding: const EdgeInsets.symmetric(vertical: 10),
         children: [
           const ProfileAvatar(),
-          const SizedBox(height: 15),
+          const SizedBox(height: 15.0),
           const UserInfo(),
-          const SizedBox(height: 25),
+          const SizedBox(height: 25.0),
           const Divider(
-            endIndent: 15,
-            indent: 15,
+            endIndent: 15.0,
+            indent: 15.0,
             thickness: 0.3,
           ),
           const EditProfileTile(),

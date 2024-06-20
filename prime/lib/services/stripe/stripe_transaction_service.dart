@@ -2,9 +2,9 @@ import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 
-// final transactionId = chargeObject['balance_transaction'];
+import '../../models/stripe_transaction.dart';
 
-class StripeTransaction {
+class StripeTransactionService {
   String _getStripeAPIKey() => dotenv.env['STRIPE_SECRET_KEY'] ?? '';
 
   Future<Map<String, dynamic>> _handleResponse(http.Response response) async {
@@ -15,7 +15,7 @@ class StripeTransaction {
     }
   }
 
-  Future<Map<String, dynamic>> getBalanceTransactionDetails({
+  Future<StripeTransaction> getBalanceTransactionDetails({
     required String transactionId,
   }) async {
     try {
@@ -29,7 +29,9 @@ class StripeTransaction {
         },
       );
 
-      return _handleResponse(response);
+      StripeTransaction stripeTransaction =
+          StripeTransaction.fromJson(await _handleResponse(response));
+      return stripeTransaction;
     } catch (e) {
       rethrow;
     }

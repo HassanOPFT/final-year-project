@@ -14,31 +14,27 @@ class CarFeatureCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8.0),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 8.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildFeatureIcon(context),
-            Text(
-              featureName,
-              style: const TextStyle(
-                color: Colors.grey,
-              ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 8.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          _buildFeatureIcon(context),
+          const SizedBox(height: 5.0),
+          Text(
+            featureName,
+            style: const TextStyle(
+              color: Colors.grey,
             ),
-            Text(
-              featureValue,
-              style: const TextStyle(
-                fontSize: 20.0,
-                fontWeight: FontWeight.bold,
-              ),
+          ),
+          Text(
+            featureValue,
+            style: const TextStyle(
+              fontSize: 20.0,
+              fontWeight: FontWeight.bold,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

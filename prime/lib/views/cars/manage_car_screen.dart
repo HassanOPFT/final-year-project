@@ -6,6 +6,7 @@ import 'package:prime/providers/address_provider.dart';
 import 'package:prime/utils/snackbar.dart';
 import 'package:prime/widgets/admin_car_address.dart';
 import 'package:prime/widgets/bottom_sheet/edit_car_bottom_sheet.dart';
+import 'package:prime/widgets/car_features_row.dart';
 import 'package:prime/widgets/card/host_car_bank_account_card.dart';
 import 'package:prime/widgets/custom_progress_indicator.dart';
 import 'package:prime/widgets/host_car_verification_document.dart';
@@ -24,7 +25,6 @@ import '../../providers/verification_document_provider.dart';
 import '../../services/firebase/firebase_auth_service.dart';
 import '../../utils/assets_paths.dart';
 import '../../utils/navigate_with_animation.dart';
-import '../../widgets/card/car_feature_card.dart';
 import '../../widgets/copy_text.dart';
 import '../../widgets/host_car_address.dart';
 import '../../widgets/images/car_images_carousel.dart';
@@ -98,7 +98,7 @@ class ManageCarScreen extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Image.asset(
-                  AssetsPaths.binImage, // Change to your bin image path
+                  AssetsPaths.binImage,
                   height: 200.0,
                 ),
                 const Text(
@@ -597,13 +597,6 @@ class ManageCarScreen extends StatelessWidget {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 16.0),
-                    Text(
-                      car.description ?? 'No description provided',
-                      style: const TextStyle(
-                        fontSize: 16.0,
-                      ),
-                    ),
                     buildSectionTitle(sectionTitle: 'Host'),
                     FutureBuilder<User?>(
                       future: Provider.of<UserProvider>(context, listen: false)
@@ -653,62 +646,15 @@ class ManageCarScreen extends StatelessWidget {
                         }
                       },
                     ),
+                    buildSectionTitle(sectionTitle: 'Description'),
+                    Text(
+                      car.description ?? 'No description provided',
+                      style: const TextStyle(
+                        fontSize: 16.0,
+                      ),
+                    ),
                     buildSectionTitle(sectionTitle: 'Features'),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        CarFeatureCard(
-                          featureIcon: Icons.color_lens,
-                          featureName: 'Color',
-                          featureValue: car.color ?? 'N/A',
-                        ),
-                        CarFeatureCard(
-                          featureIcon: Image.asset(
-                            AssetsPaths.transmissionTypeIcon,
-                            width: 23.0,
-                            height: 19.0,
-                            color: Theme.of(context).colorScheme.onBackground,
-                          ),
-                          featureName: 'Transmission',
-                          featureValue:
-                              car.transmissionType?.transmissionTypeString ??
-                                  'N/A',
-                        ),
-                        CarFeatureCard(
-                          featureIcon: Image.asset(
-                            AssetsPaths.carSeatIcon,
-                            width: 25.0,
-                            height: 25.0,
-                            color: Theme.of(context).colorScheme.onBackground,
-                          ),
-                          featureName: 'Seats',
-                          featureValue: car.seats?.toString() ?? 'N/A',
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10.0),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        CarFeatureCard(
-                          featureIcon: Icons.directions_car,
-                          featureName: 'Car Type',
-                          featureValue:
-                              car.carType?.getCarTypeString() ?? 'N/A',
-                        ),
-                        CarFeatureCard(
-                          featureIcon: Image.asset(
-                            AssetsPaths.engineTypeIcon,
-                            width: 28.0,
-                            height: 26.0,
-                            color: Theme.of(context).colorScheme.onBackground,
-                          ),
-                          featureName: 'Engine Type',
-                          featureValue:
-                              car.engineType?.engineTypeString ?? 'N/A',
-                        ),
-                      ],
-                    ),
+                    CarFeaturesRow(car: car),
                     buildSectionTitle(sectionTitle: 'Address'),
                     if (!isAdmin)
                       HostCarAddress(

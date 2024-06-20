@@ -8,7 +8,7 @@ class User {
   String? userProfileUrl;
   String? userPhoneNumber;
   String? userFcmToken;
-  ActivityStatus? userActivityStatus;
+  ActivityStatus? userActivityStatus; // TODO: either implement a feature to manage this or remove it
   bool? notificationsEnabled;
   DateTime? createdAt;
 

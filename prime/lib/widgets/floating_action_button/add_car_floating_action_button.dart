@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:prime/providers/user_provider.dart';
 import 'package:prime/utils/snackbar.dart';
 import 'package:prime/views/host/add_car_screen.dart';
 import 'package:provider/provider.dart';
@@ -95,6 +96,35 @@ class _AddCarFloatingButtonState extends State<AddCarFloatingButton> {
     }
   }
 
+  Future<bool> hasPhoneNumber() async {
+    try {
+      final userProvider = Provider.of<UserProvider>(
+        context,
+        listen: false,
+      );
+
+      if (currentUserId == null || currentUserId!.isEmpty) {
+        return false;
+      }
+
+      final currentUser =
+          await userProvider.getUserDetails(currentUserId ?? '');
+
+      if (currentUser == null) {
+        return false;
+      }
+
+      if (currentUser.userPhoneNumber == null ||
+          currentUser.userPhoneNumber!.isEmpty) {
+        return false;
+      }
+
+      return true;
+    } on Exception catch (_) {
+      rethrow;
+    }
+  }
+
   Future<void> _addCar() async {
     try {
       setAddCarLoading(true);
@@ -121,6 +151,20 @@ class _AddCarFloatingButtonState extends State<AddCarFloatingButton> {
             context: context,
             message:
                 'You need to have a bank account or complete bank account details to add a car.',
+          );
+        }
+        return;
+      }
+
+      // check if the user has a phone no in the database
+      final userHasPhoneNumber = await hasPhoneNumber();
+      if (!userHasPhoneNumber) {
+        setAddCarLoading(false);
+        if (mounted) {
+          buildAlertSnackbar(
+            context: context,
+            message:
+                'You need to add a phone number to your profile to add a new car.',
           );
         }
         return;

@@ -38,9 +38,11 @@ enum CarRentalStatus {
   customerReturnedCar,
   hostConfirmedPickup,
   customerCancelled,
+  hostCancelled,
   hostReportedIssue,
   hostConfirmedReturn,
-  adminConfirmedPayment,
+  adminConfirmedPayout,
+  adminConfirmedRefund,
 }
 
 extension RentalStatusExtension on CarRentalStatus {
@@ -59,7 +61,9 @@ extension RentalStatusExtension on CarRentalStatus {
       case CarRentalStatus.hostConfirmedPickup:
         return 'Ongoing';
       case CarRentalStatus.customerCancelled:
-        return 'Cancelled';
+        return 'Customer Cancelled';
+      case CarRentalStatus.hostCancelled:
+        return 'Host Cancelled';
       case CarRentalStatus.hostReportedIssue:
         return 'Issue Reported By Host';
       case CarRentalStatus.hostConfirmedReturn:
@@ -68,7 +72,7 @@ extension RentalStatusExtension on CarRentalStatus {
         } else {
           return 'Completed & Pending Payout';
         }
-      case CarRentalStatus.adminConfirmedPayment:
+      case CarRentalStatus.adminConfirmedPayout:
         if (role == UserRole.host ||
             role == UserRole.primaryAdmin ||
             role == UserRole.secondaryAdmin) {
@@ -76,8 +80,17 @@ extension RentalStatusExtension on CarRentalStatus {
         } else {
           return 'Completed';
         }
+      case CarRentalStatus.adminConfirmedRefund:
+        return 'Host Cancelled & Customer Refunded';
       default:
         return 'Unknown Status';
     }
+  }
+}
+
+extension CarRentalStatusExtension on CarRentalStatus {
+  static CarRentalStatus fromString(String status) {
+    return CarRentalStatus.values
+        .firstWhere((e) => e.toString().split('.').last == status);
   }
 }

@@ -266,7 +266,7 @@ class CarRentalConfirmationScreen extends StatelessWidget {
                               ),
                             ),
                             Text(
-                              totalPrice,
+                              'RM$totalPrice',
                               style: const TextStyle(
                                 fontSize: 22.0,
                                 fontWeight: FontWeight.bold,

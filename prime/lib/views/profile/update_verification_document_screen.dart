@@ -263,13 +263,12 @@ class _UpdateVerificationDocumentScreenState
                     Text(
                       documentTitle,
                       style: const TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
+                        fontSize: 32.0,
                       ),
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 10.0),
                     Text(documentSubtitle),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 20.0),
                     if (changeDocument)
                       ChooseImageContainer(
                         setSelectedImage: setSelectedImage,
@@ -291,7 +290,7 @@ class _UpdateVerificationDocumentScreenState
                           tag: 'document-image',
                           child: Container(
                             width: double.infinity,
-                            height: 200,
+                            height: 200.0,
                             decoration:
                                 widget.verificationDocument.documentUrl == null
                                     ? null
@@ -326,7 +325,7 @@ class _UpdateVerificationDocumentScreenState
                           ),
                         ),
                       ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 20.0),
                     TextFormField(
                       controller: _expiryDateController,
                       decoration: InputDecoration(
@@ -375,7 +374,7 @@ class _UpdateVerificationDocumentScreenState
                   ? const CustomProgressIndicator()
                   : FilledButton(
                       onPressed:
-                          _updateDocument, // Disable button if no file is selected
+                          _updateDocument,
                       child: Text(
                         submitButtonText,
                         style: const TextStyle(

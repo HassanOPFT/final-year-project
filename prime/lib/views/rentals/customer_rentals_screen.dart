@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../../widgets/car_rentals_history_tab_body.dart';
+import '../../widgets/customer_car_rentals_history_tab_body.dart';
 import '../../widgets/navigation_bar/customer_navigation_bar.dart';
-import '../../widgets/ongoing_and_upcoming_car_rentals_tab_body.dart';
+import '../../widgets/customer_active_car_rentals_tab_body.dart.dart';
 
 class CustomerRentalsScreen extends StatefulWidget {
   const CustomerRentalsScreen({super.key});
@@ -23,8 +23,8 @@ class _CustomerRentalsScreenState extends State<CustomerRentalsScreen> {
           bottom: const TabBar(
             tabs: [
               Tab(
-                text: 'Ongoing & Upcoming',
-                icon: Icon(Icons.schedule_rounded),
+                text: 'Active',
+                icon: Icon(Icons.directions_car_rounded),
               ),
               Tab(
                 text: 'History',
@@ -35,8 +35,8 @@ class _CustomerRentalsScreenState extends State<CustomerRentalsScreen> {
         ),
         body: const TabBarView(
           children: [
-            OngoingAndUpcomingCarRentalsTabBody(),
-            CarRentalsHistoryTabBody(),
+            CustomerActiveCarRentalsTabBody(),
+            CustomerCarRentalsHistoryTabBody(),
           ],
         ),
         bottomNavigationBar: const CustomerNavigationBar(currentIndex: 1),

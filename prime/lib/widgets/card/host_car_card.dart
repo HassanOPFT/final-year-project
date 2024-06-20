@@ -47,15 +47,10 @@ class HostCarCard extends StatelessWidget {
                             '${car.manufacturer} ${car.model} ',
                             style: const TextStyle(
                               fontWeight: FontWeight.bold,
-                              fontSize: 24.0,
+                              fontSize: 22.0,
                             ),
                           ),
-                          Text(
-                            '${car.manufactureYear} ',
-                            style: const TextStyle(
-                              fontSize: 16.0,
-                            ),
-                          ),
+                          Text('${car.manufactureYear} '),
                         ],
                       ),
                     ),
@@ -66,13 +61,16 @@ class HostCarCard extends StatelessWidget {
                           children: [
                             Text(
                               'RM${car.hourPrice?.toStringAsFixed(1) ?? 'N/A'}',
-                              style: const TextStyle(),
+                              style: const TextStyle(
+                                fontSize: 12.0,
+                              ),
                             ),
                             const SizedBox(width: 4.0),
                             const Text(
-                              '/hr',
+                              '/Hr',
                               style: TextStyle(
                                 color: Colors.grey,
+                                fontSize: 12.0,
                               ),
                             ),
                           ],
@@ -81,13 +79,16 @@ class HostCarCard extends StatelessWidget {
                           children: [
                             Text(
                               'RM${car.dayPrice?.toStringAsFixed(1) ?? 'N/A'}',
-                              style: const TextStyle(),
+                              style: const TextStyle(
+                                fontSize: 12.0,
+                              ),
                             ),
                             const SizedBox(width: 4.0),
                             const Text(
-                              '/day',
+                              '/Day',
                               style: TextStyle(
                                 color: Colors.grey,
+                                fontSize: 12.0,
                               ),
                             ),
                           ],

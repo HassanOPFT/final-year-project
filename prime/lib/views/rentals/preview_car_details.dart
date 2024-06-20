@@ -1,11 +1,8 @@
 // ignore_for_file: use_build_context_synchronously
 
-import 'dart:async';
-
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:prime/utils/snackbar.dart';
 import 'package:prime/widgets/images/car_address_image_preview.dart';
 import 'package:provider/provider.dart';
 
@@ -14,69 +11,25 @@ import '../../models/user.dart';
 import '../../providers/car_provider.dart';
 import '../../providers/user_provider.dart';
 import '../../widgets/car_features_row.dart';
-import '../../widgets/car_rental_schedule_picker.dart';
 import '../../widgets/card/car_rental_reviews.dart';
 import '../../widgets/custom_progress_indicator.dart';
 import '../../widgets/images/car_images_carousel.dart';
 
-class RentCarScreen extends StatefulWidget {
+class PreviewCarDetails extends StatefulWidget {
   final String carId;
-  const RentCarScreen({
+  const PreviewCarDetails({
     super.key,
     required this.carId,
   });
 
   @override
-  State<RentCarScreen> createState() => _RentCarScreenState();
+  State<PreviewCarDetails> createState() => _RentCarScreenState();
 }
 
-class _RentCarScreenState extends State<RentCarScreen> {
-  StreamSubscription<CarStatus>? _carStatusSubscription;
-
+class _RentCarScreenState extends State<PreviewCarDetails> {
   @override
   void initState() {
     super.initState();
-    _startListeningToCarStatus();
-  }
-
-  void _startListeningToCarStatus() {
-    final carProvider = Provider.of<CarProvider>(context, listen: false);
-    _carStatusSubscription = carProvider.listenToCarStatus(widget.carId).listen(
-      (status) {
-        // If the car status is not approved, pop the screen
-        if (status != CarStatus.approved) {
-          WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-            Navigator.of(context).pop();
-            buildAlertSnackbar(
-              context: context,
-              message: 'This car is not available anymore.',
-            );
-          });
-        }
-      },
-      onError: (_) {
-        WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-          Navigator.of(context).pop();
-          buildAlertSnackbar(
-            context: context,
-            message: 'This car is not available anymore.',
-          );
-        });
-      },
-    );
-  }
-
-  void _stopListeningToCarStatus() {
-    if (_carStatusSubscription != null) {
-      _carStatusSubscription!.cancel();
-      _carStatusSubscription = null;
-    }
-  }
-
-  @override
-  void dispose() {
-    _stopListeningToCarStatus();
-    super.dispose();
   }
 
   @override
@@ -102,14 +55,14 @@ class _RentCarScreenState extends State<RentCarScreen> {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Scaffold(
             appBar: AppBar(
-              title: const Text('Rent Car'),
+              title: const Text('Car Preview'),
             ),
             body: const CustomProgressIndicator(),
           );
         } else if (snapshot.hasError) {
           return Scaffold(
             appBar: AppBar(
-              title: const Text('Rent Car'),
+              title: const Text('Car Preview'),
             ),
             body: const Center(
               child: Text('Error loading car details.'),
@@ -118,7 +71,7 @@ class _RentCarScreenState extends State<RentCarScreen> {
         } else if (!snapshot.hasData || snapshot.data == null) {
           return Scaffold(
             appBar: AppBar(
-              title: const Text('Rent Car'),
+              title: const Text('Car Preview'),
             ),
             body: const Center(
               child: Text('Car details not available.'),
@@ -128,7 +81,7 @@ class _RentCarScreenState extends State<RentCarScreen> {
           final car = snapshot.data!;
           return Scaffold(
             appBar: AppBar(
-              title: const Text('Rent Car'),
+              title: const Text('Car Preview'),
             ),
             body: SingleChildScrollView(
               child: Padding(
@@ -243,7 +196,7 @@ class _RentCarScreenState extends State<RentCarScreen> {
                               ),
                             ),
                             subtitle: Text(
-                              'Joined on ${DateFormat.yMMM().format(car.createdAt as DateTime)}',
+                              'Joined on ${DateFormat.yMMM().format(car.createdAt ?? DateTime.now())}',
                             ),
                           );
                         }
@@ -256,7 +209,6 @@ class _RentCarScreenState extends State<RentCarScreen> {
                         fontSize: 16.0,
                       ),
                     ),
-
                     buildSectionTitle(sectionTitle: 'Features'),
                     CarFeaturesRow(car: car),
                     buildSectionTitle(sectionTitle: 'Address'),
@@ -264,10 +216,6 @@ class _RentCarScreenState extends State<RentCarScreen> {
                     // TODO: Implelment the Reviews section + most recent review
                     buildSectionTitle(sectionTitle: 'Reviews'),
                     const CarRentalReviews(),
-                    CarRentalSchedulePicker(
-                      carId: car.id ?? '',
-                      stopListeningToCarStatus: _stopListeningToCarStatus,
-                    ),
                   ],
                 ),
               ),

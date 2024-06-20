@@ -152,8 +152,8 @@ class _ConfirmCarRentalScreenState extends State<ConfirmCarRentalScreen> {
                                     borderRadius: BorderRadius.circular(16.0),
                                     child: CachedNetworkImage(
                                       imageUrl: car.imagesUrl!.first,
-                                      width: 100,
-                                      height: 100,
+                                      width: 100.0,
+                                      height: 100.0,
                                       fit: BoxFit.cover,
                                       placeholder: (context, url) =>
                                           const CustomProgressIndicator(),
@@ -689,25 +689,28 @@ class ConfirmAndPayButton extends StatefulWidget {
 }
 
 class _ConfirmAndPayButtonState extends State<ConfirmAndPayButton> {
-  @override
-  Widget build(BuildContext context) {
-    bool isButtonLoading = false;
-    setIsButtonLoading(bool value) {
+  bool isButtonLoading = false;
+  setIsButtonLoading(bool value) {
+    if (mounted) {
       setState(() {
         isButtonLoading = value;
       });
     }
+  }
 
+  @override
+  Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 10.0),
+      padding: const EdgeInsets.only(bottom: 15.0),
       child: SizedBox(
         width: double.infinity,
         height: 50.0,
         child: isButtonLoading
             ? const CustomProgressIndicator()
             : FilledButton(
-                onPressed: () {
-                  widget.confirmAndPay(
+                onPressed: () async {
+                  setIsButtonLoading(true);
+                  await widget.confirmAndPay(
                     totalPrice: widget.totalPrice,
                     carName: '${widget.car.manufacturer} ${widget.car.model}',
                     carImage: widget.car.imagesUrl!.first,
@@ -715,6 +718,7 @@ class _ConfirmAndPayButtonState extends State<ConfirmAndPayButton> {
                     carColor: widget.car.color ?? 'N/A',
                     carStatus: widget.car.status ?? CarStatus.approved,
                   );
+                  setIsButtonLoading(false);
                 },
                 child: const Text(
                   'Confirm & Pay',

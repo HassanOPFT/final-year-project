@@ -36,7 +36,7 @@ class CustomerCarCard extends StatelessWidget {
       return Row(
         children: [
           buildFeatureIcon(),
-          const SizedBox(width: 4.0),
+          const SizedBox(width: 5.0),
           Text(
             featureName,
           ),
@@ -50,9 +50,12 @@ class CustomerCarCard extends StatelessWidget {
         screen: RentCarScreen(carId: car.id ?? ''),
       ),
       child: Card(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(30.0),
+        ),
         elevation: 5.0,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 10.0),
+          padding: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 15.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -67,15 +70,10 @@ class CustomerCarCard extends StatelessWidget {
                             '${car.manufacturer} ${car.model} ',
                             style: const TextStyle(
                               fontWeight: FontWeight.bold,
-                              fontSize: 24.0,
+                              fontSize: 22.0,
                             ),
                           ),
-                          Text(
-                            '${car.manufactureYear} ',
-                            style: const TextStyle(
-                              fontSize: 16.0,
-                            ),
-                          ),
+                          Text('${car.manufactureYear} '),
                         ],
                       ),
                     ),
@@ -86,13 +84,16 @@ class CustomerCarCard extends StatelessWidget {
                           children: [
                             Text(
                               'RM${car.hourPrice?.toStringAsFixed(1) ?? 'N/A'}',
-                              style: const TextStyle(),
+                              style: const TextStyle(
+                                fontSize: 12.0,
+                              ),
                             ),
                             const SizedBox(width: 4.0),
                             const Text(
-                              '/hr',
+                              '/Hr',
                               style: TextStyle(
                                 color: Colors.grey,
+                                fontSize: 12.0,
                               ),
                             ),
                           ],
@@ -101,13 +102,16 @@ class CustomerCarCard extends StatelessWidget {
                           children: [
                             Text(
                               'RM${car.dayPrice?.toStringAsFixed(1) ?? 'N/A'}',
-                              style: const TextStyle(),
+                              style: const TextStyle(
+                                fontSize: 12.0,
+                              ),
                             ),
                             const SizedBox(width: 4.0),
                             const Text(
-                              '/day',
+                              '/Day',
                               style: TextStyle(
                                 color: Colors.grey,
+                                fontSize: 12.0,
                               ),
                             ),
                           ],
@@ -119,7 +123,7 @@ class CustomerCarCard extends StatelessWidget {
               ),
               SizedBox(
                 width: double.infinity,
-                height: 200,
+                height: 200.0,
                 child: car.imagesUrl != null
                     ? ClipRRect(
                         borderRadius: BorderRadius.circular(15.0),
@@ -138,7 +142,7 @@ class CustomerCarCard extends StatelessWidget {
               ),
               //? Add Car Address
               Padding(
-                padding: const EdgeInsets.fromLTRB(0.0, 20.0, 0.0, 10.0),
+                padding: const EdgeInsets.fromLTRB(0.0, 10.0, 0.0, 0.0),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
