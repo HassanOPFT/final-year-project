@@ -35,6 +35,7 @@ class CustomerCarRentalsHistoryTabBody extends StatelessWidget {
         CarRentalStatus.adminConfirmedPayout,
         CarRentalStatus.adminConfirmedRefund,
         CarRentalStatus.customerCancelled,
+        CarRentalStatus.hostCancelled,
       ],
     );
 

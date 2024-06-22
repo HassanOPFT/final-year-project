@@ -364,7 +364,7 @@ class VerificationDocumentDetailsScreen extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Image.asset(
-                  AssetsPaths.binImage, // Change to your bin image path
+                  AssetsPaths.binImage,
                   height: 200.0,
                 ),
                 const Text(
@@ -498,7 +498,8 @@ class VerificationDocumentDetailsScreen extends StatelessWidget {
     }
 
     Future<void> showEditVerificationDocumentBottomSheet(
-        VerificationDocument verificationDocument) async {
+      VerificationDocument verificationDocument,
+    ) async {
       await showModalBottomSheet(
         context: context,
         showDragHandle: true,
@@ -523,7 +524,8 @@ class VerificationDocumentDetailsScreen extends StatelessWidget {
     }
 
     Future<StatusHistory?> getMostRecentStatusHistory(
-        String? verificationDocumentId) async {
+      String? verificationDocumentId,
+    ) async {
       if (verificationDocumentId == null || verificationDocumentId.isEmpty) {
         return null;
       }

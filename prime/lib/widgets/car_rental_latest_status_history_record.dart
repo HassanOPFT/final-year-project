@@ -86,8 +86,9 @@ class CarRentalLatestStatusHistoryRecord extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       ListTile(
-                        leading: const Icon(
+                        leading: Icon(
                           Icons.history_rounded,
+                          color: Theme.of(context).colorScheme.primary,
                           size: 30.0,
                         ),
                         title: Text(

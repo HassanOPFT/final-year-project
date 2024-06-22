@@ -25,6 +25,7 @@ import '../../providers/verification_document_provider.dart';
 import '../../services/firebase/firebase_auth_service.dart';
 import '../../utils/assets_paths.dart';
 import '../../utils/navigate_with_animation.dart';
+import '../../widgets/card/car_rental_reviews.dart';
 import '../../widgets/copy_text.dart';
 import '../../widgets/host_car_address.dart';
 import '../../widgets/images/car_images_carousel.dart';
@@ -655,6 +656,7 @@ class ManageCarScreen extends StatelessWidget {
                     ),
                     buildSectionTitle(sectionTitle: 'Features'),
                     CarFeaturesRow(car: car),
+                    CarRentalReviews(carId: car.id ?? ''),
                     buildSectionTitle(sectionTitle: 'Address'),
                     if (!isAdmin)
                       HostCarAddress(

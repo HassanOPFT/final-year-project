@@ -25,7 +25,7 @@ class HostScreen extends StatelessWidget {
                 icon: Icon(Icons.directions_car_rounded),
               ),
               Tab(
-                text: 'Rentals History',
+                text: 'Rental History',
                 icon: Icon(Icons.history_rounded),
               ),
             ],

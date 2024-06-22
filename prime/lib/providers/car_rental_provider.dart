@@ -93,4 +93,42 @@ class CarRentalProvider with ChangeNotifier {
       rethrow;
     }
   }
+
+  Future<void> updateCarRentalStatus({
+    required String carRentalId,
+    required CarRentalStatus previousStatus,
+    required CarRentalStatus newStatus,
+    String? statusDescription = '',
+    required String modifiedById,
+  }) async {
+    try {
+      await _carRentalController.updateCarRentalStatus(
+        carRentalId: carRentalId,
+        previousStatus: previousStatus,
+        newStatus: newStatus,
+        statusDescription: statusDescription,
+        modifiedById: modifiedById,
+      );
+      notifyListeners();
+    } catch (_) {
+      rethrow;
+    }
+  }
+
+  Future<void> updateCarRentalReviewAndRating({
+    required String carRentalId,
+    String? review,
+    required double rating,
+  }) async {
+    try {
+      await _carRentalController.updateReviewAndRating(
+        carRentalId: carRentalId,
+        review: review,
+        rating: rating,
+      );
+      notifyListeners();
+    } catch (_) {
+      rethrow;
+    }
+  }
 }

@@ -39,20 +39,24 @@ class CarRentalStatusIndicator extends StatelessWidget {
         textColor = Colors.orange.shade900;
         break;
       case CarRentalStatus.hostConfirmedPickup:
-        backgroundColor = Colors.yellow.shade50;
-        textColor = Colors.yellow.shade900;
+        backgroundColor = Colors.green.shade50;
+        textColor = Colors.green.shade900;
         break;
       case CarRentalStatus.customerCancelled:
-        backgroundColor = Colors.grey.shade50;
-        textColor = Colors.grey.shade900;
-        break;
-      case CarRentalStatus.hostReportedIssue:
         backgroundColor = Colors.red.shade50;
         textColor = Colors.red.shade900;
         break;
+      case CarRentalStatus.hostCancelled:
+        backgroundColor = Colors.red.shade50;
+        textColor = Colors.red.shade900;
+        break;
+      case CarRentalStatus.hostReportedIssue:
+        backgroundColor = Colors.orange.shade50;
+        textColor = Colors.orange.shade900;
+        break;
       case CarRentalStatus.hostConfirmedReturn:
-        backgroundColor = Colors.teal.shade50;
-        textColor = Colors.teal.shade900;
+        backgroundColor = Colors.green.shade50;
+        textColor = Colors.green.shade900;
         break;
       case CarRentalStatus.adminConfirmedPayout:
         backgroundColor = Colors.green.shade50;
@@ -76,6 +80,7 @@ class CarRentalStatusIndicator extends StatelessWidget {
       ),
       child: Text(
         carRentalStatus.getStatusString(userRole),
+        textAlign: TextAlign.center,
         style: TextStyle(
           fontSize: 16.0,
           color: textColor,

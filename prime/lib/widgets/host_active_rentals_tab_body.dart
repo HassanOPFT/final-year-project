@@ -67,7 +67,7 @@ class HostActiveRentalsTabBody extends StatelessWidget {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const CustomProgressIndicator();
           } else if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
+            return const Center(child: Text('Error fetching active rentals.'));
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
             return const NoDataFound(
               title: 'Nothing Found',

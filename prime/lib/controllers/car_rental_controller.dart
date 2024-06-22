@@ -185,4 +185,62 @@ class CarRentalController {
       rethrow;
     }
   }
+
+  Future<void> updateCarRentalStatus({
+    required String carRentalId,
+    required CarRentalStatus previousStatus,
+    required CarRentalStatus newStatus,
+    String? statusDescription = '',
+    required String modifiedById,
+  }) async {
+    try {
+      DocumentReference carRentalRef = _carRentalCollection.doc(
+        carRentalId,
+      );
+
+      await carRentalRef.update({
+        _statusFieldName: newStatus.name,
+      });
+
+      // Create StatusHistory Record
+      await _statusHistoryController.createStatusHistory(
+        StatusHistory(
+          linkedObjectId: carRentalId,
+          linkedObjectType: 'CarRental',
+          linkedObjectSubtype: '',
+          previousStatus: previousStatus.name,
+          newStatus: newStatus.name,
+          statusDescription: statusDescription,
+          modifiedById: modifiedById,
+        ),
+      );
+    } catch (_) {
+      rethrow;
+    }
+  }
+
+  Future<void> updateReviewAndRating({
+    required String carRentalId,
+    String? review,
+    required double rating,
+  }) async {
+    try {
+      if (rating < 0 || rating > 5) {
+        throw Exception('Rating must be between 0 and 5');
+      }
+      if (carRentalId.isEmpty) {
+        throw Exception('Car Rental ID cannot be empty');
+      }
+      DocumentReference carRentalRef = _carRentalCollection.doc(
+        carRentalId,
+      );
+
+      await carRentalRef.update({
+        _reviewFieldName: review ?? '',
+        _ratingFieldName: rating,
+      });
+    } catch (_) {
+      rethrow;
+    }
+  }
 }

@@ -243,7 +243,7 @@ class _RentCarScreenState extends State<RentCarScreen> {
                               ),
                             ),
                             subtitle: Text(
-                              'Joined on ${DateFormat.yMMM().format(car.createdAt as DateTime)}',
+                              'Joined on ${DateFormat.yMMM().format(user.createdAt ?? DateTime.now())}',
                             ),
                           );
                         }
@@ -256,14 +256,11 @@ class _RentCarScreenState extends State<RentCarScreen> {
                         fontSize: 16.0,
                       ),
                     ),
-
                     buildSectionTitle(sectionTitle: 'Features'),
                     CarFeaturesRow(car: car),
                     buildSectionTitle(sectionTitle: 'Address'),
                     CarAddressImagePreview(addressId: car.defaultAddressId),
-                    // TODO: Implelment the Reviews section + most recent review
-                    buildSectionTitle(sectionTitle: 'Reviews'),
-                    const CarRentalReviews(),
+                    CarRentalReviews(carId: car.id ?? ''),
                     CarRentalSchedulePicker(
                       carId: car.id ?? '',
                       stopListeningToCarStatus: _stopListeningToCarStatus,

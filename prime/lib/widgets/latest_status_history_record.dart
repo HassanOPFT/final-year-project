@@ -7,7 +7,7 @@ import '../../models/status_history.dart';
 import '../controllers/user_controller.dart';
 
 class LatestStatusHistoryRecord extends StatelessWidget {
-  final Future<StatusHistory?> Function(String verificationDocumentId)
+  final Future<StatusHistory?> Function(String linkedObjectId)
       fetchStatusHistory;
   final String linkedObjectId;
 
@@ -68,14 +68,15 @@ class LatestStatusHistoryRecord extends StatelessWidget {
                           } else {
                             final userName =
                                 '${userSnapshot.data?['userFirstName'] ?? ''} ${userSnapshot.data?['userLastName'] ?? ''}';
-                            // final modifiedBy = userName;
 
                             return Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 ListTile(
-                                  leading: const Icon(
+                                  leading: Icon(
                                     Icons.history_rounded,
+                                    color:
+                                        Theme.of(context).colorScheme.primary,
                                     size: 30.0,
                                   ),
                                   title: Text(
@@ -132,12 +133,10 @@ class LatestStatusHistoryRecord extends StatelessWidget {
                                     TextButton(
                                       onPressed: () => animatedPushNavigation(
                                         context: context,
-                                        screen:
-                                            StatusHistoryScreen(
-                                          linkedObjectId:
-                                              latestStatusHistory
-                                                      .linkedObjectId ??
-                                                  '',
+                                        screen: StatusHistoryScreen(
+                                          linkedObjectId: latestStatusHistory
+                                                  .linkedObjectId ??
+                                              '',
                                         ),
                                       ),
                                       child: const Text(

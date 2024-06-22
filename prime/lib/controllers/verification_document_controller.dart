@@ -300,8 +300,9 @@ class VerificationDocumentController {
     required String modifiedById,
   }) async {
     try {
-      DocumentReference documentRef =
-          _verificationDocumentCollection.doc(verificationDocumentId);
+      DocumentReference documentRef = _verificationDocumentCollection.doc(
+        verificationDocumentId,
+      );
 
       await documentRef.update({
         _statusFieldName: newStatus.name,

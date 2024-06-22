@@ -5,12 +5,15 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:prime/models/stripe_charge.dart';
 import 'package:prime/models/stripe_transaction.dart';
+import 'package:prime/providers/issue_report_provider.dart';
 import 'package:prime/services/firebase/firebase_auth_service.dart';
 import 'package:prime/services/stripe/stripe_transaction_service.dart';
 import 'package:prime/utils/launch_core_service_util.dart';
 import 'package:prime/utils/navigate_with_animation.dart';
 import 'package:prime/views/cars/manage_car_screen.dart';
 import 'package:prime/views/rentals/preview_car_details.dart';
+import 'package:prime/widgets/bottom_sheet/review_car_rental_bottom_sheet.dart';
+import 'package:prime/widgets/car_rental_latest_issue_report.dart';
 import 'package:prime/widgets/car_rental_latest_status_history_record.dart';
 import 'package:prime/widgets/car_rental_status_indicator.dart';
 import 'package:prime/widgets/created_at_row.dart';
@@ -20,6 +23,7 @@ import 'package:provider/provider.dart';
 import '../../models/address.dart';
 import '../../models/car.dart';
 import '../../models/car_rental.dart';
+import '../../models/issue_report.dart';
 import '../../models/status_history.dart';
 import '../../models/user.dart';
 import '../../providers/address_provider.dart';
@@ -36,7 +40,7 @@ import '../../widgets/tiles/car_rental_payment_card_tile.dart';
 import '../admin/user_details_screen.dart';
 
 // TODO: Implement the extension rental if found
-//TODO: Implement the issues reported details if found for this rental
+// TODO: if the host cancelled, customer will be refunded, so there is no profit for host and platform
 
 class CarRentalDetailsScreen extends StatelessWidget {
   final String carRentalId;
@@ -84,13 +88,18 @@ class CarRentalDetailsScreen extends StatelessWidget {
 
     final UserRole currentUserRole = await getCurrentUserRole(
       currentUser?.userId ?? '',
-      car!,
+      car?.hostId ?? '',
       carRental!,
       context,
     );
 
     final stripeTransaction = await _getStripeTransactionDetails(
       stripeCharge.balanceTransactionId ?? '',
+    );
+
+    final latestIssueReport = await _fetchLatestIssueReport(
+      context,
+      carRentalId,
     );
 
     return {
@@ -104,6 +113,7 @@ class CarRentalDetailsScreen extends StatelessWidget {
       'customer': customer,
       'currentUserRole': currentUserRole,
       'stripeTransaction': stripeTransaction,
+      'latestIssueReport': latestIssueReport,
     };
   }
 
@@ -113,7 +123,6 @@ class CarRentalDetailsScreen extends StatelessWidget {
   ) async {
     final carRentalProvider = Provider.of<CarRentalProvider>(
       context,
-      listen: false,
     );
     return await carRentalProvider.getCarRentalById(carRentalId);
   }
@@ -199,6 +208,22 @@ class CarRentalDetailsScreen extends StatelessWidget {
     );
 
     return stripeTransaction;
+  }
+
+  Future<IssueReport?> _fetchLatestIssueReport(
+    BuildContext context,
+    String carRentalId,
+  ) async {
+    final issueReportProvider = Provider.of<IssueReportProvider>(
+      context,
+      listen: false,
+    );
+    final latestIssueReport =
+        await issueReportProvider.getLatestIssueReportByCarRentalId(
+      carRentalId,
+    );
+
+    return latestIssueReport;
   }
 
   Widget _buildSectionTitle(String title) {
@@ -371,83 +396,14 @@ class CarRentalDetailsScreen extends StatelessWidget {
     );
   }
 
-  Future<void> pickUpByCustomer(CarRental carRental) async {}
-  Future<void> confirmPickUpByHost(CarRental carRental) async {}
-  Future<void> cancelCarRental(CarRental carRental) async {}
-  Future<void> reportIssue(CarRental carRental) async {}
-  Future<void> extendRental(CarRental carRental) async {}
-  Future<void> confirmReturnByHost(CarRental carRental) async {}
-  Future<void> returnCarByCustomer(CarRental carRental) async {}
-  Future<void> confirmPayout(CarRental carRental) async {}
-  Future<void> confirmRefund(CarRental carRental) async {}
-
-  Future<void> showEditCarRentalBottomSheet(
-    BuildContext context,
-    CarRental carRental,
-    List<CarRentalStatus?> carRentalStatusHistory,
-    Car car,
-  ) async {
-    if (carRental.status == null ||
-        carRentalStatusHistory.isEmpty ||
-        carRentalStatusHistory.contains(null)) {
-      buildAlertSnackbar(
-        context: context,
-        message: 'Error while editing car rental. Please try again later.',
-      );
-      return;
-    }
-
-    UserRole? currentUserRole;
-    final currentUserId = FirebaseAuthService().currentUser?.uid ?? '';
-    currentUserRole = await getCurrentUserRole(
-      currentUserId,
-      car,
-      carRental,
-      context,
-    );
-
-    // final userProvider = Provider.of<UserProvider>(context, listen: false);
-    // final userRole = userProvider.getUserRole(currentUserId);
-
-    // Check if the current user is allowed to modify the car rental based on its status
-    // if (carRental.status == CarRentalStatus.adminConfirmedPayment && !isAdmin) {
-    //   buildAlertSnackbar(
-    //     context: context,
-    //     message: 'Modification is not allowed for completed rentals.',
-    //   );
-    //   return;
-    // }
-
-    await showModalBottomSheet(
-      context: context,
-      showDragHandle: true,
-      builder: (BuildContext context) {
-        return EditCarRentalBottomSheet(
-          userRole: currentUserRole!,
-          carRental: carRental,
-          carRentalStatusHistory: carRentalStatusHistory,
-          pickUpByCustomer: pickUpByCustomer,
-          confirmPickUpByHost: confirmPickUpByHost,
-          cancelCarRental: cancelCarRental,
-          reportIssue: reportIssue,
-          extendRental: extendRental,
-          confirmReturnByHost: confirmReturnByHost,
-          returnCarByCustomer: returnCarByCustomer,
-          confirmPayout: confirmPayout,
-          confirmRefund: confirmRefund,
-        );
-      },
-    );
-  }
-
   Future<UserRole> getCurrentUserRole(
     String currentUserId,
-    Car car,
+    String carHostId,
     CarRental carRental,
     BuildContext context,
   ) async {
     UserRole? currentUserRole;
-    if (currentUserId == car.hostId) {
+    if (currentUserId == carHostId) {
       currentUserRole = UserRole.host;
     } else if (currentUserId == carRental.customerId) {
       currentUserRole = UserRole.customer;
@@ -469,8 +425,16 @@ class CarRentalDetailsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final currentUserId = FirebaseAuthService().currentUser?.uid ?? '';
+
+    final carRentalProvider = Provider.of<CarRentalProvider>(
+      context,
+      listen: false,
+    );
+
     Future<StatusHistory?> getMostRecentStatusHistory(
-        String? carRentalId) async {
+      String? carRentalId,
+    ) async {
       if (carRentalId == null || carRentalId.isEmpty) {
         return null;
       }
@@ -488,6 +452,656 @@ class CarRentalDetailsScreen extends StatelessWidget {
       }
     }
 
+    Future<bool?> showConfirmationDialog(
+      String title,
+      String message,
+    ) async {
+      return showDialog<bool?>(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text(title),
+            content: Text('$message this action is irreversible.'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop(false);
+                },
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop(true);
+                },
+                child: const Text('Confirm'),
+              ),
+            ],
+          );
+        },
+      );
+    }
+
+    Future<void> pickUpByCustomer(CarRental carRental) async {
+      final confirmAction = await showConfirmationDialog(
+        'Confirm Pick-Up',
+        'Are you sure you want to confirm pick-up by customer?',
+      );
+      if (confirmAction == null || !confirmAction) {
+        return;
+      }
+
+      try {
+        await carRentalProvider.updateCarRentalStatus(
+          carRentalId: carRentalId,
+          previousStatus: carRental.status ?? CarRentalStatus.rentedByCustomer,
+          newStatus: CarRentalStatus.pickedUpByCustomer,
+          modifiedById: currentUserId,
+        );
+        // update the car status to currently rented
+        final carProvider = Provider.of<CarProvider>(
+          context,
+          listen: false,
+        );
+        carProvider.updateCarStatus(
+          carId: carRental.carId ?? '',
+          previousStatus: CarStatus.upcomingRental,
+          newStatus: CarStatus.currentlyRented,
+          modifiedById: currentUserId,
+        );
+        buildSuccessSnackbar(
+          context: context,
+          message: 'Pick-up confirmed successfully.',
+        );
+      } on Exception catch (_) {
+        buildFailureSnackbar(
+          context: context,
+          message:
+              'Error confirming pick-up by customer. Please try again later.',
+        );
+      }
+    }
+
+    Future<void> confirmPickUpByHost(CarRental carRental) async {
+      final confirmAction = await showConfirmationDialog(
+        'Confirm Pick-Up',
+        'Are you sure you want to confirm pick-up by host?',
+      );
+      if (confirmAction == null || !confirmAction) {
+        return;
+      }
+
+      try {
+        await carRentalProvider.updateCarRentalStatus(
+          carRentalId: carRentalId,
+          previousStatus: carRental.status ?? CarRentalStatus.rentedByCustomer,
+          newStatus: CarRentalStatus.hostConfirmedPickup,
+          modifiedById: currentUserId,
+        );
+        buildSuccessSnackbar(
+          context: context,
+          message: 'Pick-up confirmed successfully.',
+        );
+      } on Exception catch (_) {
+        buildFailureSnackbar(
+          context: context,
+          message: 'Error confirming pick-up by host. Please try again later.',
+        );
+      }
+    }
+
+    Future<String?> showReasonDialog({
+      required String title,
+      required String hintText,
+    }) async {
+      final TextEditingController reasonController = TextEditingController();
+      final formKey = GlobalKey<FormState>();
+
+      return showDialog<String>(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(15),
+            ),
+            title: Text(title),
+            content: SizedBox(
+              width: MediaQuery.of(context).size.width,
+              child: Form(
+                key: formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextFormField(
+                      controller: reasonController,
+                      textInputAction: TextInputAction.done,
+                      keyboardType: TextInputType.text,
+                      decoration: InputDecoration(
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        labelText: hintText,
+                      ),
+                      validator: (value) {
+                        if (value == null ||
+                            value.isEmpty ||
+                            value.trim().isEmpty) {
+                          return 'Please enter a reason.';
+                        }
+                        return null;
+                      },
+                      onFieldSubmitted: (_) {
+                        if (formKey.currentState!.validate()) {
+                          Navigator.of(context).pop(reasonController.text);
+                        }
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop(null);
+                },
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () {
+                  if (formKey.currentState!.validate()) {
+                    Navigator.of(context).pop(reasonController.text);
+                  }
+                },
+                child: const Text('Submit'),
+              ),
+            ],
+          );
+        },
+      );
+    }
+
+    Future<void> cancelCarRental(CarRental carRental) async {
+      final carProvider = Provider.of<CarProvider>(context, listen: false);
+      final car = await carProvider.getCarById(carRental.carId ?? '');
+      final currentUserRole = await getCurrentUserRole(
+        currentUserId,
+        car?.hostId ?? '',
+        carRental,
+        context,
+      );
+
+      if (currentUserRole == UserRole.primaryAdmin ||
+          currentUserRole == UserRole.secondaryAdmin) {
+        buildAlertSnackbar(
+          context: context,
+          message: 'Cancellation is not allowed for admin.',
+        );
+        return;
+      }
+
+      final dialogMessage = currentUserRole == UserRole.host
+          ? 'Are you sure you want to cancel this car rental? you will not be paid and customer will be fully refunded.'
+          : 'Are you sure you want to cancel this car rental? you will not be refunded.';
+
+      final confirmAction = await showConfirmationDialog(
+        'Confirm Cancellation',
+        dialogMessage,
+      );
+
+      if (confirmAction == null || !confirmAction) {
+        return;
+      }
+
+      final cancellationReason = await showReasonDialog(
+        title: 'Reason for Cancellation',
+        hintText: 'Enter reason for cancellation',
+      );
+
+      if (cancellationReason == null || cancellationReason.isEmpty) {
+        return;
+      }
+
+      try {
+        // cancelled by host or by customer
+        final CarRentalStatus newStatus = currentUserRole == UserRole.host
+            ? CarRentalStatus.hostCancelled
+            : CarRentalStatus.customerCancelled;
+        await carRentalProvider.updateCarRentalStatus(
+          carRentalId: carRentalId,
+          previousStatus: carRental.status ?? CarRentalStatus.rentedByCustomer,
+          newStatus: newStatus,
+          statusDescription: cancellationReason,
+          modifiedById: currentUserId,
+        );
+        buildSuccessSnackbar(
+          context: context,
+          message: 'Car rental cancelled successfully.',
+        );
+      } on Exception catch (_) {
+        buildFailureSnackbar(
+          context: context,
+          message: 'Error cancelling car rental. Please try again later.',
+        );
+      }
+    }
+
+    Future<Map<String, String>?> showIssueReportDialog({
+      required String title,
+      required String subjectHintText,
+      required String descriptionHintText,
+    }) async {
+      final TextEditingController subjectController = TextEditingController();
+      final TextEditingController descriptionController =
+          TextEditingController();
+      final formKey = GlobalKey<FormState>();
+
+      return showDialog<Map<String, String>>(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(15.0),
+            ),
+            title: Text(
+              title,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            content: SizedBox(
+              width: MediaQuery.of(context).size.width,
+              child: SingleChildScrollView(
+                child: Form(
+                  key: formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.max,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      TextFormField(
+                        controller: subjectController,
+                        textInputAction: TextInputAction.next,
+                        keyboardType: TextInputType.text,
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                          labelText: subjectHintText,
+                        ),
+                        validator: (value) {
+                          if (value == null ||
+                              value.isEmpty ||
+                              value.trim().isEmpty) {
+                            return 'Please enter a subject.';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16.0),
+                      TextFormField(
+                        controller: descriptionController,
+                        textInputAction: TextInputAction.done,
+                        keyboardType: TextInputType.multiline,
+                        maxLines: 3,
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                          labelText: descriptionHintText,
+                        ),
+                        validator: (value) {
+                          if (value == null ||
+                              value.isEmpty ||
+                              value.trim().isEmpty) {
+                            return 'Please enter a description.';
+                          }
+                          return null;
+                        },
+                        onFieldSubmitted: (_) {
+                          if (formKey.currentState!.validate()) {
+                            Navigator.of(context).pop({
+                              'subject': subjectController.text,
+                              'description': descriptionController.text,
+                            });
+                          }
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop(null);
+                },
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () {
+                  if (formKey.currentState!.validate()) {
+                    Navigator.of(context).pop({
+                      'subject': subjectController.text,
+                      'description': descriptionController.text,
+                    });
+                  }
+                },
+                child: const Text('Submit'),
+              ),
+            ],
+          );
+        },
+      );
+    }
+
+    Future<void> reportIssue(CarRental carRental) async {
+      final carProvider = Provider.of<CarProvider>(context, listen: false);
+      final car = await carProvider.getCarById(carRental.carId ?? '');
+      final currentUserRole = await getCurrentUserRole(
+        currentUserId,
+        car?.hostId ?? '',
+        carRental,
+        context,
+      );
+
+      if (currentUserRole == UserRole.primaryAdmin ||
+          currentUserRole == UserRole.secondaryAdmin) {
+        buildAlertSnackbar(
+          context: context,
+          message: 'Reporting issue is not allowed for admin.',
+        );
+        return;
+      }
+
+      final issueReportDetails = await showIssueReportDialog(
+        title: 'Report Issue',
+        subjectHintText: 'Enter issue subject',
+        descriptionHintText: 'Enter issue description',
+      );
+
+      if (issueReportDetails == null ||
+          issueReportDetails['subject'] == null ||
+          issueReportDetails['description'] == null ||
+          issueReportDetails['subject']!.isEmpty ||
+          issueReportDetails['description']!.isEmpty) {
+        return;
+      }
+
+      try {
+        final issueReportProvider = Provider.of<IssueReportProvider>(
+          context,
+          listen: false,
+        );
+        await issueReportProvider.createIssueReport(
+          carRentalId: carRentalId,
+          reporterId: currentUserId,
+          reportSubject: issueReportDetails['subject']!,
+          reportDescription: issueReportDetails['description']!,
+        );
+
+        final newStatus = currentUserRole == UserRole.host
+            ? CarRentalStatus.hostReportedIssue
+            : CarRentalStatus.customerReportedIssue;
+
+        await carRentalProvider.updateCarRentalStatus(
+          carRentalId: carRentalId,
+          previousStatus: carRental.status ?? CarRentalStatus.rentedByCustomer,
+          newStatus: newStatus,
+          modifiedById: currentUserId,
+        );
+        buildSuccessSnackbar(
+          context: context,
+          message: 'Issue reported successfully.',
+        );
+      } on Exception catch (_) {
+        buildFailureSnackbar(
+          context: context,
+          message: 'Error reporting issue. Please try again later.',
+        );
+      }
+    }
+
+    // TODO: implement extend rental ui
+    Future<void> extendRental(CarRental carRental) async {
+      final confirmAction = await showConfirmationDialog(
+        'Confirm Extension',
+        'Are you sure you want to extend this rental?',
+      );
+      if (confirmAction == null || !confirmAction) {
+        return;
+      }
+
+      try {
+        await carRentalProvider.updateCarRentalStatus(
+          carRentalId: carRentalId,
+          previousStatus: carRental.status ?? CarRentalStatus.rentedByCustomer,
+          newStatus: CarRentalStatus.customerExtendedRental,
+          modifiedById: currentUserId,
+        );
+        buildSuccessSnackbar(
+          context: context,
+          message: 'Rental extended successfully.',
+        );
+      } on Exception catch (_) {
+        buildFailureSnackbar(
+          context: context,
+          message: 'Error extending rental. Please try again later.',
+        );
+      }
+    }
+
+    Future<void> confirmReturnByHost(CarRental carRental) async {
+      final confirmAction = await showConfirmationDialog(
+        'Confirm Return',
+        'Are you sure you want to confirm return by host?',
+      );
+      if (confirmAction == null || !confirmAction) {
+        return;
+      }
+
+      try {
+        await carRentalProvider.updateCarRentalStatus(
+          carRentalId: carRentalId,
+          previousStatus: carRental.status ?? CarRentalStatus.rentedByCustomer,
+          newStatus: CarRentalStatus.hostConfirmedReturn,
+          modifiedById: currentUserId,
+        );
+        // update the car status to available
+        final carProvider = Provider.of<CarProvider>(
+          context,
+          listen: false,
+        );
+        carProvider.updateCarStatus(
+          carId: carRental.carId ?? '',
+          previousStatus: CarStatus.currentlyRented,
+          newStatus: CarStatus.approved,
+          modifiedById: currentUserId,
+        );
+        buildSuccessSnackbar(
+          context: context,
+          message: 'Return confirmed successfully.',
+        );
+      } on Exception catch (_) {
+        buildFailureSnackbar(
+          context: context,
+          message: 'Error confirming return by host. Please try again later.',
+        );
+      }
+    }
+
+    Future<void> returnCarByCustomer(
+      CarRental carRental,
+      double rentalTotalAmount,
+      Car car,
+    ) async {
+      final result = await showModalBottomSheet<Map<String, dynamic>>(
+        context: context,
+        showDragHandle: true,
+        enableDrag: true,
+        barrierLabel: 'Address Details',
+        isScrollControlled: true,
+        builder: (BuildContext context) {
+          return Container(
+            padding: EdgeInsets.fromLTRB(
+              20.0,
+              0.0,
+              20.0,
+              MediaQuery.of(context).viewInsets.bottom + 20.0,
+            ),
+            child: ReviewCarRentalBottomSheet(
+              carImageUrl: car.imagesUrl?.first ?? '',
+              carName: '${car.manufacturer} ${car.model}',
+              carColor: '${car.color}',
+              rentalTotalAmount: rentalTotalAmount.toString(),
+            ),
+          );
+        },
+      );
+
+      if (result == null) {
+        return;
+      }
+
+      final int rating = result['rating'];
+      final String? review = result['review'];
+
+      try {
+        await carRentalProvider.updateCarRentalStatus(
+          carRentalId: carRentalId,
+          previousStatus: carRental.status ?? CarRentalStatus.rentedByCustomer,
+          newStatus: CarRentalStatus.customerReturnedCar,
+          modifiedById: currentUserId,
+        );
+        // Handle the rating and review here
+        await carRentalProvider.updateCarRentalReviewAndRating(
+          carRentalId: carRentalId,
+          rating: rating.toDouble(),
+          review: review,
+        );
+
+        buildSuccessSnackbar(
+          context: context,
+          message: 'Return confirmed successfully.',
+        );
+      } on Exception catch (_) {
+        buildFailureSnackbar(
+          context: context,
+          message:
+              'Error confirming return by customer. Please try again later.',
+        );
+      }
+    }
+
+    Future<void> confirmPayout(CarRental carRental) async {
+      final confirmAction = await showConfirmationDialog(
+        'Confirm Payout',
+        'Are you sure you want to confirm payout?',
+      );
+      if (confirmAction == null || !confirmAction) {
+        return;
+      }
+
+      try {
+        await carRentalProvider.updateCarRentalStatus(
+          carRentalId: carRentalId,
+          previousStatus: carRental.status ?? CarRentalStatus.rentedByCustomer,
+          newStatus: CarRentalStatus.adminConfirmedPayout,
+          statusDescription:
+              'The payout has been confirmed & sent to the host.',
+          modifiedById: currentUserId,
+        );
+        buildAlertSnackbar(
+          context: context,
+          message: 'Payout confirmed successfully.',
+        );
+      } on Exception catch (_) {
+        buildFailureSnackbar(
+          context: context,
+          message: 'Error confirming payout. Please try again later.',
+        );
+      }
+    }
+
+    Future<void> confirmRefund(CarRental carRental) async {
+      final confirmAction = await showConfirmationDialog(
+        'Confirm Refund',
+        'Are you sure you want to confirm refund?',
+      );
+      if (confirmAction == null || !confirmAction) {
+        return;
+      }
+
+      try {
+        await carRentalProvider.updateCarRentalStatus(
+          carRentalId: carRentalId,
+          previousStatus: carRental.status ?? CarRentalStatus.rentedByCustomer,
+          newStatus: CarRentalStatus.adminConfirmedRefund,
+          statusDescription:
+              'The refund has been confirmed & sent to the customer.',
+          modifiedById: currentUserId,
+        );
+        buildSuccessSnackbar(
+          context: context,
+          message: 'Refund confirmed successfully.',
+        );
+      } on Exception catch (_) {
+        buildFailureSnackbar(
+          context: context,
+          message: 'Error confirming refund. Please try again later.',
+        );
+      }
+    }
+
+    Future<void> showEditCarRentalBottomSheet(
+      BuildContext context,
+      CarRental carRental,
+      List<CarRentalStatus?> carRentalStatusHistory,
+      Car car,
+      double rentalTotalAmount,
+    ) async {
+      if (carRental.status == null ||
+          carRentalStatusHistory.isEmpty ||
+          carRentalStatusHistory.contains(null)) {
+        buildAlertSnackbar(
+          context: context,
+          message: 'Error while editing car rental. Please try again later.',
+        );
+        return;
+      }
+
+      UserRole? currentUserRole;
+      final currentUserId = FirebaseAuthService().currentUser?.uid ?? '';
+      currentUserRole = await getCurrentUserRole(
+        currentUserId,
+        car.hostId ?? '',
+        carRental,
+        context,
+      );
+
+      await showModalBottomSheet(
+        context: context,
+        showDragHandle: true,
+        builder: (BuildContext context) {
+          return EditCarRentalBottomSheet(
+            userRole: currentUserRole!,
+            carRental: carRental,
+            carRentalStatusHistory: carRentalStatusHistory,
+            rentalTotalAmount: rentalTotalAmount,
+            car: car,
+            pickUpByCustomer: pickUpByCustomer,
+            confirmPickUpByHost: confirmPickUpByHost,
+            cancelCarRental: cancelCarRental,
+            reportIssue: reportIssue,
+            extendRental: extendRental,
+            confirmReturnByHost: confirmReturnByHost,
+            returnCarByCustomer: returnCarByCustomer,
+            confirmPayout: confirmPayout,
+            confirmRefund: confirmRefund,
+          );
+        },
+      );
+    }
+
     return FutureBuilder(
       future: _fetchAllDetails(context, carRentalId),
       builder: (context, snapshot) {
@@ -501,8 +1115,7 @@ class CarRentalDetailsScreen extends StatelessWidget {
             ),
           );
         } else if (snapshot.hasError) {
-          debugPrint(
-              'Error loading car rental details: ${snapshot.stackTrace}');
+          debugPrint('Error loading car rental details: ${snapshot.error}');
           return Scaffold(
             appBar: AppBar(
               title: const Text('Car Rental Details'),
@@ -538,12 +1151,18 @@ class CarRentalDetailsScreen extends StatelessWidget {
           final User customer = data['customer'];
           final UserRole currentUserRole = data['currentUserRole'];
           final StripeTransaction stripeTransaction = data['stripeTransaction'];
+          final IssueReport? latestIssueReport = data['latestIssueReport'];
 
           final totalAmount = stripeTransaction.amount;
-          final hostEarnings = totalAmount * 0.85;
-          final stripeFees = stripeTransaction.fee;
-          final platformNetProfit = totalAmount - hostEarnings - stripeFees;
-          final hostPlatformFees = totalAmount - hostEarnings;
+          double hostEarnings = totalAmount * 0.85;
+          hostEarnings = double.parse(hostEarnings.toStringAsFixed(1));
+          double stripeFees = stripeTransaction.fee;
+          stripeFees = double.parse(stripeFees.toStringAsFixed(1));
+          double platformNetProfit = totalAmount - hostEarnings - stripeFees;
+          platformNetProfit =
+              double.parse(platformNetProfit.toStringAsFixed(1));
+          double hostPlatformFees = totalAmount - hostEarnings;
+          hostPlatformFees = double.parse(hostPlatformFees.toStringAsFixed(1));
 
           final duration = carRental.endDate!.difference(carRental.startDate!);
           final days = duration.inDays;
@@ -561,6 +1180,7 @@ class CarRentalDetailsScreen extends StatelessWidget {
                     carRental,
                     carRentalStatusHistory,
                     car,
+                    totalAmount,
                   ),
                   icon: const Icon(Icons.more_vert_rounded),
                 ),
@@ -596,17 +1216,27 @@ class CarRentalDetailsScreen extends StatelessWidget {
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
+                                // consider adding info icon to explain statuses in a dialog
                                 const Text(
                                   'Status',
                                   style: TextStyle(
                                     fontSize: 22.0,
                                   ),
                                 ),
-                                CarRentalStatusIndicator(
-                                  carRentalStatus: carRental.status ??
-                                      CarRentalStatus.rentedByCustomer,
-                                  userRole: currentUser?.userRole ??
-                                      UserRole.customer,
+                                const SizedBox(width: 50.0),
+                                Flexible(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      CarRentalStatusIndicator(
+                                        carRentalStatus: carRental.status ??
+                                            CarRentalStatus.rentedByCustomer,
+                                        userRole: currentUser?.userRole ??
+                                            UserRole.customer,
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ],
                             ),
@@ -884,11 +1514,14 @@ class CarRentalDetailsScreen extends StatelessWidget {
                     if (currentUser?.userId == carRental.customerId)
                       _buildSectionTitle('Car Address'),
                     if (currentUser?.userId == carRental.customerId)
-                      CarAddressImagePreview(addressId: car.defaultAddressId),
+                      CarAddressImagePreview(
+                        addressId: car.defaultAddressId,
+                      ),
                     _buildSectionTitle('Payment Method'),
                     CarRentalPaymentCarTile(
                       stripeCharge: stripeCharge,
                     ),
+                    // customer shouldn't see payout status, only customer, check which other statuses he shouldn't see
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 15.0),
                       child: CarRentalLatestStatusHistoryRecord(
@@ -896,6 +1529,14 @@ class CarRentalDetailsScreen extends StatelessWidget {
                         linkedObjectId: carRental.id ?? '',
                       ),
                     ),
+                    if (latestIssueReport != null)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 15.0),
+                        child: CarRentalLatestIssueReport(
+                          latestIssueReport: latestIssueReport,
+                          carRentalId: carRental.id ?? '',
+                        ),
+                      ),
                     const Divider(thickness: 0.3),
                     Padding(
                       padding: const EdgeInsets.only(bottom: 5.0),

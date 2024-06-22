@@ -213,9 +213,7 @@ class _RentCarScreenState extends State<PreviewCarDetails> {
                     CarFeaturesRow(car: car),
                     buildSectionTitle(sectionTitle: 'Address'),
                     CarAddressImagePreview(addressId: car.defaultAddressId),
-                    // TODO: Implelment the Reviews section + most recent review
-                    buildSectionTitle(sectionTitle: 'Reviews'),
-                    const CarRentalReviews(),
+                    const CarRentalReviews(carId: 'car.id'),
                   ],
                 ),
               ),

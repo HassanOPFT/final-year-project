@@ -12,18 +12,7 @@ class SignOutTile extends StatelessWidget {
   final _firebaseAuthService = FirebaseAuthService();
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      title: const Text(
-        'Sign out',
-        style: TextStyle(
-          fontSize: 20.0,
-          color: Colors.red,
-        ),
-      ),
-      leading: const Icon(
-        Icons.logout,
-        color: Colors.red,
-      ),
+    return GestureDetector(
       onTap: () async {
         try {
           await _firebaseAuthService.signOut();
@@ -38,6 +27,19 @@ class SignOutTile extends StatelessWidget {
           );
         }
       },
+      child: const ListTile(
+        title: Text(
+          'Sign out',
+          style: TextStyle(
+            fontSize: 20.0,
+            color: Colors.red,
+          ),
+        ),
+        leading: Icon(
+          Icons.logout,
+          color: Colors.red,
+        ),
+      ),
     );
   }
 }

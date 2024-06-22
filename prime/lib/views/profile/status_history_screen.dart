@@ -16,12 +16,16 @@ class StatusHistoryScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final statusHistoryProvider =
-        Provider.of<StatusHistoryProvider>(context, listen: false);
+    final statusHistoryProvider = Provider.of<StatusHistoryProvider>(
+      context,
+      listen: false,
+    );
     final userController = UserController();
 
     final Future<List<StatusHistory>> statusHistoryList =
-        statusHistoryProvider.getStatusHistoryList(linkedObjectId);
+        statusHistoryProvider.getStatusHistoryList(
+      linkedObjectId,
+    );
 
     Future<Map<String, String?>> fetchUserNames(
         List<StatusHistory> histories) async {
@@ -41,7 +45,10 @@ class StatusHistoryScreen extends StatelessWidget {
     final Future<Map<String, dynamic>> combinedFuture =
         statusHistoryList.then((histories) async {
       final userNames = await fetchUserNames(histories);
-      return {'histories': histories, 'userNames': userNames};
+      return {
+        'histories': histories,
+        'userNames': userNames,
+      };
     });
 
     return Scaffold(
@@ -72,8 +79,9 @@ class StatusHistoryScreen extends StatelessWidget {
                     userNames[history.modifiedById] ?? 'User details not found';
 
                 return ListTile(
-                  leading: const Icon(
+                  leading: Icon(
                     Icons.history_rounded,
+                    color: Theme.of(context).colorScheme.primary,
                     size: 30.0,
                   ),
                   title: Text(
