@@ -131,4 +131,14 @@ class CarRentalProvider with ChangeNotifier {
       rethrow;
     }
   }
+
+  Future<List<CarRentalStatus>> getCarRentalStatuses() async {
+    try {
+      final carRentalStatuses =
+          await _carRentalController.getCarRentalStatuses();
+      return carRentalStatuses;
+    } catch (_) {
+      rethrow;
+    }
+  }
 }

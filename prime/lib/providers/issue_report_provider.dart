@@ -94,4 +94,14 @@ class IssueReportProvider with ChangeNotifier {
       rethrow;
     }
   }
+
+  Future<List<IssueReportStatus>> getIssueReportsStatuses() async {
+    try {
+      final issueReportStatuses =
+          await _issueReportController.getIssueReportsStatuses();
+      return issueReportStatuses;
+    } catch (_) {
+      rethrow;
+    }
+  }
 }

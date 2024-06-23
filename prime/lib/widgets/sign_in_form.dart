@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:prime/views/home/home_screen.dart';
 
@@ -88,11 +89,45 @@ class _SignInFormState extends State<SignInForm> {
             );
           }
         } catch (e) {
-          // TODO: filter the error messages and display human informative messages
+          String errorMessage = 'An error occurred. Please try again later.';
+          if (e is FirebaseAuthException) {
+            switch (e.code) {
+              case 'invalid-credential':
+                errorMessage = 'Email or password is incorrect.';
+                break;
+              case 'invalid-email':
+                errorMessage = 'Invalid email address.';
+                break;
+              case 'user-disabled':
+                errorMessage = 'This account has been disabled.';
+                break;
+              case 'user-not-found':
+                errorMessage = 'No user found with this email address.';
+                break;
+              case 'wrong-password':
+                errorMessage = 'Incorrect password.';
+                break;
+              case 'too-many-requests':
+                errorMessage =
+                    'Too many unsuccessful login attempts. Please try again later.';
+                break;
+              case 'network-request-failed':
+                errorMessage =
+                    'Network error. Please check your internet connection.';
+                break;
+              case 'operation-not-allowed':
+                errorMessage =
+                    'Email/password sign-in is not allowed for this project.';
+                break;
+              default:
+                errorMessage = 'An error occurred. Please try again later.';
+                break;
+            }
+          }
           if (mounted) {
             buildFailureSnackbar(
               context: context,
-              message: e.toString(),
+              message: errorMessage,
             );
           }
         }

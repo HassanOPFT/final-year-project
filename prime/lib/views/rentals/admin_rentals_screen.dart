@@ -6,11 +6,16 @@ import '../../widgets/admin_car_rentals_history_tab_body.dart';
 import '../../widgets/admin_reported_issues_tab_body.dart';
 
 class AdminRentalsScreen extends StatelessWidget {
-  const AdminRentalsScreen({super.key});
+  final int initialTab;
+  const AdminRentalsScreen({
+    super.key,
+    this.initialTab = 0,
+  });
 
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
+      initialIndex: initialTab,
       length: 3,
       child: Scaffold(
         appBar: AppBar(

@@ -179,7 +179,8 @@ class CarController {
       if (data == null) {
         throw Exception('Car not found');
       }
-      return CarStatus.values.firstWhere((e) => e.name == data[_statusFieldName]);
+      return CarStatus.values
+          .firstWhere((e) => e.name == data[_statusFieldName]);
     });
   }
 
@@ -681,6 +682,21 @@ class CarController {
           ),
         );
       }
+    } on FirebaseException catch (_) {
+      rethrow;
+    } catch (_) {
+      rethrow;
+    }
+  }
+
+  Future<List<CarStatus>> getCarStatuses() async {
+    try {
+      final querySnapshot = await _carCollection.get();
+      final carStatuses = querySnapshot.docs
+          .map((doc) => CarStatus.values
+              .firstWhere((status) => status.name == doc[_statusFieldName]))
+          .toList();
+      return carStatuses;
     } on FirebaseException catch (_) {
       rethrow;
     } catch (_) {

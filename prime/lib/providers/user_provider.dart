@@ -22,6 +22,37 @@ class UserProvider extends ChangeNotifier {
     }
   }
 
+  // updateUserFCMToken method
+  Future<void> updateUserFCMToken(String userId, String fcmToken) async {
+    try {
+      await _userController.updateUserFcmToken(userId, fcmToken);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<void> deleteUserFcmToken(String userId) async {
+    try {
+      await _userController.deleteUserFcmToken(userId);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<void> updateNotificationsEnabled({
+    required String userId,
+    required bool notificationsEnabled,
+  }) async {
+    try {
+      await _userController.updateNotificationsEnabled(
+        userId: userId,
+        notificationsEnabled: notificationsEnabled,
+      );
+    } catch (_) {
+      rethrow;
+    }
+  }
+
   Future<Map<String, String?>> getUserNameAndPhoneNo() async {
     try {
       User? currentUser = _user;
@@ -139,6 +170,15 @@ class UserProvider extends ChangeNotifier {
         currentUserId: currentUserId,
       );
       return customers;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<List<UserRole>> getUsersRoles() async {
+    try {
+      final usersWithRoles = await _userController.getUsersRoles();
+      return usersWithRoles;
     } catch (e) {
       rethrow;
     }

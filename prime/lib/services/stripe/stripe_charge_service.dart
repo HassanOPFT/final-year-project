@@ -18,6 +18,9 @@ class StripeChargeService {
     required String chargeId,
   }) async {
     try {
+      if (chargeId.isEmpty) {
+        throw Exception('Charge ID cannot be empty');
+      }
       String apiKey = _getStripeAPIKey();
       String baseUrl = 'https://api.stripe.com/v1/charges';
 
@@ -27,7 +30,8 @@ class StripeChargeService {
           'Authorization': 'Bearer $apiKey',
         },
       );
-      StripeCharge stripeCharge = StripeCharge.fromJson(await _handleResponse(response));
+      StripeCharge stripeCharge =
+          StripeCharge.fromJson(await _handleResponse(response));
       return stripeCharge;
     } catch (e) {
       rethrow;

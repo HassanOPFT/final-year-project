@@ -294,4 +294,13 @@ class CarProvider extends ChangeNotifier {
       rethrow;
     }
   }
+
+  Future<List<CarStatus>> getCarStatuses() async {
+    try {
+      final carStatuses = await _carController.getCarStatuses();
+      return carStatuses;
+    } catch (_) {
+      rethrow;
+    }
+  }
 }

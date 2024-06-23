@@ -234,6 +234,11 @@ class CarRentalReviews extends StatelessWidget {
                     screen: CarReviewsScreen(carId: carId),
                   ),
                   child: const Text('View all Reviews'),
+                )
+              else
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 10.0),
+                  child: Text('No reviews yet'),
                 ),
             ],
           ),

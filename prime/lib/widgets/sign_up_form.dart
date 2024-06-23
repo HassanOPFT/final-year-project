@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../views/home/home_screen.dart';
@@ -130,10 +131,33 @@ class _SignUpFormState extends State<SignUpForm> {
             );
           }
         } catch (e) {
+          String errorMessage = 'Sign up failed. Please try again.';
+          if (e is FirebaseAuthException) {
+            switch (e.code) {
+              case 'weak-password':
+                errorMessage =
+                    'Password is too weak. Please use a stronger password.';
+                break;
+              case 'email-already-in-use':
+                errorMessage =
+                    'This email is already in use. Please use a different email address.';
+                break;
+              case 'invalid-email':
+                errorMessage = 'Invalid email address.';
+                break;
+              case 'operation-not-allowed':
+                errorMessage =
+                    'Email/password sign-up is not allowed for this project.';
+                break;
+              default:
+                errorMessage = 'Sign up failed. Please try again.';
+                break;
+            }
+          }
           if (mounted) {
             buildFailureSnackbar(
               context: context,
-              message: 'Sign up failed. Please try again.',
+              message: errorMessage,
             );
           }
         }

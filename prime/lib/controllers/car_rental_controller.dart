@@ -243,4 +243,18 @@ class CarRentalController {
       rethrow;
     }
   }
+
+  Future<List<CarRentalStatus>> getCarRentalStatuses() async {
+    try {
+      final carRentals = await _carRentalCollection.get();
+
+      return carRentals.docs
+          .map((carRental) => carRental.data()[_statusFieldName])
+          .toSet()
+          .map((status) => CarRentalStatus.values.byName(status))
+          .toList();
+    } catch (_) {
+      rethrow;
+    }
+  }
 }

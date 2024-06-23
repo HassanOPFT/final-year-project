@@ -208,4 +208,18 @@ class IssueReportController {
       rethrow;
     }
   }
+
+  Future<List<IssueReportStatus>> getIssueReportsStatuses() async {
+    try {
+      final querySnapshot = await _issueReportCollection.get();
+      final issueReports = querySnapshot.docs
+          .map((doc) => IssueReportStatus.values.firstWhere(
+                (status) => status.name == doc.data()[_statusFieldName],
+              ))
+          .toList();
+      return issueReports;
+    } on Exception catch (_) {
+      rethrow;
+    }
+  }
 }

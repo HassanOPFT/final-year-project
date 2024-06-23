@@ -49,6 +49,42 @@ class UserController {
     }
   }
 
+  // update user fcm token
+  Future<void> updateUserFcmToken(String userId, String fcmToken) async {
+    try {
+      await _userCollection.doc(userId).update({
+        _fcmTokenFieldName: fcmToken,
+      });
+    } on Exception catch (_) {
+      rethrow;
+    }
+  }
+
+  Future<void> deleteUserFcmToken(String userId) async {
+    try {
+      await _userCollection.doc(userId).update({
+        _fcmTokenFieldName: '',
+      });
+    } on Exception catch (_) {
+      rethrow;
+    }
+  }
+
+  Future<void> updateNotificationsEnabled({
+    required String userId,
+    required bool notificationsEnabled,
+  }) async {
+    try {
+      await _userCollection.doc(userId).update({
+        _notificationsEnabledFieldName: notificationsEnabled,
+      });
+    } on FirebaseException catch (_) {
+      rethrow;
+    } catch (_) {
+      rethrow;
+    }
+  }
+
   Future<User?> getUserDetails(String userId) async {
     try {
       final userSnapshot = await FirebaseFirestore.instance
@@ -289,5 +325,17 @@ class UserController {
     } catch (_) {
       rethrow;
     }
+  }
+
+  Future<List<UserRole>> getUsersRoles() async {
+    final querySnapshot = await _userCollection.get();
+    final usersRoles = querySnapshot.docs.map((doc) {
+      final data = doc.data();
+      return UserRole.values.firstWhere(
+        (role) => role.name == data[_roleFieldName],
+        orElse: () => UserRole.customer,
+      );
+    }).toList();
+    return usersRoles;
   }
 }

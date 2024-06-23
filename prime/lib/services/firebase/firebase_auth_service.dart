@@ -29,10 +29,10 @@ class FirebaseAuthService {
         }
       }
       throw Exception('Sign up failed. Please try again.');
-    } on FirebaseAuthException catch (e) {
-      throw Exception(e.message ?? 'Sign up failed. Please try again.');
-    } catch (e) {
-      throw Exception('Sign up failed. Please try again.');
+    } on FirebaseAuthException catch (_) {
+      rethrow;
+    } catch (_) {
+      rethrow;
     }
   }
 
@@ -45,10 +45,10 @@ class FirebaseAuthService {
         email: email,
         password: password,
       );
-    } on FirebaseAuthException catch (e) {
-      throw Exception(e.message ?? 'Sign in failed. Please try again.');
-    } catch (e) {
-      throw Exception('Sign in failed. Please try again.');
+    } on FirebaseAuthException catch (_) {
+      rethrow;
+    } catch (_) {
+      rethrow;
     }
   }
 
@@ -91,12 +91,10 @@ class FirebaseAuthService {
   Future<void> sendPasswordResetEmail(String email) async {
     try {
       await _firebaseAuth.sendPasswordResetEmail(email: email);
-    } on FirebaseAuthException catch (e) {
-      throw Exception(
-        e.message ?? 'Failed to send password reset email. Please try again.',
-      );
-    } catch (e) {
-      throw Exception('Failed to send password reset email. Please try again.');
+    } on FirebaseAuthException catch (_) {
+      rethrow;
+    } catch (_) {
+      rethrow;
     }
   }
 
@@ -104,10 +102,10 @@ class FirebaseAuthService {
     try {
       await _googleSignIn.signOut();
       await _firebaseAuth.signOut();
-    } on FirebaseAuthException catch (e) {
-      throw Exception(e.message ?? 'Sign out failed. Please try again.');
+    } on FirebaseAuthException catch (_) {
+      rethrow;
     } catch (e) {
-      throw Exception('Sign out failed. Please try again.');
+      rethrow;
     }
   }
 }
