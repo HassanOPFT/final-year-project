@@ -59,6 +59,8 @@ class HostActiveRentalsTabBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // update when car rental is updated
+    Provider.of<CarRentalProvider>(context);
     return Padding(
       padding: const EdgeInsets.all(5.0),
       child: FutureBuilder<List<Map<String, dynamic>>>(

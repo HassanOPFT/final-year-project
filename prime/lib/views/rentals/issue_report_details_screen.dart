@@ -363,7 +363,9 @@ class IssueReportDetailsScreen extends StatelessWidget {
           return Scaffold(
             appBar: AppBar(title: const Text('Issue Report Details')),
             body: const Center(
-              child: Text('Error loading data'),
+              child: Text(
+                'Issue report details not available now. please try again later.',
+              ),
             ),
           );
         } else if (!snapshot.hasData) {

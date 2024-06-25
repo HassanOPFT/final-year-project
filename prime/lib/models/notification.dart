@@ -6,7 +6,6 @@ class Notification {
   String? linkedObjectId;
   String? linkedObjectType;
   bool? isRead;
-  bool? isDelivered;
   DateTime? createdAt;
 
   Notification({
@@ -17,8 +16,23 @@ class Notification {
     this.linkedObjectId,
     this.linkedObjectType,
     this.isRead,
-    this.isDelivered,
     this.createdAt,
   });
+  factory Notification.fromMap(String id, Map<String, dynamic> map) {
+    return Notification(
+      id: id,
+      userId: map['userId'],
+      title: map['title'],
+      body: map['body'],
+      linkedObjectId: map['linkedObjectId'],
+      linkedObjectType: map['linkedObjectType'],
+      isRead: map['isRead'],
+      createdAt: map['createdAt'] != null
+          ? DateTime.fromMillisecondsSinceEpoch(
+              map['createdAt'].millisecondsSinceEpoch)
+          : null,
+    );
+  }
 }
 // create enum for linkedObjectType
+// create fromMap method

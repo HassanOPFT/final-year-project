@@ -8,6 +8,7 @@ import 'package:prime/providers/bank_account_provider.dart';
 import 'package:prime/providers/car_provider.dart';
 import 'package:prime/providers/car_rental_provider.dart';
 import 'package:prime/providers/issue_report_provider.dart';
+import 'package:prime/providers/notification_provider.dart';
 import 'package:provider/provider.dart';
 import 'firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -18,6 +19,7 @@ import 'providers/address_provider.dart';
 import 'providers/customer_provider.dart';
 import 'providers/user_provider.dart';
 import 'providers/theme_provider.dart';
+import 'services/notification_service.dart';
 import 'views/auth/auth_screen.dart';
 
 // Firebase Messaging Variable
@@ -69,10 +71,6 @@ Future<void> main() async {
 
   // Foreground Message Handling
   FirebaseMessaging.onMessage.listen((message) {
-    debugPrint('#' * 20);
-
-    debugPrint('Message Received (Foreground): ${message.data}');
-    debugPrint('#' * 20);
     currentMessageData = message;
     _handleForegroundMessageLogic(message);
   });
@@ -84,15 +82,11 @@ Future<void> main() async {
 
   // Message Opened App Handling
   FirebaseMessaging.onMessageOpenedApp.listen((message) {
-    debugPrint('#' * 20);
-    debugPrint('Message Opened from Background: ${message.data}');
-    debugPrint('#' * 20);
-
     currentMessageData = message;
     _handleMessageOpenedAppLogic(message);
   });
 
-  
+  await NotificationService.initializeNotification();
 
   runApp(const MyApp());
 }
@@ -116,31 +110,26 @@ void _handleInitialMessageLogic(RemoteMessage message) {
   // Or display a custom message using a SnackBar
 }
 
-void _handleForegroundMessageLogic(RemoteMessage message) {
-  // Display a notification using FlutterLocalNotificationsPlugin
-  // Or update UI elements directly
+Future<void> _handleForegroundMessageLogic(RemoteMessage message) async {
+  // display a notification using the NotificationService
+  await NotificationService.showNotification(
+    title: message.notification?.title ?? 'New Notification',
+    body: message.notification?.body ?? 'Notification Body',
+  );
 }
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  debugPrint('#' * 20);
-
-  debugPrint("Handling a background message: ${message.data}");
-  debugPrint('#' * 20);
-
+  // No need to display a notification here, firebase messaging will handle it
   currentMessageData = message;
   // Schedule a background task
   // Or update server data
 }
 
 void _handleMessageOpenedAppLogic(RemoteMessage message) {
-  debugPrint('#' * 20);
-
-  debugPrint("Handling a Message opened App Logic message: ${message.data}");
-  debugPrint('#' * 20);
-
   // Access the message data from `currentMessageData` if needed
   // Show a detailed message or perform further actions
+  // navigation can be done here
 }
 
 class MyApp extends StatelessWidget {
@@ -160,6 +149,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => BankAccountProvider()),
         ChangeNotifierProvider(create: (_) => CarRentalProvider()),
         ChangeNotifierProvider(create: (_) => IssueReportProvider()),
+        ChangeNotifierProvider(create: (_) => NotificationProvider()),
       ],
       child: Consumer<ThemeProvider>(
         builder: (_, themeProvider, __) => MaterialApp(

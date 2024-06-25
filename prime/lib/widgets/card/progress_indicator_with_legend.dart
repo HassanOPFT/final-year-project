@@ -96,10 +96,14 @@ class LegendItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
+        // make border radius circular
         Container(
           width: 16,
           height: 16,
-          color: color,
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+          ),
         ),
         const SizedBox(width: 8),
         Text('$label: RM${value.toStringAsFixed(2)}'),

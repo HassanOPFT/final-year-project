@@ -19,26 +19,23 @@ class AdminCarRentalsHistoryTabBody extends StatelessWidget {
         Provider.of<CarRentalProvider>(context, listen: false);
     final rentalsHistoryWithCars = <Map<String, dynamic>>[];
 
-    final cars = await carProvider.getAllCars();
+    final carRentals = await carRentalProvider.getCarRentalsByStatuses(
+      [
+        CarRentalStatus.customerCancelled,
+        CarRentalStatus.hostCancelled,
+        CarRentalStatus.hostConfirmedReturn,
+        CarRentalStatus.adminConfirmedRefund,
+        CarRentalStatus.adminConfirmedPayout,
+      ],
+    );
 
-    for (var car in cars) {
-      if (car.id != null) {
-        final carRentals = await carRentalProvider.getCarRentalsByStatuses(
-          [
-            CarRentalStatus.customerCancelled,
-            CarRentalStatus.hostCancelled,
-            CarRentalStatus.hostConfirmedReturn,
-            CarRentalStatus.adminConfirmedRefund,
-            CarRentalStatus.adminConfirmedPayout,
-          ],
-        );
-
-        for (var rental in carRentals) {
-          rentalsHistoryWithCars.add({
-            'car': car,
-            'rental': rental,
-          });
-        }
+    for (var carRental in carRentals) {
+      if (carRental.carId != null) {
+        final car = await carProvider.getCarById(carRental.carId!);
+        rentalsHistoryWithCars.add({
+          'car': car,
+          'rental': carRental,
+        });
       }
     }
 

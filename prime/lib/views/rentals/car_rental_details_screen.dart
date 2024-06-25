@@ -1010,7 +1010,7 @@ class CarRentalDetailsScreen extends StatelessWidget {
               'The payout has been confirmed & sent to the host.',
           modifiedById: currentUserId,
         );
-        buildAlertSnackbar(
+        buildSuccessSnackbar(
           context: context,
           message: 'Payout confirmed successfully.',
         );
@@ -1517,10 +1517,12 @@ class CarRentalDetailsScreen extends StatelessWidget {
                       CarAddressImagePreview(
                         addressId: car.defaultAddressId,
                       ),
-                    _buildSectionTitle('Payment Method'),
-                    CarRentalPaymentCarTile(
-                      stripeCharge: stripeCharge,
-                    ),
+                    if (currentUserRole == UserRole.customer)
+                      _buildSectionTitle('Payment Method'),
+                    if (currentUserRole == UserRole.customer)
+                      CarRentalPaymentCarTile(
+                        stripeCharge: stripeCharge,
+                      ),
                     // customer shouldn't see payout status, only customer, check which other statuses he shouldn't see
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 15.0),

@@ -19,28 +19,24 @@ class AdminActiveCarRentalsTabBody extends StatelessWidget {
         Provider.of<CarRentalProvider>(context, listen: false);
     final activeRentalsWithCars = <Map<String, dynamic>>[];
 
-    final cars = await carProvider.getAllCars();
-
-    for (var car in cars) {
-      if (car.id != null) {
-        final carRentals = await carRentalProvider.getCarRentalsByStatuses(
-          [
-            CarRentalStatus.rentedByCustomer,
-            CarRentalStatus.pickedUpByCustomer,
-            CarRentalStatus.hostReportedIssue,
-            CarRentalStatus.hostConfirmedPickup,
-            CarRentalStatus.customerReturnedCar,
-            CarRentalStatus.customerReportedIssue,
-            CarRentalStatus.customerExtendedRental,
-          ],
-        );
-
-        for (var rental in carRentals) {
-          activeRentalsWithCars.add({
-            'car': car,
-            'rental': rental,
-          });
-        }
+    final carRentals = await carRentalProvider.getCarRentalsByStatuses(
+      [
+        CarRentalStatus.rentedByCustomer,
+        CarRentalStatus.pickedUpByCustomer,
+        CarRentalStatus.hostReportedIssue,
+        CarRentalStatus.hostConfirmedPickup,
+        CarRentalStatus.customerReturnedCar,
+        CarRentalStatus.customerReportedIssue,
+        CarRentalStatus.customerExtendedRental,
+      ],
+    );
+    for (var carRental in carRentals) {
+      if (carRental.carId != null) {
+        final car = await carProvider.getCarById(carRental.carId!);
+        activeRentalsWithCars.add({
+          'car': car,
+          'rental': carRental,
+        });
       }
     }
 

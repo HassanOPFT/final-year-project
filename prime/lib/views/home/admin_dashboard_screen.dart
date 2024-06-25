@@ -1,6 +1,4 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:prime/models/car.dart';
 import 'package:prime/models/car_rental.dart';
 import 'package:prime/models/issue_report.dart';
@@ -8,13 +6,15 @@ import 'package:prime/models/stripe_transaction.dart';
 import 'package:prime/models/user.dart';
 import 'package:prime/providers/car_rental_provider.dart';
 import 'package:prime/providers/issue_report_provider.dart';
+import 'package:prime/providers/notification_provider.dart';
+import 'package:prime/services/firebase/firebase_auth_service.dart';
 import 'package:prime/services/stripe/stripe_charge_service.dart';
 import 'package:prime/utils/navigate_with_animation.dart';
 import 'package:prime/views/admin/admin_users_screen.dart';
 import 'package:prime/views/cars/admin_cars_screen.dart';
+import 'package:prime/views/home/notification_screen.dart';
 import 'package:prime/views/rentals/admin_rentals_screen.dart';
 import 'package:prime/widgets/card/issue_report_progress_indicator.dart';
-import 'package:prime/widgets/navigation_bar/admin_navigation_bar.dart';
 import 'package:provider/provider.dart';
 
 import '../../models/stripe_charge.dart';
@@ -25,6 +25,7 @@ import '../../widgets/app_logo.dart';
 import '../../widgets/card/progress_indicator_with_legend.dart';
 import '../../widgets/card/revenue_dashboard_card.dart';
 import '../../widgets/card/total_dashboard_card.dart';
+import '../../widgets/navigation_bar/admin_navigation_bar.dart';
 
 class AdminDashboardScreen extends StatelessWidget {
   const AdminDashboardScreen({super.key});
@@ -116,6 +117,8 @@ class AdminDashboardScreen extends StatelessWidget {
         getIssueReportsWithStatus(),
       ]);
 
+      final currentUserId = FirebaseAuthService().currentUser?.uid ?? '';
+
       final carsWithStatus = combinedFutures[0];
       final List<CarRental> carRentals = combinedFutures[1] as List<CarRental>;
       final usersWithRoles = combinedFutures[2];
@@ -131,56 +134,127 @@ class AdminDashboardScreen extends StatelessWidget {
         'totalUsers': usersWithRoles.length,
         ...allFinance,
         'issueReportsWithStatuses': issueReportsWithStatuses,
+        'currentUserId': currentUserId,
       };
     }
 
-    return Scaffold(
-      appBar: AppBar(
-        centerTitle: true,
-        title: const AppLogo(height: 120),
-        automaticallyImplyLeading: false,
-      ),
-      body: FutureBuilder<Map<String, dynamic>>(
-        future: fetchAllData(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return const Center(child: Text('Error fetching data'));
-          } else if (snapshot.hasData) {
-            final data = snapshot.data!;
+    return FutureBuilder<Map<String, dynamic>>(
+      future: fetchAllData(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Scaffold(
+            appBar: AppBar(
+              centerTitle: true,
+              title: const AppLogo(height: 120),
+              automaticallyImplyLeading: false,
+            ),
+            body: const Center(
+              child: CircularProgressIndicator(),
+            ),
+          );
+        } else if (snapshot.hasError) {
+          return Scaffold(
+            appBar: AppBar(
+              centerTitle: true,
+              title: const AppLogo(height: 120),
+              automaticallyImplyLeading: false,
+            ),
+            body: const Center(
+              child: Text('Error fetching data'),
+            ),
+          );
+        } else if (snapshot.hasData) {
+          final data = snapshot.data!;
 
-            final totalCars = data['totalCars'];
-            final carRentals = data['carRentals'];
-            final totalUsers = data['totalUsers'];
-            final platformRevenue = data['platformRevenue'];
-            final hostsEarnings = data['hostsEarnings'];
-            final stripeFees = data['stripeFees'];
-            final issueReportsWithStatuses = data['issueReportsWithStatuses'];
+          final totalCars = data['totalCars'];
+          final carRentals = data['carRentals'];
+          final totalUsers = data['totalUsers'];
+          final platformRevenue = data['platformRevenue'];
+          final hostsEarnings = data['hostsEarnings'];
+          final stripeFees = data['stripeFees'];
+          final issueReportsWithStatuses = data['issueReportsWithStatuses'];
+          final String currentUserId = data['currentUserId'];
 
-            // calculate how many issue reports are in each status
-            int open = 0;
-            int inProgress = 0;
-            int resolved = 0;
-            int closed = 0;
-            for (final issueReport in issueReportsWithStatuses) {
-              switch (issueReport) {
-                case IssueReportStatus.open:
-                  open++;
-                  break;
-                case IssueReportStatus.inProgress:
-                  inProgress++;
-                  break;
-                case IssueReportStatus.resolved:
-                  resolved++;
-                  break;
-                case IssueReportStatus.closed:
-                  closed++;
-                  break;
-              }
+          // calculate how many issue reports are in each status
+          int open = 0;
+          int inProgress = 0;
+          int resolved = 0;
+          int closed = 0;
+          for (final issueReport in issueReportsWithStatuses) {
+            switch (issueReport) {
+              case IssueReportStatus.open:
+                open++;
+                break;
+              case IssueReportStatus.inProgress:
+                inProgress++;
+                break;
+              case IssueReportStatus.resolved:
+                resolved++;
+                break;
+              case IssueReportStatus.closed:
+                closed++;
+                break;
             }
+          }
 
-            return SingleChildScrollView(
+          return Scaffold(
+            appBar: AppBar(
+              centerTitle: true,
+              title: const AppLogo(height: 120),
+              automaticallyImplyLeading: false,
+              actions: [
+                Stack(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.notifications_none_rounded),
+                      onPressed: () => animatedPushNavigation(
+                        context: context,
+                        screen: NotificationScreen(userId: currentUserId),
+                      ),
+                    ),
+                    Consumer<NotificationProvider>(
+                      builder: (_, notificationProvider, __) {
+                        return FutureBuilder(
+                          future: notificationProvider
+                              .hasUnreadNotification(currentUserId),
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState ==
+                                ConnectionState.waiting) {
+                              return const SizedBox();
+                            } else if (snapshot.hasError) {
+                              return const SizedBox();
+                            } else if (snapshot.hasData) {
+                              final hasUnread = snapshot.data as bool;
+
+                              if (hasUnread) {
+                                return Positioned(
+                                  top: 5.0,
+                                  right: 8.0,
+                                  child: Container(
+                                    width: 12.0,
+                                    height: 12.0,
+                                    decoration: BoxDecoration(
+                                      color:
+                                          Theme.of(context).colorScheme.primary,
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                );
+                              } else {
+                                return const SizedBox();
+                              }
+                            } else {
+                              return const SizedBox();
+                            }
+                          },
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            body: SingleChildScrollView(
               padding: const EdgeInsets.all(16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -297,13 +371,13 @@ class AdminDashboardScreen extends StatelessWidget {
                   const SizedBox(height: 16),
                 ],
               ),
-            );
-          } else {
-            return const Center(child: Text('No data available'));
-          }
-        },
-      ),
-      bottomNavigationBar: const AdminNavigationBar(currentIndex: 0),
+            ),
+            bottomNavigationBar: const AdminNavigationBar(currentIndex: 0),
+          );
+        } else {
+          return const Center(child: Text('No data available'));
+        }
+      },
     );
   }
 }

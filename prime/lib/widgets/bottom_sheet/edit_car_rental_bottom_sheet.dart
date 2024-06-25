@@ -110,19 +110,19 @@ class EditCarRentalBottomSheet extends StatelessWidget {
       );
     }
 
-    Widget extendRentalButton() {
-      return TextButton.icon(
-        onPressed: () {
-          Navigator.of(context).pop();
-          extendRental(carRental);
-        },
-        icon: const Icon(Icons.access_time),
-        label: const Text(
-          'Extend Rental',
-          style: TextStyle(fontSize: 18.0),
-        ),
-      );
-    }
+    // Widget extendRentalButton() {
+    //   return TextButton.icon(
+    //     onPressed: () {
+    //       Navigator.of(context).pop();
+    //       extendRental(carRental);
+    //     },
+    //     icon: const Icon(Icons.access_time),
+    //     label: const Text(
+    //       'Extend Rental',
+    //       style: TextStyle(fontSize: 18.0),
+    //     ),
+    //   );
+    // }
 
     Widget returnCarByCustomerButton() {
       return TextButton.icon(
@@ -270,8 +270,12 @@ class EditCarRentalBottomSheet extends StatelessWidget {
         ]);
       }
 
-      if ((carRental.status == CarRentalStatus.pickedUpByCustomer ||
-              carRental.status == CarRentalStatus.hostConfirmedPickup) &&
+      if (!carRentalStatusHistory.contains(
+            CarRentalStatus.customerCancelled,
+          ) &&
+          !carRentalStatusHistory.contains(
+            CarRentalStatus.hostCancelled,
+          ) &&
           !carRentalStatusHistory.contains(
             CarRentalStatus.customerReturnedCar,
           ) &&
@@ -319,7 +323,7 @@ class EditCarRentalBottomSheet extends StatelessWidget {
             CarRentalStatus.adminConfirmedRefund,
           )) {
         buttons.addAll([
-          extendRentalButton(),
+          // extendRentalButton(),
           cancelRentalButton(),
         ]);
       }
@@ -409,8 +413,16 @@ class EditCarRentalBottomSheet extends StatelessWidget {
     // }
 
     void loadHostButtons() {
-      if (carRental.status == CarRentalStatus.rentedByCustomer &&
-          !carRentalStatusHistory.contains(CarRentalStatus.hostCancelled)) {
+      if (carRental.status == CarRentalStatus.rentedByCustomer ||
+          (!carRentalStatusHistory.contains(
+                CarRentalStatus.hostCancelled,
+              ) &&
+              !carRentalStatusHistory.contains(
+                CarRentalStatus.customerCancelled,
+              ) &&
+              !carRentalStatusHistory.contains(
+                CarRentalStatus.hostConfirmedPickup,
+              ))) {
         buttons.addAll([
           confirmPickUpByHostButton(),
         ]);
