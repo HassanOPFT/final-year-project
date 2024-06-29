@@ -7,9 +7,7 @@ import '../../widgets/tiles/address_tile.dart';
 import '../../widgets/tiles/change_password_tile.dart';
 import '../../widgets/tiles/edit_profile_tile.dart';
 import '../../widgets/profile_avatar.dart';
-import '../../widgets/tiles/help_center_tile.dart';
 import '../../widgets/tiles/personal_documents_tile.dart';
-import '../../widgets/tiles/privacy_policy_tile.dart';
 import '../../widgets/tiles/sign_out_tile.dart';
 import '../../widgets/tiles/dark_mode_switch.dart';
 import '../../widgets/navigation_bar/customer_navigation_bar.dart';
@@ -35,7 +33,7 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
           const ProfileAvatar(),
           const SizedBox(height: 15.0),
           const UserInfo(),
-          const SizedBox(height: 25.0),
+          const SizedBox(height: 15.0),
           const Divider(
             endIndent: 15.0,
             indent: 15.0,
@@ -44,7 +42,7 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
           const EditProfileTile(),
           const ChangePasswordTile(),
           const AddressTile(),
-          const PersonalDocumentsTile(), // make tabs for each document type
+          const PersonalDocumentsTile(),
           const NotificationsSwitch(),
           const PaymentCardsAndBankAccountTile(),
           const DarkModeSwitch(),

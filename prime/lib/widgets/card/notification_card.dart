@@ -23,7 +23,7 @@ class NotificationCard extends StatelessWidget {
               ? Icons.notifications_none_rounded
               : Icons.notifications_active_rounded,
         ),
-        title: Text(
+        title: SelectableText(
           notification.title ?? '',
           style: const TextStyle(
             fontWeight: FontWeight.bold,
@@ -32,7 +32,7 @@ class NotificationCard extends StatelessWidget {
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
+            SelectableText(
               notification.body ?? '',
               style: const TextStyle(
                 fontSize: 12.0,

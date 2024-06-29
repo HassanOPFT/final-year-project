@@ -98,7 +98,7 @@ class _SignUpFormState extends State<SignUpForm> {
             password: _passwordController.text.trim(),
           );
 
-          // create a customer using
+          // create a customer using the user id
           final customerController = CustomerController();
           await customerController.createCustomer(
             customer: Customer(
@@ -250,30 +250,6 @@ class _SignUpFormState extends State<SignUpForm> {
             ),
             controller: _passwordController,
           ),
-          // const SizedBox(height: 10.0),
-          // GestureDetector(
-          //   onTap: () {
-          //     setState(() {
-          //       _rememberMe = !_rememberMe;
-          //     });
-          //   },
-          //   child: Row(
-          //     mainAxisAlignment: MainAxisAlignment.center,
-          //     children: [
-          //       Checkbox(
-          //         value: _rememberMe,
-          //         onChanged: (value) {
-          //           if (value != null) {
-          //             setState(() {
-          //               _rememberMe = value;
-          //             });
-          //           }
-          //         },
-          //       ),
-          //       const Text('Remember me'),
-          //     ],
-          //   ),
-          // ),
           const SizedBox(height: 30.0),
           SizedBox(
             height: 50.0,

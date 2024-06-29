@@ -41,7 +41,7 @@ class AdminRentalsScreen extends StatelessWidget {
           children: [
             AdminActiveCarRentalsTabBody(),
             AdminCarRentalsHistoryTabBody(),
-            AdminReportedIssuesTabBody(),
+            AdminIssueReportsTabBody(),
           ],
         ),
         bottomNavigationBar: const AdminNavigationBar(currentIndex: 1),

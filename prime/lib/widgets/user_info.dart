@@ -38,6 +38,15 @@ class UserInfo extends StatelessWidget {
                   ),
                   textAlign: TextAlign.center,
                 ),
+              if (userProvider.user?.userReferenceNumber != null)
+                SelectableText(
+                  '${userProvider.user?.userReferenceNumber}',
+                  style: TextStyle(
+                    color: Theme.of(context).dividerColor,
+                    fontSize: 12.0,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
             ],
           );
         }

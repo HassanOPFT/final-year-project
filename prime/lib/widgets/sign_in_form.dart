@@ -185,29 +185,6 @@ class _SignInFormState extends State<SignInForm> {
             },
           ),
           const SizedBox(height: 10.0),
-          // GestureDetector(
-          //   onTap: () {
-          //     setState(() {
-          //       _rememberMe = !_rememberMe;
-          //     });
-          //   },
-          //   child: Row(
-          //     mainAxisAlignment: MainAxisAlignment.center,
-          //     children: [
-          //       Checkbox(
-          //         value: _rememberMe,
-          //         onChanged: (value) {
-          //           if (value != null) {
-          //             setState(() {
-          //               _rememberMe = value;
-          //             });
-          //           }
-          //         },
-          //       ),
-          //       const Text('Remember me'),
-          //     ],
-          //   ),
-          // ),
           const Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [

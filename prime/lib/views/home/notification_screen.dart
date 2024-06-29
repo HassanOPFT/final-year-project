@@ -68,7 +68,7 @@ class NotificationScreen extends StatelessWidget {
             ),
             body: ListView.builder(
               itemCount: notifications.length,
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.fromLTRB(15.0, 5.0, 15.0, 5.0),
               itemBuilder: (context, index) {
                 final notification = notifications[index];
                 return NotificationCard(

@@ -338,4 +338,17 @@ class UserController {
     }).toList();
     return usersRoles;
   }
+
+  Future<void> updateUserRole({
+    required String userId,
+    required UserRole userRole,
+  }) async {
+    try {
+      await _userCollection.doc(userId).update({
+        _roleFieldName: userRole.name,
+      });
+    } on Exception catch (_) {
+      rethrow;
+    }
+  }
 }

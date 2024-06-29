@@ -12,7 +12,7 @@ class _PaymentMethodSelectorState extends State<PaymentMethodSelector> {
   bool _saveCard = true;
 
   List<String> savedCards = [
-    '**** **** **** 4679',
+    // '**** **** **** 4679',
   ];
 
   @override

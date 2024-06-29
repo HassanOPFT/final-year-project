@@ -3,8 +3,10 @@ import 'package:prime/utils/generate_reference_number.dart';
 
 import '../models/car.dart';
 import '../models/status_history.dart';
+import '../models/user.dart';
 import '../services/firebase/firebase_storage_service.dart';
 import 'status_history_controller.dart';
+import 'user_controller.dart';
 
 class CarController {
   static const String _carCollectionName = 'Car';
@@ -116,6 +118,16 @@ class CarController {
           modifiedById: hostId,
         ),
       );
+
+      // update user role to host if not already
+      final userController = UserController();
+      final userRole = await userController.getUserRole(hostId);
+      if (userRole != UserRole.host) {
+        await userController.updateUserRole(
+          userId: hostId,
+          userRole: UserRole.host,
+        );
+      }
 
       return newCar.id;
     } on FirebaseException catch (_) {
@@ -651,6 +663,7 @@ class CarController {
   }) async {
     try {
       final car = await getCarById(carId);
+      final hostId = car?.hostId ?? '';
       if (car == null) {
         throw Exception('Car not found');
       }
@@ -681,6 +694,26 @@ class CarController {
             modifiedById: modifiedById,
           ),
         );
+      }
+      // check if the user still has cars after deleting the current car, if no then update the role to customer
+      final userController = UserController();
+      final userCars = await getCarsByHostId(hostId);
+
+      if (userCars.isEmpty) {
+        await userController.updateUserRole(
+          userId: hostId,
+          userRole: UserRole.customer,
+        );
+      } else {
+        // Check if all cars have deleteByHost status
+        bool allCarsDeletedByHost =
+            userCars.every((car) => car.status == CarStatus.deletedByHost);
+        if (allCarsDeletedByHost) {
+          await userController.updateUserRole(
+            userId: hostId,
+            userRole: UserRole.customer,
+          );
+        }
       }
     } on FirebaseException catch (_) {
       rethrow;

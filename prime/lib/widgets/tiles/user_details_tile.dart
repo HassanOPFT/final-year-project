@@ -4,7 +4,6 @@ import 'package:prime/controllers/user_controller.dart';
 import 'package:prime/utils/navigate_with_animation.dart';
 import 'package:prime/views/admin/user_details_screen.dart';
 
-import '../../models/customer.dart';
 import '../../models/user.dart';
 
 class UserDetailsTile extends StatelessWidget {

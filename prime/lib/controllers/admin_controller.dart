@@ -1,13 +1,11 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-
 import '../models/admin.dart';
 import 'user_controller.dart';
 
 class AdminController {
-  static const String _adminCollectionName = 'Admin';
+  // static const String _adminCollectionName = 'Admin';
 
-  final _adminCollection =
-      FirebaseFirestore.instance.collection(_adminCollectionName);
+  // final _adminCollection =
+  //     FirebaseFirestore.instance.collection(_adminCollectionName);
   final _userController = UserController();
 
   Future<void> createAdmin({required Admin admin}) async {

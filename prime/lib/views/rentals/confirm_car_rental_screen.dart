@@ -21,6 +21,8 @@ import '../../providers/address_provider.dart';
 import '../../providers/car_provider.dart';
 import '../../providers/car_rental_provider.dart';
 import '../../services/stripe/stripe_customer.dart';
+import '../../widgets/rental_agreement.dart';
+import '../../widgets/tiles/payment_method_selector.dart';
 
 // TODO: The system should provide rental agreements that outline the terms and conditions of the rental,
 // including any liabilities or responsibilities of the owner or renter.
@@ -292,9 +294,11 @@ class _ConfirmCarRentalScreenState extends State<ConfirmCarRentalScreen> {
                             ],
                           ),
                         ),
-                        // TODO: Implement payment method selection
-                        // _buildSectionTitle('Payment Method'),
-                        // const PaymentMethodSelector(),
+                        _buildSectionTitle('Payment Method'),
+                        const PaymentMethodSelector(),
+                        _buildSectionTitle('Rental Agreement'),
+                        const RentalAgreement(),
+                        const SizedBox(height: 30.0),
                       ],
                     ),
                   ),

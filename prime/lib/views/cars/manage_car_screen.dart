@@ -8,6 +8,7 @@ import 'package:prime/widgets/admin_car_address.dart';
 import 'package:prime/widgets/bottom_sheet/edit_car_bottom_sheet.dart';
 import 'package:prime/widgets/car_features_row.dart';
 import 'package:prime/widgets/card/host_car_bank_account_card.dart';
+import 'package:prime/widgets/card/total_dashboard_card.dart';
 import 'package:prime/widgets/custom_progress_indicator.dart';
 import 'package:prime/widgets/host_car_verification_document.dart';
 import 'package:provider/provider.dart';
@@ -24,13 +25,16 @@ import '../../providers/user_provider.dart';
 import '../../providers/verification_document_provider.dart';
 import '../../services/firebase/firebase_auth_service.dart';
 import '../../utils/assets_paths.dart';
+import '../../utils/finance_util.dart';
 import '../../utils/navigate_with_animation.dart';
 import '../../widgets/card/car_rental_reviews.dart';
+import '../../widgets/card/revenue_dashboard_card.dart';
 import '../../widgets/copy_text.dart';
 import '../../widgets/host_car_address.dart';
 import '../../widgets/images/car_images_carousel.dart';
 import '../../widgets/latest_status_history_record.dart';
 import '../../widgets/tiles/manage_verification_document_tile.dart';
+import 'car_rental_history_screen.dart';
 import 'update_host_car_screen.dart';
 
 // TODO: add car rental history, total earnings, how many rentals, etc
@@ -487,6 +491,7 @@ class ManageCarScreen extends StatelessWidget {
     final bankAccountProvider = Provider.of<BankAccountProvider>(context);
     final verificationDocumentProvider =
         Provider.of<VerificationDocumentProvider>(context);
+    final financeUtil = FinanceUtil();
 
     return FutureBuilder<Car?>(
       future: carProvider.getCarById(carId),
@@ -534,8 +539,36 @@ class ManageCarScreen extends StatelessWidget {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10.0, vertical: 5.0),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    FutureBuilder<double>(
+                      future: financeUtil.getTotalHostRevenueByCarId(
+                        car.id ?? '',
+                      ),
+                      builder: (context, revenueSnapshot) {
+                        if (revenueSnapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const CustomProgressIndicator();
+                        } else if (revenueSnapshot.hasError) {
+                          return const Center(
+                            child: Text(
+                                'Error loading revenue. Please try again later.'),
+                          );
+                        } else {
+                          return RevenueDashboardCard(
+                            icon: Icons.attach_money,
+                            value: 'RM${revenueSnapshot.data ?? 0}',
+                            title: 'Car Revenue',
+                            backgroundColor: Colors.green.shade100,
+                            iconColor: Colors.green.shade900,
+                            valueColor: Colors.green.shade900,
+                            titleColor: Colors.green.shade900,
+                            aspectRatio: 0.5,
+                          );
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 15.0),
                     CarImagesCarousel(
                       imagesUrl: car.imagesUrl ?? [],
                       carStatus: car.status as CarStatus,
@@ -719,6 +752,33 @@ class ManageCarScreen extends StatelessWidget {
                       AdminVerificationDocumentTile(
                         verificationDocumentId: car.roadTaxDocumentId ?? '',
                       ),
+                    buildSectionTitle(sectionTitle: 'Rental History'),
+                    Card(
+                      child: ListTile(
+                        leading: const Icon(
+                          Icons.car_rental,
+                          size: 30,
+                        ),
+                        title: const Text(
+                          'Rental History',
+                          style: TextStyle(
+                            fontSize: 20.0,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        subtitle: const Text('View rental history of this car'),
+                        trailing: const Icon(
+                          Icons.keyboard_arrow_right_rounded,
+                          size: 30,
+                        ),
+                        onTap: () => animatedPushNavigation(
+                          context: context,
+                          screen: CarRentalHistoryScreen(
+                            carId: car.id ?? '',
+                          ),
+                        ),
+                      ),
+                    ),
                     const SizedBox(height: 30.0),
                     LatestStatusHistoryRecord(
                       fetchStatusHistory: getMostRecentStatusHistory,

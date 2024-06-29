@@ -183,4 +183,16 @@ class UserProvider extends ChangeNotifier {
       rethrow;
     }
   }
+
+  Future<void> updateUserRole(String userId, UserRole userRole) async {
+    try {
+      await _userController.updateUserRole(
+        userId: userId,
+        userRole: userRole,
+      );
+      notifyListeners();
+    } catch (e) {
+      rethrow;
+    }
+  }
 }

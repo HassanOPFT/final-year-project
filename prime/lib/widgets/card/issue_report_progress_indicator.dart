@@ -70,25 +70,25 @@ class IssueReportProgressIndicator extends StatelessWidget {
             Column(
               children: [
                 LegendItem(
-                  color: Colors.blue,
+                  color: openColor,
                   value: open,
                   label: 'Open',
                 ),
                 const SizedBox(height: 5),
                 LegendItem(
-                  color: Colors.yellow,
+                  color: inProgressColor,
                   value: inProgress,
                   label: 'In Progress',
                 ),
                 const SizedBox(height: 5),
                 LegendItem(
-                  color: Colors.green,
+                  color: resolvedColor,
                   value: resolved,
                   label: 'Resolved',
                 ),
                 const SizedBox(height: 5),
                 LegendItem(
-                  color: Colors.red,
+                  color: closedColor,
                   value: closed,
                   label: 'Closed',
                 ),

@@ -5,9 +5,11 @@ import '../models/car.dart';
 import '../providers/car_provider.dart';
 import '../services/firebase/firebase_auth_service.dart';
 import 'card/host_car_card.dart';
+import 'card/revenue_dashboard_card.dart';
 import 'custom_progress_indicator.dart';
 import 'floating_action_button/add_car_floating_action_button.dart';
 import 'no_data_found.dart';
+import '../utils/finance_util.dart';
 
 class HostCarsTabBody extends StatelessWidget {
   const HostCarsTabBody({
@@ -18,6 +20,8 @@ class HostCarsTabBody extends StatelessWidget {
   Widget build(BuildContext context) {
     final firebaseAuthService = FirebaseAuthService();
     final carProvider = Provider.of<CarProvider>(context);
+    final financeUtil = FinanceUtil();
+
     return Stack(
       children: [
         Padding(
@@ -38,14 +42,43 @@ class HostCarsTabBody extends StatelessWidget {
                     .where((car) => car.status != CarStatus.deletedByHost)
                     .toList();
                 if (carsList.isNotEmpty) {
-                  return ListView.builder(
-                    itemCount: carsList.length,
-                    padding: EdgeInsets.only(
-                      bottom: MediaQuery.of(context).padding.bottom + 80.0,
+                  return FutureBuilder<double>(
+                    future: financeUtil.getTotalHostRevenueByHostId(
+                      firebaseAuthService.currentUser?.uid ?? '',
                     ),
-                    itemBuilder: (context, index) {
-                      final car = carsList[index];
-                      return HostCarCard(car: car);
+                    builder: (context, revenueSnapshot) {
+                      if (revenueSnapshot.connectionState ==
+                          ConnectionState.waiting) {
+                        return const CustomProgressIndicator();
+                      } else if (revenueSnapshot.hasError) {
+                        return const Center(
+                          child: Text(
+                              'Error loading revenue. Please try again later.'),
+                        );
+                      } else {
+                        return SingleChildScrollView(
+                          padding: const EdgeInsets.only(bottom: 80.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              const SizedBox(height: 10.0),
+                              RevenueDashboardCard(
+                                icon: Icons.attach_money,
+                                value:
+                                    'RM${revenueSnapshot.data?.toStringAsFixed(2) ?? 0}',
+                                title: 'Hosting Revenue',
+                                backgroundColor: Colors.green.shade100,
+                                iconColor: Colors.green.shade900,
+                                valueColor: Colors.green.shade900,
+                                titleColor: Colors.green.shade900,
+                                aspectRatio: 0.5,
+                              ),
+                              const SizedBox(height: 5),
+                              for (final car in carsList) HostCarCard(car: car),
+                            ],
+                          ),
+                        );
+                      }
                     },
                   );
                 } else {
@@ -66,10 +99,10 @@ class HostCarsTabBody extends StatelessWidget {
           ),
         ),
         const Positioned(
-            bottom: 16.0,
-            right: 16.0,
-            child: AddCarFloatingButton(),
-          ),
+          bottom: 16.0,
+          right: 16.0,
+          child: AddCarFloatingButton(),
+        ),
       ],
     );
   }

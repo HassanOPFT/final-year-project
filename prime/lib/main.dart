@@ -9,10 +9,14 @@ import 'package:prime/providers/car_provider.dart';
 import 'package:prime/providers/car_rental_provider.dart';
 import 'package:prime/providers/issue_report_provider.dart';
 import 'package:prime/providers/notification_provider.dart';
+import 'package:prime/providers/search_cars_provider.dart';
+import 'package:prime/providers/search_issue_reports_provider.dart';
 import 'package:provider/provider.dart';
 import 'firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
 
+import 'providers/search_rentals_provider.dart';
+import 'providers/search_users_provider.dart';
 import 'providers/status_history_provider.dart';
 import 'providers/verification_document_provider.dart';
 import 'providers/address_provider.dart';
@@ -112,10 +116,12 @@ void _handleInitialMessageLogic(RemoteMessage message) {
 
 Future<void> _handleForegroundMessageLogic(RemoteMessage message) async {
   // display a notification using the NotificationService
-  await NotificationService.showNotification(
-    title: message.notification?.title ?? 'New Notification',
-    body: message.notification?.body ?? 'Notification Body',
-  );
+  if (message.notification != null) {
+    await NotificationService.showNotification(
+      title: message.notification?.title ?? 'Notification Title',
+      body: message.notification?.body ?? 'Notification Body',
+    );
+  }
 }
 
 @pragma('vm:entry-point')
@@ -150,6 +156,10 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => CarRentalProvider()),
         ChangeNotifierProvider(create: (_) => IssueReportProvider()),
         ChangeNotifierProvider(create: (_) => NotificationProvider()),
+        ChangeNotifierProvider(create: (_) => SearchCarsProvider()),
+        ChangeNotifierProvider(create: (_) => SearchRentalsProvider()),
+        ChangeNotifierProvider(create: (_) => SearchIssueReportsProvider()),
+        ChangeNotifierProvider(create: (_) => SearchUsersProvider()),
       ],
       child: Consumer<ThemeProvider>(
         builder: (_, themeProvider, __) => MaterialApp(

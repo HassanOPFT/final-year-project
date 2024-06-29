@@ -151,6 +151,7 @@ class AdminDashboardScreen extends StatelessWidget {
             body: const Center(
               child: CircularProgressIndicator(),
             ),
+            bottomNavigationBar: const AdminNavigationBar(currentIndex: 0),
           );
         } else if (snapshot.hasError) {
           return Scaffold(
@@ -162,6 +163,7 @@ class AdminDashboardScreen extends StatelessWidget {
             body: const Center(
               child: Text('Error fetching data'),
             ),
+            bottomNavigationBar: const AdminNavigationBar(currentIndex: 0),
           );
         } else if (snapshot.hasData) {
           final data = snapshot.data!;
@@ -339,7 +341,7 @@ class AdminDashboardScreen extends StatelessWidget {
                   ),
                   const Padding(
                     padding: EdgeInsets.symmetric(vertical: 15.0),
-                    child: Divider(),
+                    child: Divider(thickness: 0.3),
                   ),
                   ProgressIndicatorWithLegend(
                     platformRevenue: platformRevenue,
@@ -348,7 +350,7 @@ class AdminDashboardScreen extends StatelessWidget {
                   ),
                   const Padding(
                     padding: EdgeInsets.symmetric(vertical: 15.0),
-                    child: Divider(),
+                    child: Divider(thickness: 0.3),
                   ),
                   GestureDetector(
                     onTap: () => animatedPushReplacementNavigation(
