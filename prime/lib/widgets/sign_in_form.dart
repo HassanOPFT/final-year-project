@@ -52,8 +52,12 @@ class _SignInFormState extends State<SignInForm> {
   String? _validatePassword(String? value) {
     if (value == null || value.isEmpty) {
       return 'Please enter your password.';
-    } else if (value.length < 6) {
-      return 'Password must be at least 6 characters long.';
+    } else if (value.length < 8) {
+      return 'Password must be at least 8 characters long.';
+    } else if (!RegExp(
+            r'^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[!@#\$&*~]).{8,}$')
+        .hasMatch(value)) {
+      return 'must contain uppercase, lowercase, number, special character.';
     }
     return null;
   }

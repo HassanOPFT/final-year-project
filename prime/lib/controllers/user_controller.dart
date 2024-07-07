@@ -17,7 +17,7 @@ class UserController {
   static const String _notificationsEnabledFieldName = 'notificationsEnabled';
   static const String _createdAtFieldName = 'createdAt';
 
-  // create getter for defaultProfileUrl
+// create getter for defaultProfileUrl
   String get defaultProfileUrl =>
       'https://firebasestorage.googleapis.com/v0/b/prime-b09b7.appspot.com/o/default-files%2Fuser-default-profile-picture.jpg?alt=media&token=4acacd32-a06e-4637-a5af-357c986caca3';
 
@@ -49,7 +49,7 @@ class UserController {
     }
   }
 
-  // update user fcm token
+// update user fcm token
   Future<void> updateUserFcmToken(String userId, String fcmToken) async {
     try {
       await _userCollection.doc(userId).update({
@@ -218,7 +218,7 @@ class UserController {
     return 'user-profile-picture/$userReferenceNumber.jpg';
   }
 
-  // user-profile-picture/${userReferenceNumber}.jpg
+// user-profile-picture/${userReferenceNumber}.jpg
   Future<String?> uploadProfilePicture(String filePath, String userId) async {
     try {
       // Get user reference number

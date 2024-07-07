@@ -50,130 +50,138 @@ class _AdminsTabBodyState extends State<AdminsTabBody> {
   @override
   Widget build(BuildContext context) {
     Provider.of<UserProvider>(context);
-    return Stack(
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(bottom: 80.0),
-          child: FutureBuilder<List<User>>(
-            future: _fetchAdmins(context),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const CustomProgressIndicator();
-              } else if (snapshot.hasError) {
-                return Center(child: Text('Error: ${snapshot.error}'));
-              } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                return const NoDataFound(
-                  title: 'No Admins Found',
-                  subTitle:
-                      'There are no other admins available in the system.',
-                );
-              } else {
-                final adminsList = snapshot.data!;
+    return RefreshIndicator(
+      onRefresh: () async {
+        await Future.delayed(const Duration(milliseconds: 100));
+        setState(() {});
+      },
+      child: Stack(
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(bottom: 80.0),
+            child: FutureBuilder<List<User>>(
+              future: _fetchAdmins(context),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const CustomProgressIndicator();
+                } else if (snapshot.hasError) {
+                  return Center(child: Text('Error: ${snapshot.error}'));
+                } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return const NoDataFound(
+                    title: 'No Admins Found',
+                    subTitle:
+                        'There are no other admins available in the system.',
+                  );
+                } else {
+                  final adminsList = snapshot.data!;
 
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  if (!Provider.of<SearchUsersProvider>(context, listen: false)
-                      .customersListEquals(adminsList)) {
-                    Provider.of<SearchUsersProvider>(context, listen: false)
-                        .setCustomersList(adminsList);
-                  }
-                });
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (!Provider.of<SearchUsersProvider>(context,
+                            listen: false)
+                        .customersListEquals(adminsList)) {
+                      Provider.of<SearchUsersProvider>(context, listen: false)
+                          .setCustomersList(adminsList);
+                    }
+                  });
 
-                return CustomScrollView(
-                  slivers: [
-                    SliverAppBar(
-                      automaticallyImplyLeading: false,
-                      toolbarHeight: 80.0,
-                      title: Consumer<SearchUsersProvider>(
-                        builder: (context, searchProvider, _) {
-                          return SearchBar(
-                            hintText: 'Search Admins',
-                            leading: const Icon(Icons.search_rounded),
-                            trailing: [
-                              if (_searchController.text.isNotEmpty)
-                                IconButton(
-                                  onPressed: () {
-                                    _searchController.clear();
-                                    searchProvider.clearFilters();
-                                  },
-                                  icon: const Icon(Icons.clear_rounded),
-                                ),
-                            ],
-                            controller: _searchController,
-                            onChanged: searchProvider.filterCustomers,
-                            padding:
-                                MaterialStateProperty.all<EdgeInsetsGeometry>(
-                              const EdgeInsets.fromLTRB(20.0, 0.0, 10.0, 0.0),
+                  return CustomScrollView(
+                    slivers: [
+                      SliverAppBar(
+                        automaticallyImplyLeading: false,
+                        toolbarHeight: 80.0,
+                        title: Consumer<SearchUsersProvider>(
+                          builder: (context, searchProvider, _) {
+                            return SearchBar(
+                              hintText: 'Search Admins',
+                              leading: const Icon(Icons.search_rounded),
+                              trailing: [
+                                if (_searchController.text.isNotEmpty)
+                                  IconButton(
+                                    onPressed: () {
+                                      _searchController.clear();
+                                      searchProvider.clearFilters();
+                                    },
+                                    icon: const Icon(Icons.clear_rounded),
+                                  ),
+                              ],
+                              controller: _searchController,
+                              onChanged: searchProvider.filterCustomers,
+                              padding:
+                                  MaterialStateProperty.all<EdgeInsetsGeometry>(
+                                const EdgeInsets.fromLTRB(20.0, 0.0, 10.0, 0.0),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      Consumer<SearchUsersProvider>(
+                        builder: (_, searchUsersProvider, __) {
+                          final childCount =
+                              searchUsersProvider.isSearchFilterActive
+                                  ? searchUsersProvider.filteredCustomers.length
+                                  : searchUsersProvider.customersList.length;
+                          if (childCount <= 0) {
+                            return SliverList(
+                              delegate: SliverChildBuilderDelegate(
+                                (context, index) {
+                                  return const NoDataFound(
+                                    title: 'No Results Found!',
+                                    subTitle:
+                                        'There are no admins matching your search criteria. Please try again with different key words.',
+                                  );
+                                },
+                                childCount: 1,
+                              ),
+                            );
+                          }
+                          return SliverList(
+                            delegate: SliverChildBuilderDelegate(
+                              (context, index) {
+                                final user = searchUsersProvider
+                                        .isSearchFilterActive
+                                    ? searchUsersProvider
+                                        .filteredCustomers[index]
+                                    : searchUsersProvider.customersList[index];
+
+                                return UserDetailsTile(user: user);
+                              },
+                              childCount: childCount,
                             ),
                           );
                         },
                       ),
+                    ],
+                  );
+                }
+              },
+            ),
+          ),
+          FutureBuilder<UserRole>(
+            future: _fetchCurrentUserRole(context),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.done &&
+                  snapshot.hasData) {
+                final currentUserRole = snapshot.data;
+                if (currentUserRole == UserRole.primaryAdmin) {
+                  return Positioned(
+                    bottom: 16.0,
+                    right: 16.0,
+                    child: FloatingActionButton.extended(
+                      onPressed: () => animatedPushNavigation(
+                        context: context,
+                        screen: const CreateAdminScreen(),
+                      ),
+                      label: const Text('Add New Admin'),
+                      icon: const Icon(Icons.person_add_alt_1_rounded),
                     ),
-                    Consumer<SearchUsersProvider>(
-                      builder: (_, searchUsersProvider, __) {
-                        final childCount =
-                            searchUsersProvider.isSearchFilterActive
-                                ? searchUsersProvider.filteredCustomers.length
-                                : searchUsersProvider.customersList.length;
-                        if (childCount <= 0) {
-                          return SliverList(
-                            delegate: SliverChildBuilderDelegate(
-                              (context, index) {
-                                return const NoDataFound(
-                                  title: 'No Results Found!',
-                                  subTitle:
-                                      'There are no admins matching your search criteria. Please try again with different key words.',
-                                );
-                              },
-                              childCount: 1,
-                            ),
-                          );
-                        }
-                        return SliverList(
-                          delegate: SliverChildBuilderDelegate(
-                            (context, index) {
-                              final user = searchUsersProvider
-                                      .isSearchFilterActive
-                                  ? searchUsersProvider.filteredCustomers[index]
-                                  : searchUsersProvider.customersList[index];
-
-                              return UserDetailsTile(user: user);
-                            },
-                            childCount: childCount,
-                          ),
-                        );
-                      },
-                    ),
-                  ],
-                );
+                  );
+                }
               }
+              return const SizedBox();
             },
           ),
-        ),
-        FutureBuilder<UserRole>(
-          future: _fetchCurrentUserRole(context),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.done &&
-                snapshot.hasData) {
-              final currentUserRole = snapshot.data;
-              if (currentUserRole == UserRole.primaryAdmin) {
-                return Positioned(
-                  bottom: 16.0,
-                  right: 16.0,
-                  child: FloatingActionButton.extended(
-                    onPressed: () => animatedPushNavigation(
-                      context: context,
-                      screen: const CreateAdminScreen(),
-                    ),
-                    label: const Text('Add New Admin'),
-                    icon: const Icon(Icons.person_add_alt_1_rounded),
-                  ),
-                );
-              }
-            }
-            return const SizedBox();
-          },
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

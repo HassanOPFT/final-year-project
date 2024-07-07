@@ -25,7 +25,7 @@ class CarRentalController {
 
   Future<String> createCarRental({
     required String carId,
-    required customerId,
+    required String customerId,
     required DateTime startDate,
     required DateTime endDate,
     required String stripeChargeId,

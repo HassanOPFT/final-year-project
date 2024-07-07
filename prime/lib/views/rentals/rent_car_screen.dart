@@ -96,182 +96,190 @@ class _RentCarScreenState extends State<RentCarScreen> {
       );
     }
 
-    return FutureBuilder<Car?>(
-      future: carProvider.getCarById(widget.carId),
-      builder: (contest, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return Scaffold(
-            appBar: AppBar(
-              title: const Text('Rent Car'),
-            ),
-            body: const CustomProgressIndicator(),
-          );
-        } else if (snapshot.hasError) {
-          return Scaffold(
-            appBar: AppBar(
-              title: const Text('Rent Car'),
-            ),
-            body: const Center(
-              child: Text('Error loading car details.'),
-            ),
-          );
-        } else if (!snapshot.hasData || snapshot.data == null) {
-          return Scaffold(
-            appBar: AppBar(
-              title: const Text('Rent Car'),
-            ),
-            body: const Center(
-              child: Text('Car details not available.'),
-            ),
-          );
-        } else {
-          final car = snapshot.data!;
-          return Scaffold(
-            appBar: AppBar(
-              title: const Text('Rent Car'),
-            ),
-            body: SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  10.0,
-                  5.0,
-                  10.0,
-                  20.0,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    CarImagesCarousel(
-                      imagesUrl: car.imagesUrl ?? [],
-                      carStatus: car.status as CarStatus,
-                    ),
-                    const SizedBox(height: 5.0),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Row(
+    return RefreshIndicator(
+      edgeOffset: 110.0,
+      onRefresh: () async {
+        setState(() {});
+      },
+      child: FutureBuilder<Car?>(
+        future: carProvider.getCarById(widget.carId),
+        builder: (contest, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Scaffold(
+              appBar: AppBar(
+                title: const Text('Rent Car'),
+              ),
+              body: const CustomProgressIndicator(),
+            );
+          } else if (snapshot.hasError) {
+            return Scaffold(
+              appBar: AppBar(
+                title: const Text('Rent Car'),
+              ),
+              body: const Center(
+                child: Text('Error loading car details.'),
+              ),
+            );
+          } else if (!snapshot.hasData || snapshot.data == null) {
+            return Scaffold(
+              appBar: AppBar(
+                title: const Text('Rent Car'),
+              ),
+              body: const Center(
+                child: Text('Car details not available.'),
+              ),
+            );
+          } else {
+            final car = snapshot.data!;
+            return Scaffold(
+              appBar: AppBar(
+                title: const Text('Rent Car'),
+              ),
+              body: SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    10.0,
+                    5.0,
+                    10.0,
+                    20.0,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      CarImagesCarousel(
+                        imagesUrl: car.imagesUrl ?? [],
+                        carStatus: car.status as CarStatus,
+                      ),
+                      const SizedBox(height: 5.0),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Row(
+                              children: [
+                                Text(
+                                  '${car.manufacturer} ${car.model} ',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 24.0,
+                                  ),
+                                ),
+                                Text(
+                                  '${car.manufactureYear} ',
+                                  style: const TextStyle(
+                                    fontSize: 16.0,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
-                              Text(
-                                '${car.manufacturer} ${car.model} ',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 24.0,
-                                ),
+                              Row(
+                                children: [
+                                  Text(
+                                    'RM${car.hourPrice?.toStringAsFixed(1) ?? 'N/A'}',
+                                  ),
+                                  const SizedBox(width: 4.0),
+                                  const Text(
+                                    '/hr',
+                                    style: TextStyle(
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                ],
                               ),
-                              Text(
-                                '${car.manufactureYear} ',
-                                style: const TextStyle(
-                                  fontSize: 16.0,
-                                ),
+                              Row(
+                                children: [
+                                  Text(
+                                    'RM${car.dayPrice?.toStringAsFixed(1) ?? 'N/A'}',
+                                  ),
+                                  const SizedBox(width: 4.0),
+                                  const Text(
+                                    '/day',
+                                    style: TextStyle(
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
-                        ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Row(
-                              children: [
-                                Text(
-                                  'RM${car.hourPrice?.toStringAsFixed(1) ?? 'N/A'}',
-                                ),
-                                const SizedBox(width: 4.0),
-                                const Text(
-                                  '/hr',
-                                  style: TextStyle(
-                                    color: Colors.grey,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            Row(
-                              children: [
-                                Text(
-                                  'RM${car.dayPrice?.toStringAsFixed(1) ?? 'N/A'}',
-                                ),
-                                const SizedBox(width: 4.0),
-                                const Text(
-                                  '/day',
-                                  style: TextStyle(
-                                    color: Colors.grey,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                    buildSectionTitle(sectionTitle: 'Host'),
-                    FutureBuilder<User?>(
-                      future: Provider.of<UserProvider>(context, listen: false)
-                          .getUserDetails(car.hostId ?? ''),
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState ==
-                            ConnectionState.waiting) {
-                          return const Center(
-                              child: CircularProgressIndicator());
-                        } else if (snapshot.hasError) {
-                          return const Center(
-                              child: Text('Error loading user details.'));
-                        } else if (!snapshot.hasData || snapshot.data == null) {
-                          return const Center(
-                              child: Text('User details not available.'));
-                        } else {
-                          final user = snapshot.data!;
-                          // TODO: add verified text and icon 'Verified By PRIME'
-                          return ListTile(
-                            leading: ClipOval(
-                              child: user.userProfileUrl != null
-                                  ? CachedNetworkImage(
-                                      imageUrl: user.userProfileUrl ?? '',
-                                      width: 50.0,
-                                      height: 50.0,
-                                      fit: BoxFit.cover,
-                                      placeholder: (context, url) =>
-                                          const CustomProgressIndicator(),
-                                      errorWidget: (context, url, error) =>
-                                          const Icon(Icons.error),
-                                    )
-                                  : const Icon(Icons.person),
-                            ),
-                            title: Text(
-                              '${user.userFirstName ?? ''} ${user.userLastName ?? ''}',
-                              style: const TextStyle(
-                                fontSize: 20.0,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            subtitle: Text(
-                              'Joined on ${DateFormat.yMMM().format(user.createdAt ?? DateTime.now())}',
-                            ),
-                          );
-                        }
-                      },
-                    ),
-                    buildSectionTitle(sectionTitle: 'Description'),
-                    Text(
-                      car.description ?? 'No description provided',
-                      style: const TextStyle(
-                        fontSize: 16.0,
+                        ],
                       ),
-                    ),
-                    buildSectionTitle(sectionTitle: 'Features'),
-                    CarFeaturesRow(car: car),
-                    buildSectionTitle(sectionTitle: 'Address'),
-                    CarAddressImagePreview(addressId: car.defaultAddressId),
-                    CarRentalReviews(carId: car.id ?? ''),
-                    CarRentalSchedulePicker(
-                      carId: car.id ?? '',
-                      stopListeningToCarStatus: _stopListeningToCarStatus,
-                    ),
-                  ],
+                      buildSectionTitle(sectionTitle: 'Host'),
+                      FutureBuilder<User?>(
+                        future:
+                            Provider.of<UserProvider>(context, listen: false)
+                                .getUserDetails(car.hostId ?? ''),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return const Center(
+                                child: CircularProgressIndicator());
+                          } else if (snapshot.hasError) {
+                            return const Center(
+                                child: Text('Error loading user details.'));
+                          } else if (!snapshot.hasData ||
+                              snapshot.data == null) {
+                            return const Center(
+                                child: Text('User details not available.'));
+                          } else {
+                            final user = snapshot.data!;
+                            // TODO: add verified text and icon 'Verified By PRIME'
+                            return ListTile(
+                              leading: ClipOval(
+                                child: user.userProfileUrl != null
+                                    ? CachedNetworkImage(
+                                        imageUrl: user.userProfileUrl ?? '',
+                                        width: 50.0,
+                                        height: 50.0,
+                                        fit: BoxFit.cover,
+                                        placeholder: (context, url) =>
+                                            const CustomProgressIndicator(),
+                                        errorWidget: (context, url, error) =>
+                                            const Icon(Icons.error),
+                                      )
+                                    : const Icon(Icons.person),
+                              ),
+                              title: Text(
+                                '${user.userFirstName ?? ''} ${user.userLastName ?? ''}',
+                                style: const TextStyle(
+                                  fontSize: 20.0,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              subtitle: Text(
+                                'Joined on ${DateFormat.yMMM().format(user.createdAt ?? DateTime.now())}',
+                              ),
+                            );
+                          }
+                        },
+                      ),
+                      buildSectionTitle(sectionTitle: 'Description'),
+                      Text(
+                        car.description ?? 'No description provided',
+                        style: const TextStyle(
+                          fontSize: 16.0,
+                        ),
+                      ),
+                      buildSectionTitle(sectionTitle: 'Features'),
+                      CarFeaturesRow(car: car),
+                      buildSectionTitle(sectionTitle: 'Address'),
+                      CarAddressImagePreview(addressId: car.defaultAddressId),
+                      CarRentalReviews(carId: car.id ?? ''),
+                      CarRentalSchedulePicker(
+                        carId: car.id ?? '',
+                        stopListeningToCarStatus: _stopListeningToCarStatus,
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          );
-        }
-      },
+            );
+          }
+        },
+      ),
     );
   }
 }

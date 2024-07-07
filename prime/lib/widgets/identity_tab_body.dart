@@ -10,80 +10,94 @@ import '../models/verification_document.dart';
 import '../views/profile/upload_verification_document_screen.dart';
 import 'no_data_found.dart';
 
-class IdentityTabBody extends StatelessWidget {
+class IdentityTabBody extends StatefulWidget {
   const IdentityTabBody({super.key});
 
   @override
+  State<IdentityTabBody> createState() => _IdentityTabBodyState();
+}
+
+class _IdentityTabBodyState extends State<IdentityTabBody> {
+  @override
   Widget build(BuildContext context) {
     final verificationDocumentProvider =
-        Provider.of<VerificationDocumentProvider>(context);
+        Provider.of<VerificationDocumentProvider>(
+      context,
+    );
     final authService = FirebaseAuthService();
     final userId = authService.currentUser?.uid ?? '';
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 20.0),
-      child: FutureBuilder<VerificationDocument?>(
-        future:
-            verificationDocumentProvider.getVerificationDocumentByDocumentType(
-          userId,
-          VerificationDocumentType.identity,
-        ),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const CustomProgressIndicator();
-          } else if (snapshot.hasError) {
-            return const Text('Error while fetching identity document');
-          } else if (snapshot.hasData &&
-              snapshot.data != null &&
-              snapshot.data!.status !=
-                  VerificationDocumentStatus.deletedByCustomer) {
-            final document = snapshot.data!;
-            return Column(
-              children: [
-                VerificationDocumentTile(
-                  verificationDocumentId: document.id ?? '',
-                ),
-              ],
-            );
-          } else {
-            return Column(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const SizedBox(height: 20),
-                const Flexible(
-                  flex: 6,
-                  child: NoDataFound(
-                    title: 'No Identity Document Found',
-                    subTitle:
-                        'It seems you have not uploaded any identity document yet.',
+    debugPrint('Building IdentityTabBody');
+    return RefreshIndicator(
+      onRefresh: () async {
+        await Future.delayed(const Duration(milliseconds: 100));
+        setState(() {});
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 20.0),
+        child: FutureBuilder<VerificationDocument?>(
+          future: verificationDocumentProvider
+              .getVerificationDocumentByDocumentType(
+            userId,
+            VerificationDocumentType.identity,
+          ),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const CustomProgressIndicator();
+            } else if (snapshot.hasError) {
+              return const Text('Error while fetching identity document');
+            } else if (snapshot.hasData &&
+                snapshot.data != null &&
+                snapshot.data!.status !=
+                    VerificationDocumentStatus.deletedByCustomer) {
+              final document = snapshot.data!;
+              return ListView(
+                children: [
+                  VerificationDocumentTile(
+                    verificationDocumentId: document.id ?? '',
                   ),
-                ),
-                Flexible(
-                  flex: 1,
-                  child: SizedBox(
-                    height: 50,
-                    child: FilledButton(
-                      onPressed: () => animatedPushNavigation(
-                        context: context,
-                        screen: UploadVerificationDocumentScreen(
-                          linkedObjectId: userId,
-                          verificationDocumentType:
-                              VerificationDocumentType.identity,
+                ],
+              );
+            } else {
+              return Column(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const SizedBox(height: 20),
+                  const Flexible(
+                    flex: 6,
+                    child: NoDataFound(
+                      title: 'No Identity Document Found',
+                      subTitle:
+                          'It seems you have not uploaded any identity document yet.',
+                    ),
+                  ),
+                  Flexible(
+                    flex: 1,
+                    child: SizedBox(
+                      height: 50,
+                      child: FilledButton(
+                        onPressed: () => animatedPushNavigation(
+                          context: context,
+                          screen: UploadVerificationDocumentScreen(
+                            linkedObjectId: userId,
+                            verificationDocumentType:
+                                VerificationDocumentType.identity,
+                          ),
                         ),
-                      ),
-                      child: const Text(
-                        'Upload Identity Document',
-                        style: TextStyle(
-                          fontSize: 20,
+                        child: const Text(
+                          'Upload Identity Document',
+                          style: TextStyle(
+                            fontSize: 20,
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
-              ],
-            );
-          }
-        },
+                ],
+              );
+            }
+          },
+        ),
       ),
     );
   }

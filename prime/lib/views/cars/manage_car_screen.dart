@@ -8,7 +8,6 @@ import 'package:prime/widgets/admin_car_address.dart';
 import 'package:prime/widgets/bottom_sheet/edit_car_bottom_sheet.dart';
 import 'package:prime/widgets/car_features_row.dart';
 import 'package:prime/widgets/card/host_car_bank_account_card.dart';
-import 'package:prime/widgets/card/total_dashboard_card.dart';
 import 'package:prime/widgets/custom_progress_indicator.dart';
 import 'package:prime/widgets/host_car_verification_document.dart';
 import 'package:provider/provider.dart';
@@ -37,9 +36,7 @@ import '../../widgets/tiles/manage_verification_document_tile.dart';
 import 'car_rental_history_screen.dart';
 import 'update_host_car_screen.dart';
 
-// TODO: add car rental history, total earnings, how many rentals, etc
-
-class ManageCarScreen extends StatelessWidget {
+class ManageCarScreen extends StatefulWidget {
   final String carId;
   final bool isAdmin;
 
@@ -49,6 +46,11 @@ class ManageCarScreen extends StatelessWidget {
     this.isAdmin = false,
   });
 
+  @override
+  State<ManageCarScreen> createState() => _ManageCarScreenState();
+}
+
+class _ManageCarScreenState extends State<ManageCarScreen> {
   @override
   Widget build(BuildContext context) {
     final carProvider = Provider.of<CarProvider>(context);
@@ -130,7 +132,6 @@ class ManageCarScreen extends StatelessWidget {
     }
 
     Future<void> deleteCar(Car car) async {
-      // TODO: the role needs to be updated if the host doesn't have other cars
       bool confirmDeletion = await confirmDeleteCar();
       if (!confirmDeletion) {
         return;
@@ -353,7 +354,7 @@ class ManageCarScreen extends StatelessWidget {
 
     Future<void> haltCar(Car car) async {
       String? haltReason = '';
-      if (isAdmin) {
+      if (widget.isAdmin) {
         haltReason = await showReasonDialog(
           title: 'Halt Reason',
           hintText: 'Enter reason for halting',
@@ -376,7 +377,8 @@ class ManageCarScreen extends StatelessWidget {
         await carProvider.updateCarStatus(
           carId: car.id ?? '',
           previousStatus: car.status as CarStatus,
-          newStatus: isAdmin ? CarStatus.haltedByAdmin : CarStatus.haltedByHost,
+          newStatus:
+              widget.isAdmin ? CarStatus.haltedByAdmin : CarStatus.haltedByHost,
           modifiedById: currentUserId,
           statusDescription: haltReason,
         );
@@ -493,329 +495,340 @@ class ManageCarScreen extends StatelessWidget {
         Provider.of<VerificationDocumentProvider>(context);
     final financeUtil = FinanceUtil();
 
-    return FutureBuilder<Car?>(
-      future: carProvider.getCarById(carId),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return Scaffold(
-            appBar: AppBar(
-              title: const Text('Car Details'),
-            ),
-            body: const CustomProgressIndicator(),
-          );
-        } else if (snapshot.hasError) {
-          return Scaffold(
-            appBar: AppBar(
-              title: const Text('Car Details'),
-            ),
-            body: const Center(
-              child: Text('Error loading car details.'),
-            ),
-          );
-        } else if (!snapshot.hasData || snapshot.data == null) {
-          return Scaffold(
-            appBar: AppBar(
-              title: const Text('Car Details'),
-            ),
-            body: const Center(
-              child: Text('Car details not available.'),
-            ),
-          );
-        } else {
-          final car = snapshot.data!;
+    return RefreshIndicator(
+      edgeOffset: 110.0,
+      onRefresh: () async {
+        await Future.delayed(const Duration(milliseconds: 100));
+        setState(() {});
+      },
+      child: FutureBuilder<Car?>(
+        future: carProvider.getCarById(widget.carId),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Scaffold(
+              appBar: AppBar(
+                title: const Text('Car Details'),
+              ),
+              body: const CustomProgressIndicator(),
+            );
+          } else if (snapshot.hasError) {
+            return Scaffold(
+              appBar: AppBar(
+                title: const Text('Car Details'),
+              ),
+              body: const Center(
+                child: Text('Error loading car details.'),
+              ),
+            );
+          } else if (!snapshot.hasData || snapshot.data == null) {
+            return Scaffold(
+              appBar: AppBar(
+                title: const Text('Car Details'),
+              ),
+              body: const Center(
+                child: Text('Car details not available.'),
+              ),
+            );
+          } else {
+            final car = snapshot.data!;
 
-          return Scaffold(
-            appBar: AppBar(
-              title: const Text('Car Details'),
-              actions: [
-                IconButton(
-                  icon: const Icon(Icons.edit),
-                  onPressed: () => showEditCarBottomSheet(car),
-                ),
-              ],
-            ),
-            body: SingleChildScrollView(
-              child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10.0, vertical: 5.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    FutureBuilder<double>(
-                      future: financeUtil.getTotalHostRevenueByCarId(
-                        car.id ?? '',
+            return Scaffold(
+              appBar: AppBar(
+                title: const Text('Car Details'),
+                actions: [
+                  IconButton(
+                    icon: const Icon(Icons.edit),
+                    onPressed: () => showEditCarBottomSheet(car),
+                  ),
+                ],
+              ),
+              body: SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 10.0, vertical: 5.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      FutureBuilder<double>(
+                        future: financeUtil.getTotalHostRevenueByCarId(
+                          car.id ?? '',
+                        ),
+                        builder: (context, revenueSnapshot) {
+                          if (revenueSnapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return const CustomProgressIndicator();
+                          } else if (revenueSnapshot.hasError) {
+                            return const Center(
+                              child: Text(
+                                  'Error loading revenue. Please try again later.'),
+                            );
+                          } else {
+                            return RevenueDashboardCard(
+                              icon: Icons.attach_money,
+                              value: 'RM${revenueSnapshot.data ?? 0}',
+                              title: 'Car Revenue',
+                              backgroundColor: Colors.green.shade100,
+                              iconColor: Colors.green.shade900,
+                              valueColor: Colors.green.shade900,
+                              titleColor: Colors.green.shade900,
+                              aspectRatio: 0.5,
+                            );
+                          }
+                        },
                       ),
-                      builder: (context, revenueSnapshot) {
-                        if (revenueSnapshot.connectionState ==
-                            ConnectionState.waiting) {
-                          return const CustomProgressIndicator();
-                        } else if (revenueSnapshot.hasError) {
-                          return const Center(
-                            child: Text(
-                                'Error loading revenue. Please try again later.'),
-                          );
-                        } else {
-                          return RevenueDashboardCard(
-                            icon: Icons.attach_money,
-                            value: 'RM${revenueSnapshot.data ?? 0}',
-                            title: 'Car Revenue',
-                            backgroundColor: Colors.green.shade100,
-                            iconColor: Colors.green.shade900,
-                            valueColor: Colors.green.shade900,
-                            titleColor: Colors.green.shade900,
-                            aspectRatio: 0.5,
-                          );
-                        }
-                      },
-                    ),
-                    const SizedBox(height: 15.0),
-                    CarImagesCarousel(
-                      imagesUrl: car.imagesUrl ?? [],
-                      carStatus: car.status as CarStatus,
-                      showCarStatus: true,
-                    ),
-                    const SizedBox(height: 5.0),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Row(
+                      const SizedBox(height: 15.0),
+                      CarImagesCarousel(
+                        imagesUrl: car.imagesUrl ?? [],
+                        carStatus: car.status as CarStatus,
+                        showCarStatus: true,
+                      ),
+                      const SizedBox(height: 5.0),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Row(
+                              children: [
+                                Text(
+                                  '${car.manufacturer} ${car.model} ',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 24.0,
+                                  ),
+                                ),
+                                Text(
+                                  '${car.manufactureYear} ',
+                                  style: const TextStyle(
+                                    fontSize: 16.0,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
-                              Text(
-                                '${car.manufacturer} ${car.model} ',
+                              Row(
+                                children: [
+                                  Text(
+                                    'RM${car.hourPrice?.toStringAsFixed(1) ?? 'N/A'}',
+                                  ),
+                                  const SizedBox(width: 4.0),
+                                  const Text(
+                                    '/hr',
+                                    style: TextStyle(
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              Row(
+                                children: [
+                                  Text(
+                                    'RM${car.dayPrice?.toStringAsFixed(1) ?? 'N/A'}',
+                                  ),
+                                  const SizedBox(width: 4.0),
+                                  const Text(
+                                    '/day',
+                                    style: TextStyle(
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      buildSectionTitle(sectionTitle: 'Host'),
+                      FutureBuilder<User?>(
+                        future:
+                            Provider.of<UserProvider>(context, listen: false)
+                                .getUserDetails(car.hostId ?? ''),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return const Center(
+                                child: CircularProgressIndicator());
+                          } else if (snapshot.hasError) {
+                            return const Center(
+                                child: Text('Error loading user details.'));
+                          } else if (!snapshot.hasData ||
+                              snapshot.data == null) {
+                            return const Center(
+                                child: Text('User details not available.'));
+                          } else {
+                            final user = snapshot.data!;
+                            return ListTile(
+                              leading: ClipOval(
+                                child: user.userProfileUrl != null
+                                    ? CachedNetworkImage(
+                                        imageUrl: user.userProfileUrl ?? '',
+                                        width: 50.0,
+                                        height: 50.0,
+                                        fit: BoxFit.cover,
+                                        placeholder: (context, url) =>
+                                            const CircularProgressIndicator(),
+                                        errorWidget: (context, url, error) =>
+                                            const Icon(Icons.error),
+                                      )
+                                    : const Icon(Icons.person),
+                              ),
+                              title: Text(
+                                '${user.userFirstName ?? ''} ${user.userLastName ?? ''}',
                                 style: const TextStyle(
+                                  fontSize: 20.0,
                                   fontWeight: FontWeight.bold,
-                                  fontSize: 24.0,
                                 ),
                               ),
-                              Text(
-                                '${car.manufactureYear} ',
+                              subtitle: Text(
+                                user.userPhoneNumber ?? 'N/A',
                                 style: const TextStyle(
                                   fontSize: 16.0,
                                 ),
                               ),
-                            ],
+                            );
+                          }
+                        },
+                      ),
+                      buildSectionTitle(sectionTitle: 'Description'),
+                      Text(
+                        car.description ?? 'No description provided',
+                        style: const TextStyle(
+                          fontSize: 16.0,
+                        ),
+                      ),
+                      buildSectionTitle(sectionTitle: 'Features'),
+                      CarFeaturesRow(car: car),
+                      CarRentalReviews(carId: car.id ?? ''),
+                      buildSectionTitle(sectionTitle: 'Address'),
+                      if (!widget.isAdmin)
+                        HostCarAddress(
+                          carDefaultAddressId: car.defaultAddressId ?? '',
+                          carId: car.id ?? '',
+                        ),
+                      if (widget.isAdmin)
+                        AdminCarAddress(
+                          addressId: car.defaultAddressId,
+                        ),
+                      buildSectionTitle(
+                          sectionTitle: 'Associated Bank Account'),
+                      HostCarBankAccountCard(
+                        bankAccountProvider: bankAccountProvider,
+                        hostBankAccountId: car.hostBankAccountId ?? '',
+                      ),
+                      buildSectionTitle(sectionTitle: 'Car Registration'),
+                      if (!widget.isAdmin)
+                        HostCarVerificationDocument(
+                          verificationDocumentType:
+                              VerificationDocumentType.carRegistration,
+                          verificationDocumentId:
+                              car.registrationDocumentId ?? '',
+                          verificationDocumentProvider:
+                              verificationDocumentProvider,
+                          linkedObjectId: car.id ?? '',
+                          uploadButtonText: 'Upload Registration',
+                        ),
+                      if (widget.isAdmin)
+                        AdminVerificationDocumentTile(
+                          verificationDocumentId:
+                              car.registrationDocumentId ?? '',
+                        ),
+                      buildSectionTitle(sectionTitle: 'Car Insurance'),
+                      if (!widget.isAdmin)
+                        HostCarVerificationDocument(
+                          verificationDocumentType:
+                              VerificationDocumentType.carInsurance,
+                          verificationDocumentId: car.insuranceDocumentId ?? '',
+                          verificationDocumentProvider:
+                              verificationDocumentProvider,
+                          linkedObjectId: car.id ?? '',
+                          uploadButtonText: 'Upload Insurance',
+                        ),
+                      if (widget.isAdmin)
+                        AdminVerificationDocumentTile(
+                          verificationDocumentId: car.insuranceDocumentId ?? '',
+                        ),
+                      buildSectionTitle(sectionTitle: 'Car Road Tax'),
+                      if (!widget.isAdmin)
+                        HostCarVerificationDocument(
+                          verificationDocumentType:
+                              VerificationDocumentType.carRoadTax,
+                          verificationDocumentId: car.roadTaxDocumentId ?? '',
+                          verificationDocumentProvider:
+                              verificationDocumentProvider,
+                          linkedObjectId: car.id ?? '',
+                          uploadButtonText: 'Upload Road Tax',
+                        ),
+                      if (widget.isAdmin)
+                        AdminVerificationDocumentTile(
+                          verificationDocumentId: car.roadTaxDocumentId ?? '',
+                        ),
+                      buildSectionTitle(sectionTitle: 'Rental History'),
+                      Card(
+                        child: ListTile(
+                          leading: const Icon(
+                            Icons.car_rental,
+                            size: 30,
                           ),
-                        ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Row(
-                              children: [
-                                Text(
-                                  'RM${car.hourPrice?.toStringAsFixed(1) ?? 'N/A'}',
-                                ),
-                                const SizedBox(width: 4.0),
-                                const Text(
-                                  '/hr',
-                                  style: TextStyle(
-                                    color: Colors.grey,
-                                  ),
-                                ),
-                              ],
+                          title: const Text(
+                            'Rental History',
+                            style: TextStyle(
+                              fontSize: 20.0,
+                              fontWeight: FontWeight.bold,
                             ),
-                            Row(
-                              children: [
-                                Text(
-                                  'RM${car.dayPrice?.toStringAsFixed(1) ?? 'N/A'}',
-                                ),
-                                const SizedBox(width: 4.0),
-                                const Text(
-                                  '/day',
-                                  style: TextStyle(
-                                    color: Colors.grey,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                    buildSectionTitle(sectionTitle: 'Host'),
-                    FutureBuilder<User?>(
-                      future: Provider.of<UserProvider>(context, listen: false)
-                          .getUserDetails(car.hostId ?? ''),
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState ==
-                            ConnectionState.waiting) {
-                          return const Center(
-                              child: CircularProgressIndicator());
-                        } else if (snapshot.hasError) {
-                          return const Center(
-                              child: Text('Error loading user details.'));
-                        } else if (!snapshot.hasData || snapshot.data == null) {
-                          return const Center(
-                              child: Text('User details not available.'));
-                        } else {
-                          final user = snapshot.data!;
-                          return ListTile(
-                            leading: ClipOval(
-                              child: user.userProfileUrl != null
-                                  ? CachedNetworkImage(
-                                      imageUrl: user.userProfileUrl ?? '',
-                                      width: 50.0,
-                                      height: 50.0,
-                                      fit: BoxFit.cover,
-                                      placeholder: (context, url) =>
-                                          const CircularProgressIndicator(),
-                                      errorWidget: (context, url, error) =>
-                                          const Icon(Icons.error),
-                                    )
-                                  : const Icon(Icons.person),
-                            ),
-                            title: Text(
-                              '${user.userFirstName ?? ''} ${user.userLastName ?? ''}',
-                              style: const TextStyle(
-                                fontSize: 20.0,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            subtitle: Text(
-                              user.userPhoneNumber ?? 'N/A',
-                              style: const TextStyle(
-                                fontSize: 16.0,
-                              ),
-                            ),
-                          );
-                        }
-                      },
-                    ),
-                    buildSectionTitle(sectionTitle: 'Description'),
-                    Text(
-                      car.description ?? 'No description provided',
-                      style: const TextStyle(
-                        fontSize: 16.0,
-                      ),
-                    ),
-                    buildSectionTitle(sectionTitle: 'Features'),
-                    CarFeaturesRow(car: car),
-                    CarRentalReviews(carId: car.id ?? ''),
-                    buildSectionTitle(sectionTitle: 'Address'),
-                    if (!isAdmin)
-                      HostCarAddress(
-                        carDefaultAddressId: car.defaultAddressId ?? '',
-                        carId: car.id ?? '',
-                      ),
-                    if (isAdmin)
-                      AdminCarAddress(
-                        addressId: car.defaultAddressId,
-                      ),
-                    buildSectionTitle(sectionTitle: 'Associated Bank Account'),
-                    HostCarBankAccountCard(
-                      bankAccountProvider: bankAccountProvider,
-                      hostBankAccountId: car.hostBankAccountId ?? '',
-                    ),
-                    buildSectionTitle(sectionTitle: 'Car Registration'),
-                    if (!isAdmin)
-                      HostCarVerificationDocument(
-                        verificationDocumentType:
-                            VerificationDocumentType.carRegistration,
-                        verificationDocumentId:
-                            car.registrationDocumentId ?? '',
-                        verificationDocumentProvider:
-                            verificationDocumentProvider,
-                        linkedObjectId: car.id ?? '',
-                        uploadButtonText: 'Upload Registration',
-                      ),
-                    if (isAdmin)
-                      AdminVerificationDocumentTile(
-                        verificationDocumentId:
-                            car.registrationDocumentId ?? '',
-                      ),
-                    buildSectionTitle(sectionTitle: 'Car Insurance'),
-                    if (!isAdmin)
-                      HostCarVerificationDocument(
-                        verificationDocumentType:
-                            VerificationDocumentType.carInsurance,
-                        verificationDocumentId: car.insuranceDocumentId ?? '',
-                        verificationDocumentProvider:
-                            verificationDocumentProvider,
-                        linkedObjectId: car.id ?? '',
-                        uploadButtonText: 'Upload Insurance',
-                      ),
-                    if (isAdmin)
-                      AdminVerificationDocumentTile(
-                        verificationDocumentId: car.insuranceDocumentId ?? '',
-                      ),
-                    buildSectionTitle(sectionTitle: 'Car Road Tax'),
-                    if (!isAdmin)
-                      HostCarVerificationDocument(
-                        verificationDocumentType:
-                            VerificationDocumentType.carRoadTax,
-                        verificationDocumentId: car.roadTaxDocumentId ?? '',
-                        verificationDocumentProvider:
-                            verificationDocumentProvider,
-                        linkedObjectId: car.id ?? '',
-                        uploadButtonText: 'Upload Road Tax',
-                      ),
-                    if (isAdmin)
-                      AdminVerificationDocumentTile(
-                        verificationDocumentId: car.roadTaxDocumentId ?? '',
-                      ),
-                    buildSectionTitle(sectionTitle: 'Rental History'),
-                    Card(
-                      child: ListTile(
-                        leading: const Icon(
-                          Icons.car_rental,
-                          size: 30,
-                        ),
-                        title: const Text(
-                          'Rental History',
-                          style: TextStyle(
-                            fontSize: 20.0,
-                            fontWeight: FontWeight.bold,
                           ),
-                        ),
-                        subtitle: const Text('View rental history of this car'),
-                        trailing: const Icon(
-                          Icons.keyboard_arrow_right_rounded,
-                          size: 30,
-                        ),
-                        onTap: () => animatedPushNavigation(
-                          context: context,
-                          screen: CarRentalHistoryScreen(
-                            carId: car.id ?? '',
+                          subtitle:
+                              const Text('View rental history of this car'),
+                          trailing: const Icon(
+                            Icons.keyboard_arrow_right_rounded,
+                            size: 30,
+                          ),
+                          onTap: () => animatedPushNavigation(
+                            context: context,
+                            screen: CarRentalHistoryScreen(
+                              carId: car.id ?? '',
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 30.0),
-                    LatestStatusHistoryRecord(
-                      fetchStatusHistory: getMostRecentStatusHistory,
-                      linkedObjectId: car.id ?? carId,
-                    ),
-                    const SizedBox(height: 15.0),
-                    const Divider(thickness: 0.3),
-                    const SizedBox(height: 15.0),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text('Ref Number'),
-                        CopyText(
-                          text: car.referenceNumber ?? 'N/A',
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 15.0),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text('Added on'),
-                        Text(
-                          DateFormat.yMMMd()
-                              .add_jm()
-                              .format(car.createdAt as DateTime),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 15.0),
-                  ],
+                      const SizedBox(height: 30.0),
+                      LatestStatusHistoryRecord(
+                        fetchStatusHistory: getMostRecentStatusHistory,
+                        linkedObjectId: car.id ?? widget.carId,
+                      ),
+                      const SizedBox(height: 15.0),
+                      const Divider(thickness: 0.3),
+                      const SizedBox(height: 15.0),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text('Ref Number'),
+                          CopyText(
+                            text: car.referenceNumber ?? 'N/A',
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 15.0),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text('Added on'),
+                          Text(
+                            DateFormat.yMMMd()
+                                .add_jm()
+                                .format(car.createdAt as DateTime),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 15.0),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          );
-        }
-      },
+            );
+          }
+        },
+      ),
     );
   }
 }

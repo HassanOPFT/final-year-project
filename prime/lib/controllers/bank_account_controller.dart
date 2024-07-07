@@ -76,9 +76,11 @@ class BankAccountController {
       rethrow;
     }
   }
+
   Future<BankAccount?> getBankAccountByHostId(String hostId) async {
     try {
-      QuerySnapshot query = await _collection.where(_hostIdFieldName, isEqualTo: hostId).get();
+      QuerySnapshot query =
+          await _collection.where(_hostIdFieldName, isEqualTo: hostId).get();
       if (query.docs.isNotEmpty) {
         DocumentSnapshot doc = query.docs.first;
         return BankAccount(

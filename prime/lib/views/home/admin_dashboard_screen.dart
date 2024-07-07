@@ -27,9 +27,14 @@ import '../../widgets/card/revenue_dashboard_card.dart';
 import '../../widgets/card/total_dashboard_card.dart';
 import '../../widgets/navigation_bar/admin_navigation_bar.dart';
 
-class AdminDashboardScreen extends StatelessWidget {
+class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
 
+  @override
+  State<AdminDashboardScreen> createState() => _AdminDashboardScreenState();
+}
+
+class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   @override
   Widget build(BuildContext context) {
     Future<Map<String, dynamic>> getAllFinance(
@@ -102,8 +107,10 @@ class AdminDashboardScreen extends StatelessWidget {
     }
 
     Future<List<IssueReportStatus>> getIssueReportsWithStatus() async {
-      final issueReportProvider =
-          Provider.of<IssueReportProvider>(context, listen: false);
+      final issueReportProvider = Provider.of<IssueReportProvider>(
+        context,
+        listen: false,
+      );
       final issueReportsWithStatus =
           await issueReportProvider.getIssueReportsStatuses();
       return issueReportsWithStatus;
@@ -138,248 +145,269 @@ class AdminDashboardScreen extends StatelessWidget {
       };
     }
 
-    return FutureBuilder<Map<String, dynamic>>(
-      future: fetchAllData(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return Scaffold(
-            appBar: AppBar(
-              centerTitle: true,
-              title: const AppLogo(height: 120),
-              automaticallyImplyLeading: false,
-            ),
-            body: const Center(
-              child: CircularProgressIndicator(),
-            ),
-            bottomNavigationBar: const AdminNavigationBar(currentIndex: 0),
-          );
-        } else if (snapshot.hasError) {
-          return Scaffold(
-            appBar: AppBar(
-              centerTitle: true,
-              title: const AppLogo(height: 120),
-              automaticallyImplyLeading: false,
-            ),
-            body: const Center(
-              child: Text('Error fetching data'),
-            ),
-            bottomNavigationBar: const AdminNavigationBar(currentIndex: 0),
-          );
-        } else if (snapshot.hasData) {
-          final data = snapshot.data!;
+    return RefreshIndicator(
+      edgeOffset: 110.0,
+      onRefresh: () async {
+        setState(() {});
+      },
+      child: FutureBuilder<Map<String, dynamic>>(
+        future: fetchAllData(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Scaffold(
+              appBar: AppBar(
+                centerTitle: true,
+                title: const AppLogo(height: 120),
+                automaticallyImplyLeading: false,
+              ),
+              body: const Center(
+                child: CircularProgressIndicator(),
+              ),
+              bottomNavigationBar: const AdminNavigationBar(currentIndex: 0),
+            );
+          } else if (snapshot.hasError) {
+            return Scaffold(
+              appBar: AppBar(
+                centerTitle: true,
+                title: const AppLogo(height: 120),
+                automaticallyImplyLeading: false,
+              ),
+              body: const Center(
+                child: Text('Error fetching data'),
+              ),
+              bottomNavigationBar: const AdminNavigationBar(currentIndex: 0),
+            );
+          } else if (snapshot.hasData) {
+            final data = snapshot.data!;
 
-          final totalCars = data['totalCars'];
-          final carRentals = data['carRentals'];
-          final totalUsers = data['totalUsers'];
-          final platformRevenue = data['platformRevenue'];
-          final hostsEarnings = data['hostsEarnings'];
-          final stripeFees = data['stripeFees'];
-          final issueReportsWithStatuses = data['issueReportsWithStatuses'];
-          final String currentUserId = data['currentUserId'];
+            final totalCars = data['totalCars'];
+            final carRentals = data['carRentals'];
+            final totalUsers = data['totalUsers'];
+            final platformRevenue = data['platformRevenue'];
+            final hostsEarnings = data['hostsEarnings'];
+            final stripeFees = data['stripeFees'];
+            final issueReportsWithStatuses = data['issueReportsWithStatuses'];
+            final String currentUserId = data['currentUserId'];
 
-          // calculate how many issue reports are in each status
-          int open = 0;
-          int inProgress = 0;
-          int resolved = 0;
-          int closed = 0;
-          for (final issueReport in issueReportsWithStatuses) {
-            switch (issueReport) {
-              case IssueReportStatus.open:
-                open++;
-                break;
-              case IssueReportStatus.inProgress:
-                inProgress++;
-                break;
-              case IssueReportStatus.resolved:
-                resolved++;
-                break;
-              case IssueReportStatus.closed:
-                closed++;
-                break;
+            // calculate how many issue reports are in each status
+            int open = 0;
+            int inProgress = 0;
+            int resolved = 0;
+            int closed = 0;
+            for (final issueReport in issueReportsWithStatuses) {
+              switch (issueReport) {
+                case IssueReportStatus.open:
+                  open++;
+                  break;
+                case IssueReportStatus.inProgress:
+                  inProgress++;
+                  break;
+                case IssueReportStatus.resolved:
+                  resolved++;
+                  break;
+                case IssueReportStatus.closed:
+                  closed++;
+                  break;
+              }
             }
-          }
 
-          return Scaffold(
-            appBar: AppBar(
-              centerTitle: true,
-              title: const AppLogo(height: 120),
-              automaticallyImplyLeading: false,
-              actions: [
-                Stack(
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.notifications_none_rounded),
-                      onPressed: () => animatedPushNavigation(
-                        context: context,
-                        screen: NotificationScreen(userId: currentUserId),
+            return Scaffold(
+              appBar: AppBar(
+                centerTitle: true,
+                title: const AppLogo(height: 120),
+                automaticallyImplyLeading: false,
+                actions: [
+                  Stack(
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.notifications_none_rounded),
+                        onPressed: () => animatedPushNavigation(
+                          context: context,
+                          screen: NotificationScreen(userId: currentUserId),
+                        ),
                       ),
-                    ),
-                    Consumer<NotificationProvider>(
-                      builder: (_, notificationProvider, __) {
-                        return FutureBuilder(
-                          future: notificationProvider
-                              .hasUnreadNotification(currentUserId),
-                          builder: (context, snapshot) {
-                            if (snapshot.connectionState ==
-                                ConnectionState.waiting) {
-                              return const SizedBox();
-                            } else if (snapshot.hasError) {
-                              return const SizedBox();
-                            } else if (snapshot.hasData) {
-                              final hasUnread = snapshot.data as bool;
+                      Consumer<NotificationProvider>(
+                        builder: (_, notificationProvider, __) {
+                          return FutureBuilder(
+                            future: notificationProvider
+                                .hasUnreadNotification(currentUserId),
+                            builder: (context, snapshot) {
+                              if (snapshot.connectionState ==
+                                  ConnectionState.waiting) {
+                                return const SizedBox();
+                              } else if (snapshot.hasError) {
+                                return const SizedBox();
+                              } else if (snapshot.hasData) {
+                                final hasUnread = snapshot.data as bool;
 
-                              if (hasUnread) {
-                                return Positioned(
-                                  top: 5.0,
-                                  right: 8.0,
-                                  child: Container(
-                                    width: 12.0,
-                                    height: 12.0,
-                                    decoration: BoxDecoration(
-                                      color:
-                                          Theme.of(context).colorScheme.primary,
-                                      shape: BoxShape.circle,
+                                if (hasUnread) {
+                                  return Positioned(
+                                    top: 5.0,
+                                    right: 8.0,
+                                    child: Container(
+                                      width: 12.0,
+                                      height: 12.0,
+                                      decoration: BoxDecoration(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .primary,
+                                        shape: BoxShape.circle,
+                                      ),
                                     ),
-                                  ),
-                                );
+                                  );
+                                } else {
+                                  return const SizedBox();
+                                }
                               } else {
                                 return const SizedBox();
                               }
-                            } else {
-                              return const SizedBox();
-                            }
-                          },
-                        );
-                      },
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            body: SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: RevenueDashboardCard(
-                          icon: Icons.attach_money,
-                          value: 'RM${platformRevenue.toStringAsFixed(2)}',
-                          title: 'Revenue',
-                          backgroundColor: Colors.green.shade100,
-                          iconColor: Colors.green.shade900,
-                          valueColor: Colors.green.shade900,
-                          titleColor: Colors.green.shade900,
-                          aspectRatio: 0.5,
-                        ),
+                            },
+                          );
+                        },
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
-                  SizedBox(
-                    height: 200.0,
-                    child: Row(
+                ],
+              ),
+              body: SingleChildScrollView(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Row(
                       children: [
-                        GestureDetector(
-                          onTap: () => animatedPushReplacementNavigation(
-                            context: context,
-                            screen: const AdminCarsScreen(),
-                          ),
-                          child: TotalDashboardCard(
-                            icon: Icons.directions_car,
-                            value: '$totalCars',
-                            title: 'Total Cars',
-                            backgroundColor: Colors.blue.shade100,
-                            iconColor: Colors.blue.shade900,
-                            valueColor: Colors.blue.shade900,
-                            titleColor: Colors.blue.shade900,
-                            aspectRatio: 1,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
                         Expanded(
-                          child: GestureDetector(
-                            onTap: () => animatedPushReplacementNavigation(
-                              context: context,
-                              screen: const AdminRentalsScreen(),
-                            ),
-                            child: TotalDashboardCard(
-                              icon: Icons.car_rental,
-                              value: '$carRentals',
-                              title: 'Car Rentals',
-                              backgroundColor: Colors.purple.shade100,
-                              iconColor: Colors.purple.shade900,
-                              valueColor: Colors.purple.shade900,
-                              titleColor: Colors.purple.shade900,
-                              aspectRatio: 1,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: GestureDetector(
-                            onTap: () => animatedPushReplacementNavigation(
-                              context: context,
-                              screen: const AdminUsersScreen(),
-                            ),
-                            child: TotalDashboardCard(
-                              icon: Icons.people,
-                              value: '$totalUsers',
-                              title: 'Total Users',
-                              backgroundColor: Colors.lime.shade100,
-                              iconColor: Colors.lime.shade900,
-                              valueColor: Colors.lime.shade900,
-                              titleColor: Colors.lime.shade900,
-                              aspectRatio: 1,
-                            ),
+                          child: RevenueDashboardCard(
+                            icon: Icons.attach_money,
+                            value: 'RM${platformRevenue.toStringAsFixed(2)}',
+                            title: 'Revenue',
+                            backgroundColor: Colors.green.shade100,
+                            iconColor: Colors.green.shade900,
+                            valueColor: Colors.green.shade900,
+                            titleColor: Colors.green.shade900,
+                            aspectRatio: 0.5,
                           ),
                         ),
                       ],
                     ),
-                  ),
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 15.0),
-                    child: Divider(thickness: 0.3),
-                  ),
-                  ProgressIndicatorWithLegend(
-                    platformRevenue: platformRevenue,
-                    hostsEarnings: hostsEarnings,
-                    stripeFees: stripeFees,
-                  ),
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 15.0),
-                    child: Divider(thickness: 0.3),
-                  ),
-                  GestureDetector(
-                    onTap: () => animatedPushReplacementNavigation(
-                      context: context,
-                      screen: const AdminRentalsScreen(
-                        initialTab: 2,
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      height: 200.0,
+                      child: Row(
+                        children: [
+                          GestureDetector(
+                            onTap: () => animatedPushReplacementNavigation(
+                              context: context,
+                              screen: const AdminCarsScreen(),
+                            ),
+                            child: TotalDashboardCard(
+                              icon: Icons.directions_car,
+                              value: '$totalCars',
+                              title: 'Total Cars',
+                              backgroundColor: Colors.blue.shade100,
+                              iconColor: Colors.blue.shade900,
+                              valueColor: Colors.blue.shade900,
+                              titleColor: Colors.blue.shade900,
+                              aspectRatio: 1,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () => animatedPushReplacementNavigation(
+                                context: context,
+                                screen: const AdminRentalsScreen(),
+                              ),
+                              child: TotalDashboardCard(
+                                icon: Icons.car_rental,
+                                value: '$carRentals',
+                                title: 'Car Rentals',
+                                backgroundColor: Colors.purple.shade100,
+                                iconColor: Colors.purple.shade900,
+                                valueColor: Colors.purple.shade900,
+                                titleColor: Colors.purple.shade900,
+                                aspectRatio: 1,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () => animatedPushReplacementNavigation(
+                                context: context,
+                                screen: const AdminUsersScreen(),
+                              ),
+                              child: TotalDashboardCard(
+                                icon: Icons.people,
+                                value: '$totalUsers',
+                                title: 'Total Users',
+                                backgroundColor: Colors.lime.shade100,
+                                iconColor: Colors.lime.shade900,
+                                valueColor: Colors.lime.shade900,
+                                titleColor: Colors.lime.shade900,
+                                aspectRatio: 1,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    child: IssueReportProgressIndicator(
-                      open: open,
-                      inProgress: inProgress,
-                      resolved: resolved,
-                      closed: closed,
-                      openColor: Colors.blue,
-                      inProgressColor: Colors.orange,
-                      resolvedColor: Colors.green,
-                      closedColor: Colors.red,
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 15.0),
+                      child: Divider(thickness: 0.3),
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                ],
+                    const Text(
+                      'Transactions',
+                      style: TextStyle(
+                        fontSize: 20.0,
+                      ),
+                    ),
+                    const SizedBox(height: 15.0),
+                    ProgressIndicatorWithLegend(
+                      platformRevenue: platformRevenue,
+                      hostsEarnings: hostsEarnings,
+                      stripeFees: stripeFees,
+                    ),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 15.0),
+                      child: Divider(thickness: 0.3),
+                    ),
+                    const Text(
+                      'Issue Reports',
+                      style: TextStyle(
+                        fontSize: 20.0,
+                      ),
+                    ),
+                    const SizedBox(height: 15.0),
+                    GestureDetector(
+                      onTap: () => animatedPushReplacementNavigation(
+                        context: context,
+                        screen: const AdminRentalsScreen(
+                          initialTab: 2,
+                        ),
+                      ),
+                      child: IssueReportProgressIndicator(
+                        open: open,
+                        inProgress: inProgress,
+                        resolved: resolved,
+                        closed: closed,
+                        openColor: Colors.blue,
+                        inProgressColor: Colors.orange,
+                        resolvedColor: Colors.green,
+                        closedColor: Colors.red,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                ),
               ),
-            ),
-            bottomNavigationBar: const AdminNavigationBar(currentIndex: 0),
-          );
-        } else {
-          return const Center(child: Text('No data available'));
-        }
-      },
+              bottomNavigationBar: const AdminNavigationBar(currentIndex: 0),
+            );
+          } else {
+            return const Center(child: Text('No data available'));
+          }
+        },
+      ),
     );
   }
 }

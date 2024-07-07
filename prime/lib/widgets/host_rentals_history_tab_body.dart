@@ -11,9 +11,15 @@ import 'package:prime/providers/car_provider.dart';
 import '../services/firebase/firebase_auth_service.dart';
 import 'tiles/car_rental_card.dart';
 
-class HostRentalsHistoryTabBody extends StatelessWidget {
+class HostRentalsHistoryTabBody extends StatefulWidget {
   const HostRentalsHistoryTabBody({super.key});
 
+  @override
+  State<HostRentalsHistoryTabBody> createState() =>
+      _HostRentalsHistoryTabBodyState();
+}
+
+class _HostRentalsHistoryTabBodyState extends State<HostRentalsHistoryTabBody> {
   Future<List<Map<String, dynamic>>> _fetchRentalsHistory(
       BuildContext context) async {
     final currentUserId = FirebaseAuthService().currentUser?.uid ?? '';
@@ -56,35 +62,41 @@ class HostRentalsHistoryTabBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(5.0),
-      child: FutureBuilder<List<Map<String, dynamic>>>(
-        future: _fetchRentalsHistory(context),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const CustomProgressIndicator();
-          } else if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const NoDataFound(
-              title: 'Nothing Found',
-              subTitle: 'No rental history found.',
-            );
-          } else {
-            final rentalsHistoryWithCars = snapshot.data!;
-            return ListView.builder(
-              itemCount: rentalsHistoryWithCars.length,
-              itemBuilder: (context, index) {
-                final rentalWithCar = rentalsHistoryWithCars[index];
-                return CarRentalCard(
-                  carRental: rentalWithCar['rental'],
-                  car: rentalWithCar['car'],
-                  userRole: UserRole.host,
-                );
-              },
-            );
-          }
-        },
+    return RefreshIndicator(
+      onRefresh: () async {
+        await Future.delayed(const Duration(milliseconds: 100));
+        setState(() {});
+      },
+      child: Padding(
+        padding: const EdgeInsets.all(5.0),
+        child: FutureBuilder<List<Map<String, dynamic>>>(
+          future: _fetchRentalsHistory(context),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const CustomProgressIndicator();
+            } else if (snapshot.hasError) {
+              return Center(child: Text('Error: ${snapshot.error}'));
+            } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+              return const NoDataFound(
+                title: 'Nothing Found',
+                subTitle: 'No rental history found.',
+              );
+            } else {
+              final rentalsHistoryWithCars = snapshot.data!;
+              return ListView.builder(
+                itemCount: rentalsHistoryWithCars.length,
+                itemBuilder: (context, index) {
+                  final rentalWithCar = rentalsHistoryWithCars[index];
+                  return CarRentalCard(
+                    carRental: rentalWithCar['rental'],
+                    car: rentalWithCar['car'],
+                    userRole: UserRole.host,
+                  );
+                },
+              );
+            }
+          },
+        ),
       ),
     );
   }

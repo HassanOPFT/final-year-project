@@ -72,12 +72,24 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     if (value == null || value.isEmpty) {
       return 'Please enter your first name.';
     }
+    if (RegExp(r'[0-9]').hasMatch(value)) {
+      return 'Numbers are not allowed in the first name.';
+    }
+    if (RegExp(r'[!@#<>?":_`~;[\]\\|=+)(*&^%0-9-]').hasMatch(value)) {
+      return 'Special characters are not allowed in the first name.';
+    }
     return null;
   }
 
   String? _validateLastName(String? value) {
     if (value == null || value.isEmpty) {
       return 'Please enter your last name.';
+    }
+    if (RegExp(r'[0-9]').hasMatch(value)) {
+      return 'Numbers are not allowed in the last name.';
+    }
+    if (RegExp(r'[!@#<>?":_`~;[\]\\|=+)(*&^%0-9-]').hasMatch(value)) {
+      return 'Special characters are not allowed in the last name.';
     }
     return null;
   }
@@ -86,6 +98,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     if (value == null || value.isEmpty) {
       return 'Please enter your phone number.';
     }
+
+    final RegExp phoneRegExp = RegExp(
+        r'^\+?([0-9]{1,3})?-?([0-9]{1,4})?-?([0-9]{1,4})?-?([0-9]{1,4})$');
+
+    if (!phoneRegExp.hasMatch(value)) {
+      return 'Invalid contact number format.';
+    }
+
     return null;
   }
 

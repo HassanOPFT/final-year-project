@@ -64,11 +64,13 @@ class _CustomerExploreScreenState extends State<CustomerExploreScreen> {
           listen: false,
         );
         await searchProvider.sortCarsByLocation(initialLocation);
-      } catch (e) {
-        buildFailureSnackbar(
-          context: context,
-          message: 'Error occurred while getting location. Please try again.',
-        );
+      } catch (_) {
+        if (mounted) {
+          buildFailureSnackbar(
+            context: context,
+            message: 'Error occurred while getting location. Please try again.',
+          );
+        }
       }
     }
   }
@@ -78,7 +80,6 @@ class _CustomerExploreScreenState extends State<CustomerExploreScreen> {
     final firebaseAuthService = FirebaseAuthService();
     final currentUserId = firebaseAuthService.currentUser?.uid ?? '';
     final carProvider = Provider.of<CarProvider>(context);
-
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
@@ -136,147 +137,153 @@ class _CustomerExploreScreenState extends State<CustomerExploreScreen> {
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 5.0),
-        child: StreamBuilder<List<Car>>(
-          stream: carProvider.getCarsByStatusAndUserIdStream(
-            carStatusList: [
-              CarStatus.approved.name,
-            ],
-            currentUserId: firebaseAuthService.currentUser?.uid ?? '',
-          ),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const CustomProgressIndicator();
-            } else if (snapshot.hasError) {
-              return const Center(
-                child: Text('Error loading cars. Please try again later.'),
-              );
-            } else if (snapshot.hasData && snapshot.data!.isNotEmpty) {
-              final carsList = snapshot.data!;
+      body: RefreshIndicator(
+        onRefresh: () async {
+          await Future.delayed(const Duration(milliseconds: 100));
+          setState(() {});
+        },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 5.0),
+          child: StreamBuilder<List<Car>>(
+            stream: carProvider.getCarsByStatusAndUserIdStream(
+              carStatusList: [
+                CarStatus.approved.name,
+              ],
+              currentUserId: firebaseAuthService.currentUser?.uid ?? '',
+            ),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const CustomProgressIndicator();
+              } else if (snapshot.hasError) {
+                return const Center(
+                  child: Text('Error loading cars. Please try again later.'),
+                );
+              } else if (snapshot.hasData && snapshot.data!.isNotEmpty) {
+                final carsList = snapshot.data!;
 
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                Provider.of<SearchCarsProvider>(
-                  context,
-                  listen: false,
-                ).setCarsList(carsList);
-                _initLocationAndSortCars();
-              });
-              return CustomScrollView(
-                slivers: [
-                  SliverAppBar(
-                    automaticallyImplyLeading: false,
-                    title: Consumer<SearchCarsProvider>(
-                      builder: (context, searchProvider, _) {
-                        return SearchBar(
-                          hintText: 'Search Cars',
-                          leading: const Icon(Icons.search_rounded),
-                          trailing: [
-                            if (_searchController.text.isNotEmpty)
-                              IconButton(
-                                onPressed: () {
-                                  _searchController.clear();
-                                  searchProvider.clearFilters();
-                                },
-                                icon: const Icon(Icons.clear_rounded),
-                              )
-                          ],
-                          controller: _searchController,
-                          onChanged: searchProvider.filterCars,
-                          padding:
-                              MaterialStateProperty.all<EdgeInsetsGeometry>(
-                            const EdgeInsets.fromLTRB(20.0, 0.0, 10.0, 0.0),
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  Provider.of<SearchCarsProvider>(
+                    context,
+                    listen: false,
+                  ).setCarsList(carsList);
+                  _initLocationAndSortCars();
+                });
+                return CustomScrollView(
+                  slivers: [
+                    SliverAppBar(
+                      automaticallyImplyLeading: false,
+                      title: Consumer<SearchCarsProvider>(
+                        builder: (context, searchProvider, _) {
+                          return SearchBar(
+                            hintText: 'Search Cars',
+                            leading: const Icon(Icons.search_rounded),
+                            trailing: [
+                              if (_searchController.text.isNotEmpty)
+                                IconButton(
+                                  onPressed: () {
+                                    _searchController.clear();
+                                    searchProvider.clearFilters();
+                                  },
+                                  icon: const Icon(Icons.clear_rounded),
+                                )
+                            ],
+                            controller: _searchController,
+                            onChanged: searchProvider.filterCars,
+                            padding:
+                                MaterialStateProperty.all<EdgeInsetsGeometry>(
+                              const EdgeInsets.fromLTRB(20.0, 0.0, 10.0, 0.0),
+                            ),
+                          );
+                        },
+                      ),
+                      toolbarHeight: 90.0,
+                    ),
+                    Consumer<SearchCarsProvider>(
+                      builder: (context, searchCarsProvider, child) {
+                        if (!searchCarsProvider.isNearestFilterActive) {
+                          return const SliverToBoxAdapter(
+                            child: SizedBox(),
+                          );
+                        }
+
+                        return const SliverToBoxAdapter(
+                          child: Padding(
+                            padding: EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 10.0),
+                            // child: FilterChip(
+                            //   label: const Text('Nearest Available'),
+                            //   selected: false,
+                            //   onSelected: (bool value) async {
+                            //     if (value == true) {
+                            //       await _initLocationAndSortCars();
+                            //     }
+                            //   },
+                            //   checkmarkColor: Colors.black,
+                            //   selectedColor: Colors.green[100],
+                            //   backgroundColor: Colors.green[50],
+                            //   deleteIcon: const Icon(
+                            //     Icons.clear_rounded,
+                            //     color: Colors.black,
+                            //   ),
+                            //   onDeleted: () => searchCarsProvider.clearFilters(),
+                            // ),
+                            child: Text(
+                              'Nearest Available',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 16.0,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                           ),
                         );
                       },
                     ),
-                    toolbarHeight: 90.0,
-                  ),
-                  Consumer<SearchCarsProvider>(
-                    builder: (context, searchCarsProvider, child) {
-                      if (!searchCarsProvider.isNearestFilterActive) {
-                        return const SliverToBoxAdapter(
-                          child: SizedBox(),
-                        );
-                      }
+                    Consumer<SearchCarsProvider>(
+                      builder: (context, searchProvider, _) {
+                        var carsToShow = searchProvider.isNearestFilterActive
+                            ? searchProvider.nearestCars
+                            : searchProvider.carsList;
 
-                      return const SliverToBoxAdapter(
-                        child: Padding(
-                          padding: EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 10.0),
-                          // child: FilterChip(
-                          //   label: const Text('Nearest Available'),
-                          //   selected: false,
-                          //   onSelected: (bool value) async {
-                          //     if (value == true) {
-                          //       await _initLocationAndSortCars();
-                          //     }
-                          //   },
-                          //   checkmarkColor: Colors.black,
-                          //   selectedColor: Colors.green[100],
-                          //   backgroundColor: Colors.green[50],
-                          //   deleteIcon: const Icon(
-                          //     Icons.clear_rounded,
-                          //     color: Colors.black,
-                          //   ),
-                          //   onDeleted: () => searchCarsProvider.clearFilters(),
-                          // ),
-                          child: Text(
-                            'Nearest Available',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 16.0,
-                              fontWeight: FontWeight.bold,
+                        if (searchProvider.isSearchFilterActive) {
+                          carsToShow = searchProvider.filteredCars;
+                        }
+
+                        if (carsToShow.isEmpty) {
+                          return SliverList(
+                            delegate: SliverChildBuilderDelegate(
+                              (context, index) {
+                                return const NoDataFound(
+                                  title: 'No Results Found!',
+                                  subTitle:
+                                      'There are no cars available matching your search criteria. Please try again with different key words.',
+                                );
+                              },
+                              childCount: 1,
                             ),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                  Consumer<SearchCarsProvider>(
-                    builder: (context, searchProvider, _) {
-                      var carsToShow = searchProvider.isNearestFilterActive
-                          ? searchProvider.nearestCars
-                          : searchProvider.carsList;
+                          );
+                        }
 
-                      if (searchProvider.isSearchFilterActive) {
-                        carsToShow = searchProvider.filteredCars;
-                      }
-
-                      if (carsToShow.isEmpty) {
                         return SliverList(
                           delegate: SliverChildBuilderDelegate(
                             (context, index) {
-                              return const NoDataFound(
-                                title: 'No Results Found!',
-                                subTitle:
-                                    'There are no cars available matching your search criteria. Please try again with different key words.',
-                              );
+                              final car = carsToShow[index];
+                              return CustomerCarCard(car: car);
                             },
-                            childCount: 1,
+                            childCount: carsToShow.length,
                           ),
                         );
-                      }
-
-                      return SliverList(
-                        delegate: SliverChildBuilderDelegate(
-                          (context, index) {
-                            final car = carsToShow[index];
-                            return CustomerCarCard(car: car);
-                          },
-                          childCount: carsToShow.length,
-                        ),
-                      );
-                    },
-                  ),
-                ],
-              );
-            } else {
-              return const NoDataFound(
-                title: 'No Cars Found!',
-                subTitle: 'No cars available at the moment.',
-              );
-            }
-          },
+                      },
+                    ),
+                  ],
+                );
+              } else {
+                return const NoDataFound(
+                  title: 'No Cars Found!',
+                  subTitle: 'No cars available at the moment.',
+                );
+              }
+            },
+          ),
         ),
       ),
       bottomNavigationBar: const CustomerNavigationBar(currentIndex: 0),

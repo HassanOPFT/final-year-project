@@ -10,9 +10,16 @@ import 'package:prime/providers/car_provider.dart';
 import '../models/user.dart';
 import '../services/firebase/firebase_auth_service.dart';
 
-class CustomerActiveCarRentalsTabBody extends StatelessWidget {
+class CustomerActiveCarRentalsTabBody extends StatefulWidget {
   const CustomerActiveCarRentalsTabBody({super.key});
 
+  @override
+  State<CustomerActiveCarRentalsTabBody> createState() =>
+      _CustomerActiveCarRentalsTabBodyState();
+}
+
+class _CustomerActiveCarRentalsTabBodyState
+    extends State<CustomerActiveCarRentalsTabBody> {
   Future<Map<CarRental, Car>> _fetchRentalsWithCars(
     BuildContext context,
     String userId,
@@ -58,36 +65,46 @@ class CustomerActiveCarRentalsTabBody extends StatelessWidget {
   Widget build(BuildContext context) {
     final userId = FirebaseAuthService().currentUser?.uid;
 
-    return Padding(
-      padding: const EdgeInsets.all(5.0),
-      child: FutureBuilder<Map<CarRental, Car>>(
-        future: _fetchRentalsWithCars(context, userId!),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const CustomProgressIndicator();
-          } else if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const NoDataFound(
-              title: 'Nothing Found',
-              subTitle: 'You have no ongoing or upcoming car rentals.',
-            );
-          } else {
-            final rentalsWithCars = snapshot.data!;
-            return ListView.builder(
-              itemCount: rentalsWithCars.length,
-              itemBuilder: (context, index) {
-                final carRental = rentalsWithCars.keys.elementAt(index);
-                final car = rentalsWithCars.values.elementAt(index);
-                return CarRentalCard(
-                  carRental: carRental,
-                  car: car,
-                  userRole: UserRole.customer,
-                );
-              },
-            );
-          }
-        },
+    return RefreshIndicator(
+      onRefresh: () async {
+        setState(() {});
+      },
+      child: Padding(
+        padding: const EdgeInsets.all(5.0),
+        child: FutureBuilder<Map<CarRental, Car>>(
+          future: _fetchRentalsWithCars(context, userId!),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const CustomProgressIndicator();
+            } else if (snapshot.hasError) {
+              return Center(child: Text('Error: ${snapshot.error}'));
+            } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+              return ListView(
+                children: const [
+                  SizedBox(height: 120.0),
+                  NoDataFound(
+                    title: 'Nothing Found',
+                    subTitle: 'You have no ongoing or upcoming car rentals.',
+                  ),
+                ],
+              );
+            } else {
+              final rentalsWithCars = snapshot.data!;
+              return ListView.builder(
+                itemCount: rentalsWithCars.length,
+                itemBuilder: (context, index) {
+                  final carRental = rentalsWithCars.keys.elementAt(index);
+                  final car = rentalsWithCars.values.elementAt(index);
+                  return CarRentalCard(
+                    carRental: carRental,
+                    car: car,
+                    userRole: UserRole.customer,
+                  );
+                },
+              );
+            }
+          },
+        ),
       ),
     );
   }

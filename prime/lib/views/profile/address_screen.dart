@@ -33,63 +33,70 @@ class _AddressScreenState extends State<AddressScreen> {
       appBar: AppBar(
         title: const Text('Address'),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(10.0),
-        child: FutureBuilder(
-          future: Future.wait([
-            addressProvider.getAddresses(userId ?? ''),
-            customerProvider.getDefaultAddress(userId ?? ''),
-          ]),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const CustomProgressIndicator();
-            } else if (snapshot.hasError) {
-              return const Center(child: Text('Error fetching addresses'));
-            } else {
-              final List<dynamic> data = snapshot.data as List<dynamic>;
-              final List<Address> addresses = data[0] as List<Address>;
-              final String defaultAddressId = data[1] as String;
+      body: RefreshIndicator(
+        onRefresh: () async {
+          await Future.delayed(const Duration(milliseconds: 100));
+          setState(() {});
+        },
+        child: Padding(
+          padding: const EdgeInsets.all(10.0),
+          child: FutureBuilder(
+            future: Future.wait([
+              addressProvider.getAddresses(userId ?? ''),
+              customerProvider.getDefaultAddress(userId ?? ''),
+            ]),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const CustomProgressIndicator();
+              } else if (snapshot.hasError) {
+                return const Center(child: Text('Error fetching addresses'));
+              } else {
+                final List<dynamic> data = snapshot.data as List<dynamic>;
+                final List<Address> addresses = data[0] as List<Address>;
+                final String defaultAddressId = data[1] as String;
 
-              if (addresses.isNotEmpty && defaultAddressId.isNotEmpty) {
-                int defaultAddressIndex = addresses
-                    .indexWhere((address) => address.id == defaultAddressId);
+                if (addresses.isNotEmpty && defaultAddressId.isNotEmpty) {
+                  int defaultAddressIndex = addresses
+                      .indexWhere((address) => address.id == defaultAddressId);
 
-                // Rearrange the list if the default address is found
-                if (defaultAddressIndex != -1) {
-                  Address defaultAddress = addresses[defaultAddressIndex];
-                  addresses.removeAt(defaultAddressIndex);
-                  addresses.insert(0, defaultAddress);
+                  // Rearrange the list if the default address is found
+                  if (defaultAddressIndex != -1) {
+                    Address defaultAddress = addresses[defaultAddressIndex];
+                    addresses.removeAt(defaultAddressIndex);
+                    addresses.insert(0, defaultAddress);
+                  }
                 }
-              }
 
-              // check if the list is empty display No Data Found
-              if (addresses.isEmpty) {
-                return const NoDataFound(
-                  title: 'No Addresses Found',
-                  subTitle:
-                      'It looks like you haven\'t added any addresses yet.',
+                // check if the list is empty display No Data Found
+                if (addresses.isEmpty) {
+                  return const NoDataFound(
+                    title: 'No Addresses Found',
+                    subTitle:
+                        'It looks like you haven\'t added any addresses yet.',
+                  );
+                }
+
+                return ListView.builder(
+                  itemCount: addresses.length,
+                  padding: EdgeInsets.only(
+                    bottom: MediaQuery.of(context).padding.bottom + 80.0,
+                  ),
+                  itemBuilder: (context, index) {
+                    final address = addresses[index];
+
+                    final bool isDefaultAddress =
+                        address.id == defaultAddressId;
+
+                    return AddressDetailsTile(
+                      address: address,
+                      isDefault: isDefaultAddress,
+                      addressPurpose: AddressPurpose.user,
+                    );
+                  },
                 );
               }
-
-              return ListView.builder(
-                itemCount: addresses.length,
-                padding: EdgeInsets.only(
-                  bottom: MediaQuery.of(context).padding.bottom + 80.0,
-                ),
-                itemBuilder: (context, index) {
-                  final address = addresses[index];
-
-                  final bool isDefaultAddress = address.id == defaultAddressId;
-
-                  return AddressDetailsTile(
-                    address: address,
-                    isDefault: isDefaultAddress,
-                    addressPurpose: AddressPurpose.user,
-                  );
-                },
-              );
-            }
-          },
+            },
+          ),
         ),
       ),
       floatingActionButton: AddAddressFloatingActionButton(userId: userId),

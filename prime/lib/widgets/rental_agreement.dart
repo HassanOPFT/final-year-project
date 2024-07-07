@@ -9,7 +9,6 @@ class RentalAgreement extends StatelessWidget {
     return RichText(
       text: TextSpan(
         text: 'By confirming this rental, you agree to the ',
-        style: const TextStyle(color: Colors.black),
         children: [
           TextSpan(
             text: 'rental agreement',
@@ -24,7 +23,6 @@ class RentalAgreement extends StatelessWidget {
           ),
           const TextSpan(
             text: '.',
-            style: TextStyle(color: Colors.black),
           ),
         ],
       ),

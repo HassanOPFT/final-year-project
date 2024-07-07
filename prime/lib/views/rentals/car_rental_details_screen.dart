@@ -39,16 +39,18 @@ import '../../widgets/images/car_address_image_preview.dart';
 import '../../widgets/tiles/car_rental_payment_card_tile.dart';
 import '../admin/user_details_screen.dart';
 
-// TODO: Implement the extension rental if found
-// TODO: if the host cancelled, customer will be refunded, so there is no profit for host and platform
-
-class CarRentalDetailsScreen extends StatelessWidget {
+class CarRentalDetailsScreen extends StatefulWidget {
   final String carRentalId;
   const CarRentalDetailsScreen({
     super.key,
     required this.carRentalId,
   });
 
+  @override
+  State<CarRentalDetailsScreen> createState() => _CarRentalDetailsScreenState();
+}
+
+class _CarRentalDetailsScreenState extends State<CarRentalDetailsScreen> {
   Future<Map<String, dynamic>> _fetchAllDetails(
     BuildContext context,
     String carRentalId,
@@ -492,7 +494,7 @@ class CarRentalDetailsScreen extends StatelessWidget {
 
       try {
         await carRentalProvider.updateCarRentalStatus(
-          carRentalId: carRentalId,
+          carRentalId: widget.carRentalId,
           previousStatus: carRental.status ?? CarRentalStatus.rentedByCustomer,
           newStatus: CarRentalStatus.pickedUpByCustomer,
           modifiedById: currentUserId,
@@ -532,7 +534,7 @@ class CarRentalDetailsScreen extends StatelessWidget {
 
       try {
         await carRentalProvider.updateCarRentalStatus(
-          carRentalId: carRentalId,
+          carRentalId: widget.carRentalId,
           previousStatus: carRental.status ?? CarRentalStatus.rentedByCustomer,
           newStatus: CarRentalStatus.hostConfirmedPickup,
           modifiedById: currentUserId,
@@ -667,7 +669,7 @@ class CarRentalDetailsScreen extends StatelessWidget {
             ? CarRentalStatus.hostCancelled
             : CarRentalStatus.customerCancelled;
         await carRentalProvider.updateCarRentalStatus(
-          carRentalId: carRentalId,
+          carRentalId: widget.carRentalId,
           previousStatus: carRental.status ?? CarRentalStatus.rentedByCustomer,
           newStatus: newStatus,
           statusDescription: cancellationReason,
@@ -833,7 +835,7 @@ class CarRentalDetailsScreen extends StatelessWidget {
           listen: false,
         );
         await issueReportProvider.createIssueReport(
-          carRentalId: carRentalId,
+          carRentalId: widget.carRentalId,
           reporterId: currentUserId,
           reportSubject: issueReportDetails['subject']!,
           reportDescription: issueReportDetails['description']!,
@@ -844,7 +846,7 @@ class CarRentalDetailsScreen extends StatelessWidget {
             : CarRentalStatus.customerReportedIssue;
 
         await carRentalProvider.updateCarRentalStatus(
-          carRentalId: carRentalId,
+          carRentalId: widget.carRentalId,
           previousStatus: carRental.status ?? CarRentalStatus.rentedByCustomer,
           newStatus: newStatus,
           modifiedById: currentUserId,
@@ -861,7 +863,6 @@ class CarRentalDetailsScreen extends StatelessWidget {
       }
     }
 
-    // TODO: implement extend rental ui
     Future<void> extendRental(CarRental carRental) async {
       final confirmAction = await showConfirmationDialog(
         'Confirm Extension',
@@ -873,7 +874,7 @@ class CarRentalDetailsScreen extends StatelessWidget {
 
       try {
         await carRentalProvider.updateCarRentalStatus(
-          carRentalId: carRentalId,
+          carRentalId: widget.carRentalId,
           previousStatus: carRental.status ?? CarRentalStatus.rentedByCustomer,
           newStatus: CarRentalStatus.customerExtendedRental,
           modifiedById: currentUserId,
@@ -901,22 +902,22 @@ class CarRentalDetailsScreen extends StatelessWidget {
 
       try {
         await carRentalProvider.updateCarRentalStatus(
-          carRentalId: carRentalId,
+          carRentalId: widget.carRentalId,
           previousStatus: carRental.status ?? CarRentalStatus.rentedByCustomer,
           newStatus: CarRentalStatus.hostConfirmedReturn,
           modifiedById: currentUserId,
         );
-        // update the car status to available
-        final carProvider = Provider.of<CarProvider>(
-          context,
-          listen: false,
-        );
-        carProvider.updateCarStatus(
-          carId: carRental.carId ?? '',
-          previousStatus: CarStatus.currentlyRented,
-          newStatus: CarStatus.approved,
-          modifiedById: currentUserId,
-        );
+        // // update the car status to available
+        // final carProvider = Provider.of<CarProvider>(
+        //   context,
+        //   listen: false,
+        // );
+        // carProvider.updateCarStatus(
+        //   carId: carRental.carId ?? '',
+        //   previousStatus: CarStatus.currentlyRented,
+        //   newStatus: CarStatus.approved,
+        //   modifiedById: currentUserId,
+        // );
         buildSuccessSnackbar(
           context: context,
           message: 'Return confirmed successfully.',
@@ -967,14 +968,14 @@ class CarRentalDetailsScreen extends StatelessWidget {
 
       try {
         await carRentalProvider.updateCarRentalStatus(
-          carRentalId: carRentalId,
+          carRentalId: widget.carRentalId,
           previousStatus: carRental.status ?? CarRentalStatus.rentedByCustomer,
           newStatus: CarRentalStatus.customerReturnedCar,
           modifiedById: currentUserId,
         );
         // Handle the rating and review here
         await carRentalProvider.updateCarRentalReviewAndRating(
-          carRentalId: carRentalId,
+          carRentalId: widget.carRentalId,
           rating: rating.toDouble(),
           review: review,
         );
@@ -1003,11 +1004,22 @@ class CarRentalDetailsScreen extends StatelessWidget {
 
       try {
         await carRentalProvider.updateCarRentalStatus(
-          carRentalId: carRentalId,
+          carRentalId: widget.carRentalId,
           previousStatus: carRental.status ?? CarRentalStatus.rentedByCustomer,
           newStatus: CarRentalStatus.adminConfirmedPayout,
           statusDescription:
               'The payout has been confirmed & sent to the host.',
+          modifiedById: currentUserId,
+        );
+        // update the car status to available
+        final carProvider = Provider.of<CarProvider>(
+          context,
+          listen: false,
+        );
+        carProvider.updateCarStatus(
+          carId: carRental.carId ?? '',
+          previousStatus: CarStatus.currentlyRented,
+          newStatus: CarStatus.approved,
           modifiedById: currentUserId,
         );
         buildSuccessSnackbar(
@@ -1033,11 +1045,22 @@ class CarRentalDetailsScreen extends StatelessWidget {
 
       try {
         await carRentalProvider.updateCarRentalStatus(
-          carRentalId: carRentalId,
+          carRentalId: widget.carRentalId,
           previousStatus: carRental.status ?? CarRentalStatus.rentedByCustomer,
           newStatus: CarRentalStatus.adminConfirmedRefund,
           statusDescription:
               'The refund has been confirmed & sent to the customer.',
+          modifiedById: currentUserId,
+        );
+        // update the car status to available
+        final carProvider = Provider.of<CarProvider>(
+          context,
+          listen: false,
+        );
+        carProvider.updateCarStatus(
+          carId: carRental.carId ?? '',
+          previousStatus: CarStatus.currentlyRented,
+          newStatus: CarStatus.approved,
           modifiedById: currentUserId,
         );
         buildSuccessSnackbar(
@@ -1102,249 +1125,115 @@ class CarRentalDetailsScreen extends StatelessWidget {
       );
     }
 
-    return FutureBuilder(
-      future: _fetchAllDetails(context, carRentalId),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return Scaffold(
-            appBar: AppBar(
-              title: const Text('Car Rental Details'),
-            ),
-            body: const Center(
-              child: CircularProgressIndicator(),
-            ),
-          );
-        } else if (snapshot.hasError) {
-          debugPrint('Error loading car rental details: ${snapshot.error}');
-          return Scaffold(
-            appBar: AppBar(
-              title: const Text('Car Rental Details'),
-            ),
-            body: const Center(
-              child: Text(
-                'Error loading car rental details',
+    return RefreshIndicator(
+      edgeOffset: 110.0,
+      onRefresh: () async {
+        await Future.delayed(const Duration(milliseconds: 100));
+        setState(() {});
+      },
+      child: FutureBuilder(
+        future: _fetchAllDetails(context, widget.carRentalId),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Scaffold(
+              appBar: AppBar(
+                title: const Text('Car Rental Details'),
               ),
-            ),
-          );
-        } else if (!snapshot.hasData) {
-          return Scaffold(
-            appBar: AppBar(
-              title: const Text('Car Rental Details'),
-            ),
-            body: const Center(
-              child: Text(
-                'Car Rental details not found. please try again later',
+              body: const Center(
+                child: CircularProgressIndicator(),
               ),
-            ),
-          );
-        } else {
-          final data = snapshot.data as Map<String, dynamic>;
-          final CarRental carRental = data['carRental'];
-          final car = data['car'];
-          final address = data['address'];
-          final host = data['host'];
-          final StripeCharge stripeCharge = data['stripeCharge'];
-
-          final User? currentUser = data['currentUser'];
-          final List<CarRentalStatus?> carRentalStatusHistory =
-              data['carRentalStatusHistory'];
-          final User customer = data['customer'];
-          final UserRole currentUserRole = data['currentUserRole'];
-          final StripeTransaction stripeTransaction = data['stripeTransaction'];
-          final IssueReport? latestIssueReport = data['latestIssueReport'];
-
-          final totalAmount = stripeTransaction.amount;
-          double hostEarnings = totalAmount * 0.85;
-          hostEarnings = double.parse(hostEarnings.toStringAsFixed(1));
-          double stripeFees = stripeTransaction.fee;
-          stripeFees = double.parse(stripeFees.toStringAsFixed(1));
-          double platformNetProfit = totalAmount - hostEarnings - stripeFees;
-          platformNetProfit =
-              double.parse(platformNetProfit.toStringAsFixed(1));
-          double hostPlatformFees = totalAmount - hostEarnings;
-          hostPlatformFees = double.parse(hostPlatformFees.toStringAsFixed(1));
-
-          final duration = carRental.endDate!.difference(carRental.startDate!);
-          final days = duration.inDays;
-          final hours = duration.inHours % 24;
-          final durationText =
-              '${days > 0 ? '$days days' : ''}${days > 0 && hours > 0 ? ' and ' : ''}${hours > 0 ? '$hours hours' : ''}';
-
-          return Scaffold(
-            appBar: AppBar(
-              title: const Text('Car Rental Details'),
-              actions: [
-                IconButton(
-                  onPressed: () => showEditCarRentalBottomSheet(
-                    context,
-                    carRental,
-                    carRentalStatusHistory,
-                    car,
-                    totalAmount,
-                  ),
-                  icon: const Icon(Icons.more_vert_rounded),
+            );
+          } else if (snapshot.hasError) {
+            debugPrint('Error loading car rental details: ${snapshot.error}');
+            return Scaffold(
+              appBar: AppBar(
+                title: const Text('Car Rental Details'),
+              ),
+              body: const Center(
+                child: Text(
+                  'Error loading car rental details',
                 ),
-              ],
-            ),
-            body: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(0.0, 10.0, 0.0, 15.0),
-                      child: ReferenceNumberRow(
-                        referenceNumber: carRental.referenceNumber,
-                      ),
+              ),
+            );
+          } else if (!snapshot.hasData) {
+            return Scaffold(
+              appBar: AppBar(
+                title: const Text('Car Rental Details'),
+              ),
+              body: const Center(
+                child: Text(
+                  'Car Rental details not found. please try again later',
+                ),
+              ),
+            );
+          } else {
+            final data = snapshot.data as Map<String, dynamic>;
+            final CarRental carRental = data['carRental'];
+            final car = data['car'];
+            final address = data['address'];
+            final host = data['host'];
+            final StripeCharge stripeCharge = data['stripeCharge'];
+
+            final User? currentUser = data['currentUser'];
+            final List<CarRentalStatus?> carRentalStatusHistory =
+                data['carRentalStatusHistory'];
+            final User customer = data['customer'];
+            final UserRole currentUserRole = data['currentUserRole'];
+            final StripeTransaction stripeTransaction =
+                data['stripeTransaction'];
+            final IssueReport? latestIssueReport = data['latestIssueReport'];
+
+            final totalAmount = stripeTransaction.amount;
+            double hostEarnings = totalAmount * 0.85;
+            hostEarnings = double.parse(hostEarnings.toStringAsFixed(1));
+            double stripeFees = stripeTransaction.fee;
+            stripeFees = double.parse(stripeFees.toStringAsFixed(1));
+            double platformNetProfit = totalAmount - hostEarnings - stripeFees;
+            platformNetProfit =
+                double.parse(platformNetProfit.toStringAsFixed(1));
+            double hostPlatformFees = totalAmount - hostEarnings;
+            hostPlatformFees =
+                double.parse(hostPlatformFees.toStringAsFixed(1));
+
+            final duration =
+                carRental.endDate!.difference(carRental.startDate!);
+            final days = duration.inDays;
+            final hours = duration.inHours % 24;
+            final durationText =
+                '${days > 0 ? '$days days' : ''}${days > 0 && hours > 0 ? ' and ' : ''}${hours > 0 ? '$hours hours' : ''}';
+
+            return Scaffold(
+              appBar: AppBar(
+                title: const Text('Car Rental Details'),
+                actions: [
+                  IconButton(
+                    onPressed: () => showEditCarRentalBottomSheet(
+                      context,
+                      carRental,
+                      carRentalStatusHistory,
+                      car,
+                      totalAmount,
                     ),
-                    Container(
-                      padding: const EdgeInsets.all(16.0),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .primary
-                            .withOpacity(0.08),
-                        borderRadius: BorderRadius.circular(16.0),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 5.0),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                // consider adding info icon to explain statuses in a dialog
-                                const Text(
-                                  'Status',
-                                  style: TextStyle(
-                                    fontSize: 22.0,
-                                  ),
-                                ),
-                                const SizedBox(width: 50.0),
-                                Flexible(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      CarRentalStatusIndicator(
-                                        carRentalStatus: carRental.status ??
-                                            CarRentalStatus.rentedByCustomer,
-                                        userRole: currentUser?.userRole ??
-                                            UserRole.customer,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const Divider(thickness: 0.3),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 16.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    Icon(
-                                      Icons.location_on,
-                                      color:
-                                          Theme.of(context).colorScheme.primary,
-                                    ),
-                                    const SizedBox(width: 8.0),
-                                    Expanded(
-                                      child: Text(
-                                        address.toString(),
-                                        style: const TextStyle(
-                                          fontSize: 16.0,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 20.0),
-                                _buildIconTextRowWithDate(
-                                  context,
-                                  Icons.access_time,
-                                  'Pick-Up Time',
-                                  carRental.startDate ?? DateTime.now(),
-                                ),
-                                const SizedBox(height: 20.0),
-                                _buildIconTextRowWithDate(
-                                  context,
-                                  Icons.access_time,
-                                  'Drop-Off Time',
-                                  carRental.endDate ?? DateTime.now(),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const Divider(thickness: 0.3),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 5.0),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                const Text(
-                                  'Duration',
-                                  style: TextStyle(
-                                    fontSize: 16.0,
-                                  ),
-                                ),
-                                Text(
-                                  durationText,
-                                  style: const TextStyle(
-                                    fontSize: 16.0,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          if (currentUserRole == UserRole.primaryAdmin ||
-                              currentUserRole == UserRole.secondaryAdmin)
-                            buildAdminPricingDetails(
-                              totalAmount,
-                              hostEarnings,
-                              stripeFees,
-                              platformNetProfit,
-                            ),
-                          if (currentUserRole == UserRole.host)
-                            buildHostPricingDetails(
-                              totalAmount,
-                              hostPlatformFees,
-                              hostEarnings,
-                            ),
-                          if (currentUserRole == UserRole.customer)
-                            buildCustomerPricingDetails(
-                              totalAmount,
-                            ),
-                        ],
-                      ),
-                    ),
-                    _buildSectionTitle('Car Details'),
-                    GestureDetector(
-                      onTap: () {
-                        if (currentUserRole == UserRole.primaryAdmin ||
-                            currentUserRole == UserRole.secondaryAdmin) {
-                          animatedPushNavigation(
-                            context: context,
-                            screen: ManageCarScreen(carId: car.id ?? ''),
-                          );
-                        } else {
-                          animatedPushNavigation(
-                            context: context,
-                            screen: PreviewCarDetails(carId: car.id ?? ''),
-                          );
-                        }
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16.0,
-                          vertical: 10.0,
+                    icon: const Icon(Icons.more_vert_rounded),
+                  ),
+                ],
+              ),
+              body: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding:
+                            const EdgeInsets.fromLTRB(0.0, 10.0, 0.0, 15.0),
+                        child: ReferenceNumberRow(
+                          referenceNumber: carRental.referenceNumber,
                         ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.all(16.0),
                         decoration: BoxDecoration(
                           color: Theme.of(context)
                               .colorScheme
@@ -1352,208 +1241,358 @@ class CarRentalDetailsScreen extends StatelessWidget {
                               .withOpacity(0.08),
                           borderRadius: BorderRadius.circular(16.0),
                         ),
-                        child: Row(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(16.0),
-                              child: CachedNetworkImage(
-                                imageUrl: car.imagesUrl!.first,
-                                width: 100.0,
-                                height: 100.0,
-                                fit: BoxFit.cover,
-                                placeholder: (context, url) =>
-                                    const CustomProgressIndicator(),
-                                errorWidget: (context, url, error) =>
-                                    const Center(child: Icon(Icons.error)),
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 5.0),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  // consider adding info icon to explain statuses in a dialog
+                                  const Text(
+                                    'Status',
+                                    style: TextStyle(
+                                      fontSize: 22.0,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 50.0),
+                                  Flexible(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        CarRentalStatusIndicator(
+                                          carRentalStatus: carRental.status ??
+                                              CarRentalStatus.rentedByCustomer,
+                                          userRole: currentUser?.userRole ??
+                                              UserRole.customer,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                            const SizedBox(width: 20.0),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  '${car.manufacturer ?? 'N/A'} ${car.model ?? 'N/A'}',
-                                  style: const TextStyle(
-                                    fontSize: 20.0,
-                                    fontWeight: FontWeight.bold,
+                            const Divider(thickness: 0.3),
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(vertical: 16.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Icon(
+                                        Icons.location_on,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .primary,
+                                      ),
+                                      const SizedBox(width: 8.0),
+                                      Expanded(
+                                        child: Text(
+                                          address.toString(),
+                                          style: const TextStyle(
+                                            fontSize: 16.0,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                ),
-                                const SizedBox(height: 8.0),
-                                _buildIconTextRow(
-                                  context,
-                                  Icons.color_lens,
-                                  car.color ?? 'N/A',
-                                ),
-                              ],
+                                  const SizedBox(height: 20.0),
+                                  _buildIconTextRowWithDate(
+                                    context,
+                                    Icons.access_time,
+                                    'Pick-Up Time',
+                                    carRental.startDate ?? DateTime.now(),
+                                  ),
+                                  const SizedBox(height: 20.0),
+                                  _buildIconTextRowWithDate(
+                                    context,
+                                    Icons.access_time,
+                                    'Drop-Off Time',
+                                    carRental.endDate ?? DateTime.now(),
+                                  ),
+                                ],
+                              ),
                             ),
-                            const Spacer(),
-                            const Column(
-                              children: [
-                                Padding(
-                                  padding: EdgeInsets.symmetric(
-                                    horizontal: 10.0,
+                            const Divider(thickness: 0.3),
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(vertical: 5.0),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  const Text(
+                                    'Duration',
+                                    style: TextStyle(
+                                      fontSize: 16.0,
+                                    ),
                                   ),
-                                  child: Icon(
-                                    Icons.keyboard_arrow_right_rounded,
+                                  Text(
+                                    durationText,
+                                    style: const TextStyle(
+                                      fontSize: 16.0,
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
+                            if (currentUserRole == UserRole.primaryAdmin ||
+                                currentUserRole == UserRole.secondaryAdmin)
+                              buildAdminPricingDetails(
+                                totalAmount,
+                                hostEarnings,
+                                stripeFees,
+                                platformNetProfit,
+                              ),
+                            if (currentUserRole == UserRole.host)
+                              buildHostPricingDetails(
+                                totalAmount,
+                                hostPlatformFees,
+                                hostEarnings,
+                              ),
+                            if (currentUserRole == UserRole.customer)
+                              buildCustomerPricingDetails(
+                                totalAmount,
+                              ),
                           ],
                         ),
                       ),
-                    ),
-                    if (currentUser?.userId != carRental.customerId ||
-                        currentUserRole == UserRole.primaryAdmin ||
-                        currentUserRole == UserRole.secondaryAdmin)
-                      _buildSectionTitle('Customer Details'),
-                    if (currentUser?.userId != carRental.customerId ||
-                        currentUserRole == UserRole.primaryAdmin ||
-                        currentUserRole == UserRole.secondaryAdmin)
-                      ListTile(
-                        onTap: (currentUserRole == UserRole.primaryAdmin ||
-                                currentUserRole == UserRole.secondaryAdmin)
-                            ? () => animatedPushNavigation(
-                                  context: context,
-                                  screen: UserDetailsScreen(
-                                      userId: customer.userId ?? ''),
-                                )
-                            : null,
-                        leading: ClipOval(
-                          child: customer.userProfileUrl != null
-                              ? CachedNetworkImage(
-                                  imageUrl: customer.userProfileUrl ?? '',
-                                  width: 50.0,
-                                  height: 50.0,
+                      _buildSectionTitle('Car Details'),
+                      GestureDetector(
+                        onTap: () {
+                          if (currentUserRole == UserRole.primaryAdmin ||
+                              currentUserRole == UserRole.secondaryAdmin) {
+                            animatedPushNavigation(
+                              context: context,
+                              screen: ManageCarScreen(carId: car.id ?? ''),
+                            );
+                          } else {
+                            animatedPushNavigation(
+                              context: context,
+                              screen: PreviewCarDetails(carId: car.id ?? ''),
+                            );
+                          }
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16.0,
+                            vertical: 10.0,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .primary
+                                .withOpacity(0.08),
+                            borderRadius: BorderRadius.circular(16.0),
+                          ),
+                          child: Row(
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(16.0),
+                                child: CachedNetworkImage(
+                                  imageUrl: car.imagesUrl!.first,
+                                  width: 100.0,
+                                  height: 100.0,
                                   fit: BoxFit.cover,
                                   placeholder: (context, url) =>
-                                      const CircularProgressIndicator(),
+                                      const CustomProgressIndicator(),
                                   errorWidget: (context, url, error) =>
-                                      const Icon(Icons.error),
-                                )
-                              : const Icon(Icons.person),
-                        ),
-                        title: Text(
-                          '${customer.userFirstName ?? ''} ${customer.userLastName ?? ''}',
-                          style: const TextStyle(
-                            fontSize: 20.0,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        subtitle: Text(
-                          customer.userPhoneNumber ?? 'N/A',
-                          style: const TextStyle(
-                            fontSize: 16.0,
-                          ),
-                        ),
-                        trailing: IconButton(
-                          icon: Icon(
-                            Icons.phone,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                          onPressed: () =>
-                              LaunchCoreServiceUtil.launchPhoneCall(
-                            customer.userPhoneNumber ?? '',
-                          ),
-                        ),
-                      ),
-                    if (currentUser?.userId == carRental.customerId ||
-                        currentUserRole == UserRole.primaryAdmin ||
-                        currentUserRole == UserRole.secondaryAdmin)
-                      _buildSectionTitle('Host Details'),
-                    if (currentUser?.userId == carRental.customerId ||
-                        currentUserRole == UserRole.primaryAdmin ||
-                        currentUserRole == UserRole.secondaryAdmin)
-                      ListTile(
-                        onTap: (currentUserRole == UserRole.primaryAdmin ||
-                                currentUserRole == UserRole.secondaryAdmin)
-                            ? () => animatedPushNavigation(
-                                  context: context,
-                                  screen: UserDetailsScreen(
-                                      userId: host.userId ?? ''),
-                                )
-                            : null,
-                        leading: ClipOval(
-                          child: host.userProfileUrl != null
-                              ? CachedNetworkImage(
-                                  imageUrl: host.userProfileUrl ?? '',
-                                  width: 50.0,
-                                  height: 50.0,
-                                  fit: BoxFit.cover,
-                                  placeholder: (context, url) =>
-                                      const CircularProgressIndicator(),
-                                  errorWidget: (context, url, error) =>
-                                      const Icon(Icons.error),
-                                )
-                              : const Icon(Icons.person),
-                        ),
-                        title: Text(
-                          '${host.userFirstName ?? ''} ${host.userLastName ?? ''}',
-                          style: const TextStyle(
-                            fontSize: 20.0,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        subtitle: Text(
-                          host.userPhoneNumber ?? 'N/A',
-                          style: const TextStyle(
-                            fontSize: 16.0,
-                          ),
-                        ),
-                        trailing: IconButton(
-                          icon: Icon(
-                            Icons.phone,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                          onPressed: () =>
-                              LaunchCoreServiceUtil.launchPhoneCall(
-                            host.userPhoneNumber ?? '',
+                                      const Center(child: Icon(Icons.error)),
+                                ),
+                              ),
+                              const SizedBox(width: 20.0),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    '${car.manufacturer ?? 'N/A'} ${car.model ?? 'N/A'}',
+                                    style: const TextStyle(
+                                      fontSize: 20.0,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8.0),
+                                  _buildIconTextRow(
+                                    context,
+                                    Icons.color_lens,
+                                    car.color ?? 'N/A',
+                                  ),
+                                ],
+                              ),
+                              const Spacer(),
+                              const Column(
+                                children: [
+                                  Padding(
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: 10.0,
+                                    ),
+                                    child: Icon(
+                                      Icons.keyboard_arrow_right_rounded,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
                           ),
                         ),
                       ),
-                    if (currentUser?.userId == carRental.customerId)
-                      _buildSectionTitle('Car Address'),
-                    if (currentUser?.userId == carRental.customerId)
-                      CarAddressImagePreview(
-                        addressId: car.defaultAddressId,
-                      ),
-                    if (currentUserRole == UserRole.customer)
-                      _buildSectionTitle('Payment Method'),
-                    if (currentUserRole == UserRole.customer)
-                      CarRentalPaymentCarTile(
-                        stripeCharge: stripeCharge,
-                      ),
-                    // customer shouldn't see payout status, only customer, check which other statuses he shouldn't see
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 15.0),
-                      child: CarRentalLatestStatusHistoryRecord(
-                        fetchStatusHistory: getMostRecentStatusHistory,
-                        linkedObjectId: carRental.id ?? '',
-                      ),
-                    ),
-                    if (latestIssueReport != null)
+                      if (currentUser?.userId != carRental.customerId ||
+                          currentUserRole == UserRole.primaryAdmin ||
+                          currentUserRole == UserRole.secondaryAdmin)
+                        _buildSectionTitle('Customer Details'),
+                      if (currentUser?.userId != carRental.customerId ||
+                          currentUserRole == UserRole.primaryAdmin ||
+                          currentUserRole == UserRole.secondaryAdmin)
+                        ListTile(
+                          onTap: (currentUserRole == UserRole.primaryAdmin ||
+                                  currentUserRole == UserRole.secondaryAdmin)
+                              ? () => animatedPushNavigation(
+                                    context: context,
+                                    screen: UserDetailsScreen(
+                                        userId: customer.userId ?? ''),
+                                  )
+                              : null,
+                          leading: ClipOval(
+                            child: customer.userProfileUrl != null
+                                ? CachedNetworkImage(
+                                    imageUrl: customer.userProfileUrl ?? '',
+                                    width: 50.0,
+                                    height: 50.0,
+                                    fit: BoxFit.cover,
+                                    placeholder: (context, url) =>
+                                        const CircularProgressIndicator(),
+                                    errorWidget: (context, url, error) =>
+                                        const Icon(Icons.error),
+                                  )
+                                : const Icon(Icons.person),
+                          ),
+                          title: Text(
+                            '${customer.userFirstName ?? ''} ${customer.userLastName ?? ''}',
+                            style: const TextStyle(
+                              fontSize: 20.0,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          subtitle: Text(
+                            customer.userPhoneNumber ?? 'N/A',
+                            style: const TextStyle(
+                              fontSize: 16.0,
+                            ),
+                          ),
+                          trailing: IconButton(
+                            icon: Icon(
+                              Icons.phone,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                            onPressed: () =>
+                                LaunchCoreServiceUtil.launchPhoneCall(
+                              customer.userPhoneNumber ?? '',
+                            ),
+                          ),
+                        ),
+                      if (currentUser?.userId == carRental.customerId ||
+                          currentUserRole == UserRole.primaryAdmin ||
+                          currentUserRole == UserRole.secondaryAdmin)
+                        _buildSectionTitle('Host Details'),
+                      if (currentUser?.userId == carRental.customerId ||
+                          currentUserRole == UserRole.primaryAdmin ||
+                          currentUserRole == UserRole.secondaryAdmin)
+                        ListTile(
+                          onTap: (currentUserRole == UserRole.primaryAdmin ||
+                                  currentUserRole == UserRole.secondaryAdmin)
+                              ? () => animatedPushNavigation(
+                                    context: context,
+                                    screen: UserDetailsScreen(
+                                        userId: host.userId ?? ''),
+                                  )
+                              : null,
+                          leading: ClipOval(
+                            child: host.userProfileUrl != null
+                                ? CachedNetworkImage(
+                                    imageUrl: host.userProfileUrl ?? '',
+                                    width: 50.0,
+                                    height: 50.0,
+                                    fit: BoxFit.cover,
+                                    placeholder: (context, url) =>
+                                        const CircularProgressIndicator(),
+                                    errorWidget: (context, url, error) =>
+                                        const Icon(Icons.error),
+                                  )
+                                : const Icon(Icons.person),
+                          ),
+                          title: Text(
+                            '${host.userFirstName ?? ''} ${host.userLastName ?? ''}',
+                            style: const TextStyle(
+                              fontSize: 20.0,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          subtitle: Text(
+                            host.userPhoneNumber ?? 'N/A',
+                            style: const TextStyle(
+                              fontSize: 16.0,
+                            ),
+                          ),
+                          trailing: IconButton(
+                            icon: Icon(
+                              Icons.phone,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                            onPressed: () =>
+                                LaunchCoreServiceUtil.launchPhoneCall(
+                              host.userPhoneNumber ?? '',
+                            ),
+                          ),
+                        ),
+                      if (currentUser?.userId == carRental.customerId)
+                        _buildSectionTitle('Car Address'),
+                      if (currentUser?.userId == carRental.customerId)
+                        CarAddressImagePreview(
+                          addressId: car.defaultAddressId,
+                        ),
+                      if (currentUserRole == UserRole.customer)
+                        _buildSectionTitle('Payment Method'),
+                      if (currentUserRole == UserRole.customer)
+                        CarRentalPaymentCarTile(
+                          stripeCharge: stripeCharge,
+                        ),
+                      // customer shouldn't see payout status, only customer, check which other statuses he shouldn't see
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 15.0),
-                        child: CarRentalLatestIssueReport(
-                          latestIssueReport: latestIssueReport,
-                          carRentalId: carRental.id ?? '',
+                        child: CarRentalLatestStatusHistoryRecord(
+                          fetchStatusHistory: getMostRecentStatusHistory,
+                          linkedObjectId: carRental.id ?? '',
                         ),
                       ),
-                    const Divider(thickness: 0.3),
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 5.0),
-                      child: CreatedAtRow(
-                        labelText: 'Created At',
-                        createdAt: carRental.createdAt,
+                      if (latestIssueReport != null)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 15.0),
+                          child: CarRentalLatestIssueReport(
+                            latestIssueReport: latestIssueReport,
+                            carRentalId: carRental.id ?? '',
+                          ),
+                        ),
+                      const Divider(thickness: 0.3),
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 5.0),
+                        child: CreatedAtRow(
+                          labelText: 'Created At',
+                          createdAt: carRental.createdAt,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-            ),
-          );
-        }
-      },
+            );
+          }
+        },
+      ),
     );
   }
 }

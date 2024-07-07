@@ -43,6 +43,9 @@ class _AdminActiveCarRentalsTabBodyState
       CarRentalStatus.customerReturnedCar,
       CarRentalStatus.customerReportedIssue,
       CarRentalStatus.customerExtendedRental,
+      CarRentalStatus.customerCancelled,
+      CarRentalStatus.hostCancelled,
+      CarRentalStatus.hostConfirmedReturn,
     ]);
 
     for (var carRental in carRentals) {
@@ -60,106 +63,113 @@ class _AdminActiveCarRentalsTabBodyState
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(5.0),
-      child: FutureBuilder<List<Map<String, dynamic>>>(
-        future: _fetchActiveRentals(context),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const CustomProgressIndicator();
-          } else if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const NoDataFound(
-              title: 'Nothing Found',
-              subTitle: 'No active rentals found.',
-            );
-          } else {
-            final activeRentalsWithCars = snapshot.data!;
+    return RefreshIndicator(
+      onRefresh: () async {
+        await Future.delayed(const Duration(milliseconds: 100));
+        setState(() {});
+      },
+      child: Padding(
+        padding: const EdgeInsets.all(5.0),
+        child: FutureBuilder<List<Map<String, dynamic>>>(
+          future: _fetchActiveRentals(context),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const CustomProgressIndicator();
+            } else if (snapshot.hasError) {
+              return Center(child: Text('Error: ${snapshot.error}'));
+            } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+              return const NoDataFound(
+                title: 'Nothing Found',
+                subTitle: 'No active rentals found.',
+              );
+            } else {
+              final activeRentalsWithCars = snapshot.data!;
 
-            // Prevent infinite rebuilds by checking if the list has changed
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (!Provider.of<SearchRentalsProvider>(context, listen: false)
-                  .rentalsListEquals(activeRentalsWithCars)) {
-                Provider.of<SearchRentalsProvider>(context, listen: false)
-                    .setRentalsList(activeRentalsWithCars);
-              }
-            });
+              // Prevent infinite rebuilds by checking if the list has changed
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (!Provider.of<SearchRentalsProvider>(context, listen: false)
+                    .rentalsListEquals(activeRentalsWithCars)) {
+                  Provider.of<SearchRentalsProvider>(context, listen: false)
+                      .setRentalsList(activeRentalsWithCars);
+                }
+              });
 
-            return CustomScrollView(
-              slivers: [
-                SliverAppBar(
-                  automaticallyImplyLeading: false,
-                  toolbarHeight: 80.0,
-                  title: Consumer<SearchRentalsProvider>(
-                    builder: (context, searchProvider, _) {
-                      return SearchBar(
-                        hintText: 'Search Rentals',
-                        leading: const Icon(Icons.search_rounded),
-                        trailing: [
-                          if (_searchController.text.isNotEmpty)
-                            IconButton(
-                              onPressed: () {
-                                _searchController.clear();
-                                searchProvider.clearFilters();
-                              },
-                              icon: const Icon(Icons.clear_rounded),
-                            ),
-                        ],
-                        controller: _searchController,
-                        onChanged: searchProvider.filterRentals,
-                        padding: MaterialStateProperty.all<EdgeInsetsGeometry>(
-                          const EdgeInsets.fromLTRB(20.0, 0.0, 10.0, 0.0),
+              return CustomScrollView(
+                slivers: [
+                  SliverAppBar(
+                    automaticallyImplyLeading: false,
+                    toolbarHeight: 80.0,
+                    title: Consumer<SearchRentalsProvider>(
+                      builder: (context, searchProvider, _) {
+                        return SearchBar(
+                          hintText: 'Search Rentals',
+                          leading: const Icon(Icons.search_rounded),
+                          trailing: [
+                            if (_searchController.text.isNotEmpty)
+                              IconButton(
+                                onPressed: () {
+                                  _searchController.clear();
+                                  searchProvider.clearFilters();
+                                },
+                                icon: const Icon(Icons.clear_rounded),
+                              ),
+                          ],
+                          controller: _searchController,
+                          onChanged: searchProvider.filterRentals,
+                          padding:
+                              MaterialStateProperty.all<EdgeInsetsGeometry>(
+                            const EdgeInsets.fromLTRB(20.0, 0.0, 10.0, 0.0),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  Consumer<SearchRentalsProvider>(
+                    builder: (_, searchRentalsProvider, __) {
+                      final childCount =
+                          searchRentalsProvider.isSearchFilterActive
+                              ? searchRentalsProvider.filteredRentals.length
+                              : searchRentalsProvider.rentalsList.length;
+                      if (childCount <= 0) {
+                        return SliverList(
+                          delegate: SliverChildBuilderDelegate(
+                            (context, index) {
+                              return const NoDataFound(
+                                title: 'No Results Found!',
+                                subTitle:
+                                    'There are no active rentals matching your search criteria. Please try again with different key words.',
+                              );
+                            },
+                            childCount: 1,
+                          ),
+                        );
+                      }
+                      return SliverList(
+                        delegate: SliverChildBuilderDelegate(
+                          (context, index) {
+                            final rentalWithCar = searchRentalsProvider
+                                    .isSearchFilterActive
+                                ? searchRentalsProvider.filteredRentals[index]
+                                : searchRentalsProvider.rentalsList[index];
+
+                            return CarRentalCard(
+                              carRental: rentalWithCar['rental'],
+                              car: rentalWithCar['car'],
+                              userRole: UserRole.primaryAdmin,
+                            );
+                          },
+                          childCount: searchRentalsProvider.isSearchFilterActive
+                              ? searchRentalsProvider.filteredRentals.length
+                              : searchRentalsProvider.rentalsList.length,
                         ),
                       );
                     },
                   ),
-                ),
-                Consumer<SearchRentalsProvider>(
-                  builder: (_, searchRentalsProvider, __) {
-                    final childCount =
-                        searchRentalsProvider.isSearchFilterActive
-                            ? searchRentalsProvider.filteredRentals.length
-                            : searchRentalsProvider.rentalsList.length;
-                    if (childCount <= 0) {
-                      return SliverList(
-                        delegate: SliverChildBuilderDelegate(
-                          (context, index) {
-                            return const NoDataFound(
-                              title: 'No Results Found!',
-                              subTitle:
-                                  'There are no active rentals matching your search criteria. Please try again with different key words.',
-                            );
-                          },
-                          childCount: 1,
-                        ),
-                      );
-                    }
-                    return SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) {
-                          final rentalWithCar =
-                              searchRentalsProvider.isSearchFilterActive
-                                  ? searchRentalsProvider.filteredRentals[index]
-                                  : searchRentalsProvider.rentalsList[index];
-
-                          return CarRentalCard(
-                            carRental: rentalWithCar['rental'],
-                            car: rentalWithCar['car'],
-                            userRole: UserRole.primaryAdmin,
-                          );
-                        },
-                        childCount: searchRentalsProvider.isSearchFilterActive
-                            ? searchRentalsProvider.filteredRentals.length
-                            : searchRentalsProvider.rentalsList.length,
-                      ),
-                    );
-                  },
-                ),
-              ],
-            );
-          }
-        },
+                ],
+              );
+            }
+          },
+        ),
       ),
     );
   }

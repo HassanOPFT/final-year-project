@@ -324,7 +324,8 @@ class VerificationDocumentController {
   }
 
   Future<List<VerificationDocument>> getVerificationDocumentsByLinkedObjectId(
-      String userId) async {
+    String userId,
+  ) async {
     try {
       if (userId.isEmpty) {
         throw Exception(

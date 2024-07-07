@@ -6,7 +6,7 @@ import 'package:prime/providers/status_history_provider.dart';
 import 'package:prime/widgets/custom_progress_indicator.dart';
 import 'package:provider/provider.dart';
 
-class StatusHistoryScreen extends StatelessWidget {
+class StatusHistoryScreen extends StatefulWidget {
   final String linkedObjectId;
 
   const StatusHistoryScreen({
@@ -14,6 +14,11 @@ class StatusHistoryScreen extends StatelessWidget {
     required this.linkedObjectId,
   });
 
+  @override
+  State<StatusHistoryScreen> createState() => _StatusHistoryScreenState();
+}
+
+class _StatusHistoryScreenState extends State<StatusHistoryScreen> {
   @override
   Widget build(BuildContext context) {
     final statusHistoryProvider = Provider.of<StatusHistoryProvider>(
@@ -24,11 +29,12 @@ class StatusHistoryScreen extends StatelessWidget {
 
     final Future<List<StatusHistory>> statusHistoryList =
         statusHistoryProvider.getStatusHistoryList(
-      linkedObjectId,
+      widget.linkedObjectId,
     );
 
     Future<Map<String, String?>> fetchUserNames(
-        List<StatusHistory> histories) async {
+      List<StatusHistory> histories,
+    ) async {
       Map<String, String?> userNames = {};
       for (var history in histories) {
         if (history.modifiedById != null &&
@@ -55,80 +61,88 @@ class StatusHistoryScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Status History'),
       ),
-      body: FutureBuilder<Map<String, dynamic>>(
-        future: combinedFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const CustomProgressIndicator();
-          } else if (snapshot.hasError) {
-            return const Center(child: Text('Error loading history'));
-          } else if (!snapshot.hasData ||
-              snapshot.data == null ||
-              snapshot.data!['histories'].isEmpty) {
-            return const Center(child: Text('No history available'));
-          } else {
-            final List<StatusHistory> statusHistoryList =
-                snapshot.data!['histories'];
-            final Map<String, String?> userNames = snapshot.data!['userNames'];
+      body: RefreshIndicator(
+        onRefresh: () async {
+          await Future.delayed(const Duration(milliseconds: 100));
+          setState(() {});
+        },
+        child: FutureBuilder<Map<String, dynamic>>(
+          future: combinedFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const CustomProgressIndicator();
+            } else if (snapshot.hasError) {
+              return const Center(child: Text('Error loading history'));
+            } else if (!snapshot.hasData ||
+                snapshot.data == null ||
+                snapshot.data!['histories'].isEmpty) {
+              return const Center(child: Text('No history available'));
+            } else {
+              final List<StatusHistory> statusHistoryList =
+                  snapshot.data!['histories'];
+              final Map<String, String?> userNames =
+                  snapshot.data!['userNames'];
 
-            return ListView.builder(
-              itemCount: statusHistoryList.length,
-              itemBuilder: (context, index) {
-                final history = statusHistoryList[index];
-                final userName =
-                    userNames[history.modifiedById] ?? 'User details not found';
+              return ListView.builder(
+                physics: const AlwaysScrollableScrollPhysics(),
+                itemCount: statusHistoryList.length,
+                itemBuilder: (context, index) {
+                  final history = statusHistoryList[index];
+                  final userName = userNames[history.modifiedById] ??
+                      'User details not found';
 
-                return ListTile(
-                  leading: Icon(
-                    Icons.history_rounded,
-                    color: Theme.of(context).colorScheme.primary,
-                    size: 30.0,
-                  ),
-                  title: Text(
-                    '${history.newStatus}',
-                    style: const TextStyle(
-                      fontSize: 16.0,
-                      fontWeight: FontWeight.bold,
+                  return ListTile(
+                    leading: Icon(
+                      Icons.history_rounded,
+                      color: Theme.of(context).colorScheme.primary,
+                      size: 30.0,
                     ),
-                  ),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (history.statusDescription != null &&
-                          history.statusDescription!.isNotEmpty)
+                    title: Text(
+                      '${history.newStatus}',
+                      style: const TextStyle(
+                        fontSize: 16.0,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (history.statusDescription != null &&
+                            history.statusDescription!.isNotEmpty)
+                          Text(
+                            history.statusDescription!,
+                            style: TextStyle(
+                              fontSize: 15.0,
+                              color: Theme.of(context).dividerColor,
+                            ),
+                          ),
                         Text(
-                          history.statusDescription!,
+                          history.createdAt != null
+                              ? DateFormat.yMMMd()
+                                  .add_jm()
+                                  .format(history.createdAt!)
+                              : 'Unknown',
                           style: TextStyle(
-                            fontSize: 15.0,
+                            fontSize: 13.0,
                             color: Theme.of(context).dividerColor,
                           ),
                         ),
-                      Text(
-                        history.createdAt != null
-                            ? DateFormat.yMMMd()
-                                .add_jm()
-                                .format(history.createdAt!)
-                            : 'Unknown',
-                        style: TextStyle(
-                          fontSize: 13.0,
-                          color: Theme.of(context).dividerColor,
-                        ),
-                      ),
-                    ],
-                  ),
-                  trailing: Text(
-                    userName,
-                    style: TextStyle(
-                      fontSize: 13.0,
-                      color: Theme.of(context).dividerColor,
+                      ],
                     ),
-                  ),
-                );
-              },
-            );
-          }
-        },
+                    trailing: Text(
+                      userName,
+                      style: TextStyle(
+                        fontSize: 13.0,
+                        color: Theme.of(context).dividerColor,
+                      ),
+                    ),
+                  );
+                },
+              );
+            }
+          },
+        ),
       ),
     );
   }

@@ -27,7 +27,7 @@ import '../../models/verification_document.dart';
 import '../../widgets/bottom_sheet/edit_verification_document_bottom_sheet.dart';
 import '../../widgets/verification_document_status_indicator.dart';
 
-class VerificationDocumentDetailsScreen extends StatelessWidget {
+class VerificationDocumentDetailsScreen extends StatefulWidget {
   final String verificationDocumentId;
 
   const VerificationDocumentDetailsScreen({
@@ -35,6 +35,13 @@ class VerificationDocumentDetailsScreen extends StatelessWidget {
     required this.verificationDocumentId,
   });
 
+  @override
+  State<VerificationDocumentDetailsScreen> createState() =>
+      _VerificationDocumentDetailsScreenState();
+}
+
+class _VerificationDocumentDetailsScreenState
+    extends State<VerificationDocumentDetailsScreen> {
   @override
   Widget build(BuildContext context) {
     final userProvider = Provider.of<UserProvider>(
@@ -543,164 +550,176 @@ class VerificationDocumentDetailsScreen extends StatelessWidget {
       }
     }
 
-    return FutureBuilder<VerificationDocument?>(
-      future: verificationDocumentProvider
-          .getVerificationDocumentById(verificationDocumentId),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return Scaffold(
-            appBar: AppBar(
-              title: const Text('Document Details'),
-            ),
-            body: const Center(
-              child: CustomProgressIndicator(),
-            ),
-          );
-        } else if (snapshot.hasError) {
-          return Scaffold(
-            appBar: AppBar(
-              title: const Text('Document Details'),
-            ),
-            body: Center(
-              child: Text('Error: ${snapshot.error}'),
-            ),
-          );
-        } else if (!snapshot.hasData || snapshot.data == null) {
-          return Scaffold(
-            body: Scaffold(
+    return RefreshIndicator(
+      edgeOffset: 110.0,
+      onRefresh: () async {
+        await Future.delayed(const Duration(milliseconds: 100));
+        setState(() {});
+      },
+      child: FutureBuilder<VerificationDocument?>(
+        future: verificationDocumentProvider.getVerificationDocumentById(
+          widget.verificationDocumentId,
+        ),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Scaffold(
               appBar: AppBar(
                 title: const Text('Document Details'),
               ),
               body: const Center(
-                child: Text('No verification document found.'),
+                child: CustomProgressIndicator(),
               ),
-            ),
-          );
-        } else {
-          final verificationDocument = snapshot.data!;
-
-          return Scaffold(
-            appBar: AppBar(
-              title: Text(
-                '${verificationDocument.documentType?.getDocumentTypeString()} Details',
+            );
+          } else if (snapshot.hasError) {
+            return Scaffold(
+              appBar: AppBar(
+                title: const Text('Document Details'),
               ),
-              actions: [
-                IconButton(
-                  icon: const Icon(Icons.edit_rounded),
-                  onPressed: () => showEditVerificationDocumentBottomSheet(
-                    verificationDocument,
-                  ),
+              body: Center(
+                child: Text('Error: ${snapshot.error}'),
+              ),
+            );
+          } else if (!snapshot.hasData || snapshot.data == null) {
+            return Scaffold(
+              body: Scaffold(
+                appBar: AppBar(
+                  title: const Text('Document Details'),
                 ),
-              ],
-            ),
-            body: Padding(
-              padding: const EdgeInsets.all(10.0),
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Stack(
-                      children: [
-                        GestureDetector(
-                          onTap: verificationDocument.documentUrl != null
-                              ? () => animatedPushNavigation(
-                                    context: context,
-                                    screen: ViewFullImageScreen(
-                                      imageUrl:
-                                          verificationDocument.documentUrl!,
-                                      appBarTitle: 'Document Image',
-                                      tag: 'document-image',
-                                    ),
-                                  )
-                              : null,
-                          child: Hero(
-                            tag: 'document-image',
-                            child: SizedBox(
-                              width: double.infinity,
-                              height: 250,
-                              child: verificationDocument.documentUrl != null
-                                  ? ClipRRect(
-                                      borderRadius: BorderRadius.circular(15.0),
-                                      child: CachedNetworkImage(
+                body: const Center(
+                  child: Text('No verification document found.'),
+                ),
+              ),
+            );
+          } else {
+            final verificationDocument = snapshot.data!;
+
+            return Scaffold(
+              appBar: AppBar(
+                title: Text(
+                  '${verificationDocument.documentType?.getDocumentTypeString()} Details',
+                ),
+                actions: [
+                  IconButton(
+                    icon: const Icon(Icons.edit_rounded),
+                    onPressed: () => showEditVerificationDocumentBottomSheet(
+                      verificationDocument,
+                    ),
+                  ),
+                ],
+              ),
+              body: Padding(
+                padding: const EdgeInsets.all(10.0),
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Stack(
+                        children: [
+                          GestureDetector(
+                            onTap: verificationDocument.documentUrl != null
+                                ? () => animatedPushNavigation(
+                                      context: context,
+                                      screen: ViewFullImageScreen(
                                         imageUrl:
                                             verificationDocument.documentUrl!,
-                                        fit: BoxFit.cover,
-                                        placeholder: (context, url) =>
-                                            const CustomProgressIndicator(),
-                                        errorWidget: (context, url, error) =>
-                                            const Center(
-                                                child: Icon(Icons.error)),
+                                        appBarTitle: 'Document Image',
+                                        tag: 'document-image',
                                       ),
                                     )
-                                  : const Center(
-                                      child: Text('Error loading image'),
-                                    ),
+                                : null,
+                            child: Hero(
+                              tag: 'document-image',
+                              child: SizedBox(
+                                width: double.infinity,
+                                height: 250,
+                                child: verificationDocument.documentUrl != null
+                                    ? ClipRRect(
+                                        borderRadius:
+                                            BorderRadius.circular(15.0),
+                                        child: CachedNetworkImage(
+                                          imageUrl:
+                                              verificationDocument.documentUrl!,
+                                          fit: BoxFit.cover,
+                                          placeholder: (context, url) =>
+                                              const CustomProgressIndicator(),
+                                          errorWidget: (context, url, error) =>
+                                              const Center(
+                                                  child: Icon(Icons.error)),
+                                        ),
+                                      )
+                                    : const Center(
+                                        child: Text('Error loading image'),
+                                      ),
+                              ),
                             ),
                           ),
-                        ),
-                        Positioned(
-                          top: 10.0,
-                          right: 10.0,
-                          child: Consumer<VerificationDocumentProvider>(
-                            builder: (BuildContext context,
-                                VerificationDocumentProvider value,
-                                Widget? child) {
-                              return VerificationDocumentStatusIndicator(
-                                verificationDocumentStatus: verificationDocument
-                                    .status as VerificationDocumentStatus,
-                              );
-                            },
+                          Positioned(
+                            top: 10.0,
+                            right: 10.0,
+                            child: Consumer<VerificationDocumentProvider>(
+                              builder: (BuildContext context,
+                                  VerificationDocumentProvider value,
+                                  Widget? child) {
+                                return VerificationDocumentStatusIndicator(
+                                  verificationDocumentStatus:
+                                      verificationDocument.status
+                                          as VerificationDocumentStatus,
+                                );
+                              },
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 20.0),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Expires on',
-                          style: TextStyle(
-                            color: Theme.of(context).hintColor,
-                            fontSize: 20.0,
+                        ],
+                      ),
+                      const SizedBox(height: 20.0),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Expires on',
+                            style: TextStyle(
+                              color: Theme.of(context).hintColor,
+                              fontSize: 20.0,
+                            ),
                           ),
-                        ),
-                        Text(
-                          verificationDocument.expiryDate != null
-                              ? DateFormat.yMMMMd().format(
-                                  verificationDocument.expiryDate as DateTime)
-                              : 'N/A',
-                          style: const TextStyle(
-                            fontSize: 20.0,
+                          Text(
+                            verificationDocument.expiryDate != null
+                                ? DateFormat.yMMMMd().format(
+                                    verificationDocument.expiryDate as DateTime)
+                                : 'N/A',
+                            style: const TextStyle(
+                              fontSize: 20.0,
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 15.0),
-                    LatestStatusHistoryRecord(
-                      fetchStatusHistory: getMostRecentStatusHistory,
-                      linkedObjectId:
-                          verificationDocument.id ?? verificationDocumentId,
-                    ),
-                    const SizedBox(height: 15.0),
-                    const Divider(thickness: 0.3),
-                    const SizedBox(height: 15.0),
-                    ReferenceNumberRow(
-                      referenceNumber: verificationDocument.referenceNumber,
-                    ),
-                    const SizedBox(height: 10.0),
-                    CreatedAtRow(
-                      labelText: 'Added On',
-                      createdAt: verificationDocument.createdAt,
-                    ),
-                  ],
+                        ],
+                      ),
+                      const SizedBox(height: 15.0),
+                      LatestStatusHistoryRecord(
+                        fetchStatusHistory: getMostRecentStatusHistory,
+                        linkedObjectId: verificationDocument.id ??
+                            widget.verificationDocumentId,
+                      ),
+                      const SizedBox(height: 15.0),
+                      const Divider(thickness: 0.3),
+                      const SizedBox(height: 15.0),
+                      ReferenceNumberRow(
+                        referenceNumber: verificationDocument.referenceNumber,
+                      ),
+                      const SizedBox(height: 10.0),
+                      CreatedAtRow(
+                        labelText: 'Added On',
+                        createdAt: verificationDocument.createdAt,
+                      ),
+                      const SizedBox(height: 10.0),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          );
-        }
-      },
+            );
+          }
+        },
+      ),
     );
   }
 }

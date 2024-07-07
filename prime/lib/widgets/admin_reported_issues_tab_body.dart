@@ -54,111 +54,120 @@ class _AdminIssueReportsTabBodyState extends State<AdminIssueReportsTabBody> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(5.0),
-      child: FutureBuilder<List<Map<String, dynamic>>>(
-        future: _fetchIssueReports(context),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const CustomProgressIndicator();
-          } else if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const NoDataFound(
-              title: 'Nothing Found',
-              subTitle: 'No issue reports found.',
-            );
-          } else {
-            final issueReportsWithDetails = snapshot.data!;
+    return RefreshIndicator(
+      onRefresh: () async {
+        await Future.delayed(const Duration(milliseconds: 100));
+        setState(() {});
+      },
+      child: Padding(
+        padding: const EdgeInsets.all(5.0),
+        child: FutureBuilder<List<Map<String, dynamic>>>(
+          future: _fetchIssueReports(context),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const CustomProgressIndicator();
+            } else if (snapshot.hasError) {
+              return Center(child: Text('Error: ${snapshot.error}'));
+            } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+              return const NoDataFound(
+                title: 'Nothing Found',
+                subTitle: 'No issue reports found.',
+              );
+            } else {
+              final issueReportsWithDetails = snapshot.data!;
 
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (!Provider.of<SearchIssueReportsProvider>(context,
-                      listen: false)
-                  .issueReportsListEquals(issueReportsWithDetails)) {
-                Provider.of<SearchIssueReportsProvider>(context, listen: false)
-                    .setIssueReportsList(issueReportsWithDetails);
-              }
-            });
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (!Provider.of<SearchIssueReportsProvider>(context,
+                        listen: false)
+                    .issueReportsListEquals(issueReportsWithDetails)) {
+                  Provider.of<SearchIssueReportsProvider>(context,
+                          listen: false)
+                      .setIssueReportsList(issueReportsWithDetails);
+                }
+              });
 
-            return CustomScrollView(
-              slivers: [
-                SliverAppBar(
-                  automaticallyImplyLeading: false,
-                  toolbarHeight: 80.0,
-                  title: Consumer<SearchIssueReportsProvider>(
-                    builder: (context, searchProvider, _) {
-                      return SearchBar(
-                        hintText: 'Search Issue Reports',
-                        leading: const Icon(Icons.search_rounded),
-                        trailing: [
-                          if (_searchController.text.isNotEmpty)
-                            IconButton(
-                              onPressed: () {
-                                _searchController.clear();
-                                searchProvider.clearFilters();
-                              },
-                              icon: const Icon(Icons.clear_rounded),
-                            ),
-                        ],
-                        controller: _searchController,
-                        onChanged: searchProvider.filterIssueReports,
-                        padding: MaterialStateProperty.all<EdgeInsetsGeometry>(
-                          const EdgeInsets.fromLTRB(20.0, 0.0, 10.0, 0.0),
+              return CustomScrollView(
+                slivers: [
+                  SliverAppBar(
+                    automaticallyImplyLeading: false,
+                    toolbarHeight: 80.0,
+                    title: Consumer<SearchIssueReportsProvider>(
+                      builder: (context, searchProvider, _) {
+                        return SearchBar(
+                          hintText: 'Search Issue Reports',
+                          leading: const Icon(Icons.search_rounded),
+                          trailing: [
+                            if (_searchController.text.isNotEmpty)
+                              IconButton(
+                                onPressed: () {
+                                  _searchController.clear();
+                                  searchProvider.clearFilters();
+                                },
+                                icon: const Icon(Icons.clear_rounded),
+                              ),
+                          ],
+                          controller: _searchController,
+                          onChanged: searchProvider.filterIssueReports,
+                          padding:
+                              MaterialStateProperty.all<EdgeInsetsGeometry>(
+                            const EdgeInsets.fromLTRB(20.0, 0.0, 10.0, 0.0),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  Consumer<SearchIssueReportsProvider>(
+                    builder: (_, searchIssueReportsProvider, __) {
+                      final childCount = searchIssueReportsProvider
+                              .isSearchFilterActive
+                          ? searchIssueReportsProvider
+                              .filteredIssueReports.length
+                          : searchIssueReportsProvider.issueReportsList.length;
+                      if (childCount <= 0) {
+                        return SliverList(
+                          delegate: SliverChildBuilderDelegate(
+                            (context, index) {
+                              return const NoDataFound(
+                                title: 'No Results Found!',
+                                subTitle:
+                                    'There are no issue reports matching your search criteria. Please try again with different keywords.',
+                              );
+                            },
+                            childCount: 1,
+                          ),
+                        );
+                      }
+                      return SliverList(
+                        delegate: SliverChildBuilderDelegate(
+                          (context, index) {
+                            final issueReportWithDetails =
+                                searchIssueReportsProvider.isSearchFilterActive
+                                    ? searchIssueReportsProvider
+                                        .filteredIssueReports[index]
+                                    : searchIssueReportsProvider
+                                        .issueReportsList[index];
+
+                            return IssueReportTile(
+                              issueReport: issueReportWithDetails['report'],
+                              userFullName:
+                                  '${issueReportWithDetails['user'].userFirstName ?? ''} ${issueReportWithDetails['user'].userLastName ?? ''}',
+                            );
+                          },
+                          childCount:
+                              searchIssueReportsProvider.isSearchFilterActive
+                                  ? searchIssueReportsProvider
+                                      .filteredIssueReports.length
+                                  : searchIssueReportsProvider
+                                      .issueReportsList.length,
                         ),
                       );
                     },
                   ),
-                ),
-                Consumer<SearchIssueReportsProvider>(
-                  builder: (_, searchIssueReportsProvider, __) {
-                    final childCount = searchIssueReportsProvider
-                            .isSearchFilterActive
-                        ? searchIssueReportsProvider.filteredIssueReports.length
-                        : searchIssueReportsProvider.issueReportsList.length;
-                    if (childCount <= 0) {
-                      return SliverList(
-                        delegate: SliverChildBuilderDelegate(
-                          (context, index) {
-                            return const NoDataFound(
-                              title: 'No Results Found!',
-                              subTitle:
-                                  'There are no issue reports matching your search criteria. Please try again with different keywords.',
-                            );
-                          },
-                          childCount: 1,
-                        ),
-                      );
-                    }
-                    return SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) {
-                          final issueReportWithDetails =
-                              searchIssueReportsProvider.isSearchFilterActive
-                                  ? searchIssueReportsProvider
-                                      .filteredIssueReports[index]
-                                  : searchIssueReportsProvider
-                                      .issueReportsList[index];
-
-                          return IssueReportTile(
-                            issueReport: issueReportWithDetails['report'],
-                            userFullName:
-                                '${issueReportWithDetails['user'].userFirstName ?? ''} ${issueReportWithDetails['user'].userLastName ?? ''}',
-                          );
-                        },
-                        childCount:
-                            searchIssueReportsProvider.isSearchFilterActive
-                                ? searchIssueReportsProvider
-                                    .filteredIssueReports.length
-                                : searchIssueReportsProvider
-                                    .issueReportsList.length,
-                      ),
-                    );
-                  },
-                ),
-              ],
-            );
-          }
-        },
+                ],
+              );
+            }
+          },
+        ),
       ),
     );
   }

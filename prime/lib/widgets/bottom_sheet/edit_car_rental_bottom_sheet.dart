@@ -184,77 +184,6 @@ class EditCarRentalBottomSheet extends StatelessWidget {
       );
     }
 
-    // void loadCustomerButtons() {
-    //   switch (carRental.status) {
-    //     case CarRentalStatus.rentedByCustomer:
-    //       buttons.addAll([
-    //         pickUpByCustomerButton(),
-    //         cancelRentalButton(),
-    //       ]);
-    //       break;
-
-    //     case CarRentalStatus.pickedUpByCustomer:
-    //       if (!carRentalStatusHistory
-    //           .contains(CarRentalStatus.customerReturnedCar)) {
-    //         buttons.addAll([
-    //           returnCarByCustomerButton(),
-    //           extendRentalButton(),
-    //           reportIssueButton(),
-    //           cancelRentalButton(),
-    //         ]);
-    //       }
-    //       break;
-
-    //     case CarRentalStatus.customerReportedIssue:
-    //     case CarRentalStatus.hostReportedIssue:
-    //       if (!carRentalStatusHistory
-    //           .contains(CarRentalStatus.customerReturnedCar)) {
-    //         buttons.addAll([
-    //           returnCarByCustomerButton(),
-    //           cancelRentalButton(),
-    //         ]);
-    //       }
-    //       break;
-
-    //     case CarRentalStatus.customerExtendedRental:
-    //       if (!carRentalStatusHistory
-    //           .contains(CarRentalStatus.customerReturnedCar)) {
-    //         buttons.addAll([
-    //           returnCarByCustomerButton(),
-    //           cancelRentalButton(),
-    //         ]);
-    //       }
-    //       break;
-
-    //     case CarRentalStatus.customerReturnedCar:
-    //       // No actions after car is returned
-    //       break;
-
-    //     case CarRentalStatus.hostConfirmedPickup:
-    //       if (!carRentalStatusHistory
-    //           .contains(CarRentalStatus.customerReturnedCar)) {
-    //         buttons.addAll([
-    //           returnCarByCustomerButton(),
-    //           extendRentalButton(),
-    //           reportIssueButton(),
-    //           cancelRentalButton(),
-    //         ]);
-    //       }
-    //       break;
-
-    //     case CarRentalStatus.customerCancelled:
-    //     case CarRentalStatus.hostCancelled:
-    //     case CarRentalStatus.hostConfirmedReturn:
-    //     case CarRentalStatus.adminConfirmedPayout:
-    //     case CarRentalStatus.adminConfirmedRefund:
-    //       // No actions after these statuses
-    //       break;
-
-    //     default:
-    //       break;
-    //   }
-    // }
-
     void loadCustomerButtons() {
       if (!carRentalStatusHistory.contains(
             CarRentalStatus.pickedUpByCustomer,
@@ -271,16 +200,13 @@ class EditCarRentalBottomSheet extends StatelessWidget {
       }
 
       if (!carRentalStatusHistory.contains(
-            CarRentalStatus.customerCancelled,
-          ) &&
-          !carRentalStatusHistory.contains(
-            CarRentalStatus.hostCancelled,
-          ) &&
-          !carRentalStatusHistory.contains(
             CarRentalStatus.customerReturnedCar,
           ) &&
           !carRentalStatusHistory.contains(
             CarRentalStatus.hostConfirmedReturn,
+          ) &&
+          carRentalStatusHistory.contains(
+            CarRentalStatus.pickedUpByCustomer,
           )) {
         buttons.addAll([
           returnCarByCustomerButton(),
@@ -288,8 +214,12 @@ class EditCarRentalBottomSheet extends StatelessWidget {
       }
 
       // only visible if the rental is not done, not cancelled by host or customer, not hostConfirmedReturn, not refunded, not paid out
-      if (!carRentalStatusHistory.contains(CarRentalStatus.customerCancelled) &&
-          !carRentalStatusHistory.contains(CarRentalStatus.hostCancelled) &&
+      if (!carRentalStatusHistory.contains(
+            CarRentalStatus.customerCancelled,
+          ) &&
+          !carRentalStatusHistory.contains(
+            CarRentalStatus.hostCancelled,
+          ) &&
           !carRentalStatusHistory.contains(
             CarRentalStatus.hostConfirmedReturn,
           ) &&
@@ -327,102 +257,21 @@ class EditCarRentalBottomSheet extends StatelessWidget {
           cancelRentalButton(),
         ]);
       }
-
-      // if (carRental.status == CarRentalStatus.customerReturnedCar ||
-      //     carRental.status == CarRentalStatus.customerCancelled ||
-      //     carRental.status == CarRentalStatus.hostCancelled ||
-      //     carRental.status == CarRentalStatus.hostConfirmedReturn ||
-      //     carRental.status == CarRentalStatus.adminConfirmedPayout ||
-      //     carRental.status == CarRentalStatus.adminConfirmedRefund) {
-      //   // no actions after these statuses
-      // }
     }
 
-    // void loadHostButtons() {
-    //   switch (carRental.status) {
-    //     case CarRentalStatus.rentedByCustomer:
-    //       if (!carRentalStatusHistory.contains(CarRentalStatus.hostCancelled)) {
-    //         buttons.add(confirmPickUpByHostButton());
-    //       }
-    //       break;
-
-    //     case CarRentalStatus.pickedUpByCustomer:
-    //       if (!carRentalStatusHistory
-    //           .contains(CarRentalStatus.hostConfirmedPickup)) {
-    //         buttons.addAll([
-    //           reportIssueButton(),
-    //           cancelRentalButton(),
-    //         ]);
-    //       }
-    //       break;
-
-    //     case CarRentalStatus.customerReportedIssue:
-    //       if (carRentalStatusHistory
-    //               .contains(CarRentalStatus.pickedUpByCustomer) ||
-    //           carRentalStatusHistory
-    //               .contains(CarRentalStatus.customerExtendedRental) ||
-    //           carRentalStatusHistory
-    //               .contains(CarRentalStatus.customerReportedIssue)) {
-    //         buttons.addAll([
-    //           reportIssueButton(),
-    //           cancelRentalButton(),
-    //         ]);
-    //       }
-    //       break;
-
-    //     case CarRentalStatus.customerExtendedRental:
-    //       if (!carRentalStatusHistory.contains(CarRentalStatus.hostCancelled)) {
-    //         buttons.add(cancelRentalButton());
-    //       }
-    //       break;
-
-    //     case CarRentalStatus.customerReturnedCar:
-    //       if (carRentalStatusHistory
-    //               .contains(CarRentalStatus.pickedUpByCustomer) ||
-    //           carRentalStatusHistory
-    //               .contains(CarRentalStatus.customerExtendedRental) ||
-    //           carRentalStatusHistory
-    //               .contains(CarRentalStatus.customerReportedIssue) ||
-    //           carRentalStatusHistory
-    //               .contains(CarRentalStatus.hostReportedIssue)) {
-    //         buttons.add(confirmCarReturnByHostButton());
-    //       }
-    //       break;
-
-    //     case CarRentalStatus.hostConfirmedPickup:
-    //       if (!carRentalStatusHistory.contains(CarRentalStatus.hostCancelled)) {
-    //         buttons.addAll([
-    //           reportIssueButton(),
-    //           cancelRentalButton(),
-    //         ]);
-    //       }
-    //       break;
-
-    //     case CarRentalStatus.customerCancelled:
-    //     case CarRentalStatus.hostCancelled:
-    //     case CarRentalStatus.hostReportedIssue:
-    //     case CarRentalStatus.hostConfirmedReturn:
-    //     case CarRentalStatus.adminConfirmedPayout:
-    //     case CarRentalStatus.adminConfirmedRefund:
-    //       // No actions after these statuses
-    //       break;
-
-    //     default:
-    //       break;
-    //   }
-    // }
-
     void loadHostButtons() {
-      if (carRental.status == CarRentalStatus.rentedByCustomer ||
-          (!carRentalStatusHistory.contains(
-                CarRentalStatus.hostCancelled,
-              ) &&
-              !carRentalStatusHistory.contains(
-                CarRentalStatus.customerCancelled,
-              ) &&
-              !carRentalStatusHistory.contains(
-                CarRentalStatus.hostConfirmedPickup,
-              ))) {
+      if (!carRentalStatusHistory.contains(
+            CarRentalStatus.hostCancelled,
+          ) &&
+          !carRentalStatusHistory.contains(
+            CarRentalStatus.customerCancelled,
+          ) &&
+          !carRentalStatusHistory.contains(
+            CarRentalStatus.hostConfirmedPickup,
+          ) &&
+          carRentalStatusHistory.contains(
+            CarRentalStatus.pickedUpByCustomer,
+          )) {
         buttons.addAll([
           confirmPickUpByHostButton(),
         ]);
@@ -447,13 +296,22 @@ class EditCarRentalBottomSheet extends StatelessWidget {
                   carRental.status == CarRentalStatus.customerReturnedCar) &&
               !carRentalStatusHistory.contains(
                 CarRentalStatus.hostConfirmedReturn,
-              )) {
+              ) ||
+          (carRentalStatusHistory.contains(
+                CarRentalStatus.hostConfirmedPickup,
+              ) &&
+              !carRentalStatusHistory.contains(
+                CarRentalStatus.hostConfirmedReturn,
+              ) &&
+              carRentalStatusHistory.contains(
+                CarRentalStatus.customerReturnedCar,
+              ))) {
         buttons.addAll([
           confirmCarReturnByHostButton(),
         ]);
       }
 
-      // only visiable if the rental is not done, not cancelled by host or customer, not hostConfirmedReturn, not refunded, not paid out
+      // only visible if the rental is not done, not cancelled by host or customer, not hostConfirmedReturn, not refunded, not paid out
       if (!carRentalStatusHistory.contains(
             CarRentalStatus.customerCancelled,
           ) &&
@@ -496,78 +354,49 @@ class EditCarRentalBottomSheet extends StatelessWidget {
           cancelRentalButton(),
         ]);
       }
-
-      // // No actions after these statuses
-      // if (carRental.status == CarRentalStatus.customerReturnedCar ||
-      //     carRental.status == CarRentalStatus.customerCancelled ||
-      //     carRental.status == CarRentalStatus.hostCancelled ||
-      //     carRental.status == CarRentalStatus.hostConfirmedReturn ||
-      //     carRental.status == CarRentalStatus.adminConfirmedPayout ||
-      //     carRental.status == CarRentalStatus.adminConfirmedRefund) {
-      //   // no actions after these statuses
-      // }
     }
-
-    // void loadAdminButtons() {
-    //   switch (carRental.status) {
-    //     case CarRentalStatus.customerCancelled:
-    //       if (carRentalStatusHistory
-    //               .contains(CarRentalStatus.rentedByCustomer) ||
-    //           carRentalStatusHistory
-    //               .contains(CarRentalStatus.pickedUpByCustomer) ||
-    //           carRentalStatusHistory
-    //               .contains(CarRentalStatus.customerExtendedRental) ||
-    //           carRentalStatusHistory
-    //               .contains(CarRentalStatus.customerReportedIssue) ||
-    //           carRentalStatusHistory
-    //               .contains(CarRentalStatus.hostReportedIssue)) {
-    //         buttons.add(confirmPayoutButton());
-    //       }
-    //       break;
-
-    //     case CarRentalStatus.hostConfirmedReturn:
-    //       // refund and payout can't be displayed at the same time, one only based completion or cancellation
-    //       if (carRentalStatusHistory
-    //           .contains(CarRentalStatus.customerReturnedCar)) {
-    //         buttons.add(confirmPayoutButton());
-    //         buttons.add(confirmRefundButton());
-    //       }
-    //       break;
-
-    //     case CarRentalStatus.rentedByCustomer:
-    //     case CarRentalStatus.pickedUpByCustomer:
-    //     case CarRentalStatus.customerReportedIssue:
-    //     case CarRentalStatus.customerExtendedRental:
-    //     case CarRentalStatus.customerReturnedCar:
-    //     case CarRentalStatus.hostConfirmedPickup:
-    //     case CarRentalStatus.hostCancelled:
-    //     case CarRentalStatus.hostReportedIssue:
-    //     case CarRentalStatus.adminConfirmedPayout:
-    //     case CarRentalStatus.adminConfirmedRefund:
-    //       // No actions allowed, can only view
-    //       break;
-
-    //     default:
-    //       break;
-    //   }
-    // }
 
     void loadAdminButtons() {
       // Admin buttons visibility based on the specified rules
-      if ((carRental.status == CarRentalStatus.customerCancelled ||
-              carRental.status == CarRentalStatus.hostConfirmedReturn) &&
-          !carRentalStatusHistory
-              .contains(CarRentalStatus.adminConfirmedPayout) &&
-          !carRentalStatusHistory
-              .contains(CarRentalStatus.adminConfirmedRefund)) {
+      if (((carRental.status == CarRentalStatus.customerCancelled ||
+                  carRental.status == CarRentalStatus.hostConfirmedReturn) &&
+              !carRentalStatusHistory.contains(
+                CarRentalStatus.adminConfirmedPayout,
+              ) &&
+              !carRentalStatusHistory.contains(
+                CarRentalStatus.adminConfirmedRefund,
+              ) &&
+              !carRentalStatusHistory.contains(
+                CarRentalStatus.hostCancelled,
+              )) ||
+          (carRental.status == CarRentalStatus.hostConfirmedReturn &&
+              !carRentalStatusHistory.contains(
+                CarRentalStatus.hostCancelled,
+              )) ||
+          (carRental.status == CarRentalStatus.hostConfirmedReturn &&
+              carRentalStatusHistory.contains(
+                CarRentalStatus.customerCancelled,
+              ))) {
         buttons.add(confirmPayoutButton());
       }
 
-      if (carRental.status == CarRentalStatus.hostCancelled &&
-          !carRentalStatusHistory
-              .contains(CarRentalStatus.adminConfirmedPayout) &&
-          !carRentalStatusHistory
-              .contains(CarRentalStatus.adminConfirmedRefund)) {
+      if ((carRental.status == CarRentalStatus.hostCancelled &&
+              !carRentalStatusHistory.contains(
+                CarRentalStatus.adminConfirmedPayout,
+              ) &&
+              !carRentalStatusHistory.contains(
+                CarRentalStatus.adminConfirmedRefund,
+              ) &&
+              !carRentalStatusHistory.contains(
+                CarRentalStatus.customerCancelled,
+              )) ||
+          (carRental.status == CarRentalStatus.hostConfirmedReturn &&
+              !carRentalStatusHistory.contains(
+                CarRentalStatus.customerCancelled,
+              ) &&
+              carRentalStatusHistory.contains(
+                CarRentalStatus.hostCancelled,
+              ))) {
         buttons.add(confirmRefundButton());
       }
     }

@@ -25,7 +25,7 @@ import '../../widgets/latest_status_history_record.dart';
 import '../../widgets/tiles/car_rental_card.dart';
 import '../admin/user_details_screen.dart';
 
-class IssueReportDetailsScreen extends StatelessWidget {
+class IssueReportDetailsScreen extends StatefulWidget {
   final String issueReportId;
 
   const IssueReportDetailsScreen({
@@ -33,6 +33,12 @@ class IssueReportDetailsScreen extends StatelessWidget {
     required this.issueReportId,
   });
 
+  @override
+  State<IssueReportDetailsScreen> createState() =>
+      _IssueReportDetailsScreenState();
+}
+
+class _IssueReportDetailsScreenState extends State<IssueReportDetailsScreen> {
   @override
   Widget build(BuildContext context) {
     Future<Map<String, dynamic>> fetchIssueReportDetails() async {
@@ -53,7 +59,7 @@ class IssueReportDetailsScreen extends StatelessWidget {
       );
 
       final issueReport = await issueReportProvider.getIssueReportById(
-        issueReportId,
+        widget.issueReportId,
       );
 
       final carRental = await carRentalProvider.getCarRentalById(
@@ -349,148 +355,156 @@ class IssueReportDetailsScreen extends StatelessWidget {
       }
     }
 
-    return FutureBuilder<Map<String, dynamic>>(
-      future: fetchIssueReportDetails(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return Scaffold(
-            appBar: AppBar(title: const Text('Issue Report Details')),
-            body: const Center(
-              child: CircularProgressIndicator(),
-            ),
-          );
-        } else if (snapshot.hasError) {
-          return Scaffold(
-            appBar: AppBar(title: const Text('Issue Report Details')),
-            body: const Center(
-              child: Text(
-                'Issue report details not available now. please try again later.',
+    return RefreshIndicator(
+      edgeOffset: 110.0,
+      onRefresh: () async {
+        await Future.delayed(const Duration(milliseconds: 100));
+        setState(() {});
+      },
+      child: FutureBuilder<Map<String, dynamic>>(
+        future: fetchIssueReportDetails(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Scaffold(
+              appBar: AppBar(title: const Text('Issue Report Details')),
+              body: const Center(
+                child: CircularProgressIndicator(),
               ),
-            ),
-          );
-        } else if (!snapshot.hasData) {
-          return Scaffold(
-            appBar: AppBar(title: const Text('Issue Report Details')),
-            body: const Center(child: Text('No data available')),
-          );
-        } else {
-          final IssueReport? issueReport = snapshot.data!['issueReport'];
-          final CarRental? carRental = snapshot.data!['carRental'];
-          final Car? car = snapshot.data!['car'];
-          final UserRole? currentUserRole = snapshot.data!['currentUserRole'];
-          final User? reporter = snapshot.data!['reporter'];
-          final User? otherParty = snapshot.data!['otherParty'];
-
-          return Scaffold(
-            appBar: AppBar(
-              title: const Text('Issue Report Details'),
-              actions: [
-                if (currentUserRole == UserRole.primaryAdmin ||
-                    currentUserRole == UserRole.secondaryAdmin)
-                  IconButton(
-                    icon: const Icon(Icons.edit),
-                    onPressed: () => showIssueReportBottomSheet(
-                      issueReport,
-                      currentUserRole,
-                    ),
-                  ),
-              ],
-            ),
-            body: Padding(
-              padding: const EdgeInsets.fromLTRB(16.0, 0.0, 16.0, 5.0),
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Status',
-                          style: TextStyle(
-                            color: Theme.of(context).dividerColor,
-                          ),
-                        ),
-                        IssueReportStatusIndicator(
-                          issueReportStatus: issueReport?.status ??
-                              IssueReportStatus.inProgress,
-                        ),
-                      ],
-                    ),
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 10.0),
-                      child: Divider(thickness: 0.3),
-                    ),
-                    Text(
-                      'Subject',
-                      style: TextStyle(
-                        color: Theme.of(context).dividerColor,
-                      ),
-                    ),
-                    Text(
-                      issueReport?.reportSubject ?? 'No Subject',
-                      style: const TextStyle(
-                        fontSize: 32.0,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 20.0),
-                    Text(
-                      'Description',
-                      style: TextStyle(
-                        color: Theme.of(context).dividerColor,
-                      ),
-                    ),
-                    Text(
-                      issueReport?.reportDescription ?? 'No Description',
-                      style: const TextStyle(
-                        fontSize: 26.0,
-                      ),
-                    ),
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 10.0),
-                      child: Divider(thickness: 0.3),
-                    ),
-                    if (currentUserRole == UserRole.primaryAdmin ||
-                        currentUserRole == UserRole.secondaryAdmin)
-                      AdminIssueReportCarRentalDetails(
-                        carRental: carRental,
-                        car: car,
-                      ),
-                    buildUserDetailsSection(
-                      context,
-                      reporter,
-                      otherParty,
-                      currentUserRole == UserRole.primaryAdmin ||
-                          currentUserRole == UserRole.secondaryAdmin,
-                    ),
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 10.0),
-                      child: Divider(thickness: 0.3),
-                    ),
-                    LatestStatusHistoryRecord(
-                      fetchStatusHistory: getMostRecentIssueReportStatusHistory,
-                      linkedObjectId: issueReport?.id ?? '',
-                    ),
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 10.0),
-                      child: Divider(thickness: 0.3),
-                    ),
-                    ReferenceNumberRow(
-                      referenceNumber: issueReport?.referenceNumber,
-                    ),
-                    CreatedAtRow(
-                      labelText: 'Reported At',
-                      createdAt: issueReport?.createdAt,
-                    ),
-                  ],
+            );
+          } else if (snapshot.hasError) {
+            return Scaffold(
+              appBar: AppBar(title: const Text('Issue Report Details')),
+              body: const Center(
+                child: Text(
+                  'Issue report details not available now. please try again later.',
                 ),
               ),
-            ),
-          );
-        }
-      },
+            );
+          } else if (!snapshot.hasData) {
+            return Scaffold(
+              appBar: AppBar(title: const Text('Issue Report Details')),
+              body: const Center(child: Text('No data available')),
+            );
+          } else {
+            final IssueReport? issueReport = snapshot.data!['issueReport'];
+            final CarRental? carRental = snapshot.data!['carRental'];
+            final Car? car = snapshot.data!['car'];
+            final UserRole? currentUserRole = snapshot.data!['currentUserRole'];
+            final User? reporter = snapshot.data!['reporter'];
+            final User? otherParty = snapshot.data!['otherParty'];
+
+            return Scaffold(
+              appBar: AppBar(
+                title: const Text('Issue Report Details'),
+                actions: [
+                  if (currentUserRole == UserRole.primaryAdmin ||
+                      currentUserRole == UserRole.secondaryAdmin)
+                    IconButton(
+                      icon: const Icon(Icons.edit),
+                      onPressed: () => showIssueReportBottomSheet(
+                        issueReport,
+                        currentUserRole,
+                      ),
+                    ),
+                ],
+              ),
+              body: Padding(
+                padding: const EdgeInsets.fromLTRB(16.0, 0.0, 16.0, 5.0),
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Status',
+                            style: TextStyle(
+                              color: Theme.of(context).dividerColor,
+                            ),
+                          ),
+                          IssueReportStatusIndicator(
+                            issueReportStatus: issueReport?.status ??
+                                IssueReportStatus.inProgress,
+                          ),
+                        ],
+                      ),
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 10.0),
+                        child: Divider(thickness: 0.3),
+                      ),
+                      Text(
+                        'Subject',
+                        style: TextStyle(
+                          color: Theme.of(context).dividerColor,
+                        ),
+                      ),
+                      Text(
+                        issueReport?.reportSubject ?? 'No Subject',
+                        style: const TextStyle(
+                          fontSize: 32.0,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 20.0),
+                      Text(
+                        'Description',
+                        style: TextStyle(
+                          color: Theme.of(context).dividerColor,
+                        ),
+                      ),
+                      Text(
+                        issueReport?.reportDescription ?? 'No Description',
+                        style: const TextStyle(
+                          fontSize: 26.0,
+                        ),
+                      ),
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 10.0),
+                        child: Divider(thickness: 0.3),
+                      ),
+                      if (currentUserRole == UserRole.primaryAdmin ||
+                          currentUserRole == UserRole.secondaryAdmin)
+                        AdminIssueReportCarRentalDetails(
+                          carRental: carRental,
+                          car: car,
+                        ),
+                      buildUserDetailsSection(
+                        context,
+                        reporter,
+                        otherParty,
+                        currentUserRole == UserRole.primaryAdmin ||
+                            currentUserRole == UserRole.secondaryAdmin,
+                      ),
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 10.0),
+                        child: Divider(thickness: 0.3),
+                      ),
+                      LatestStatusHistoryRecord(
+                        fetchStatusHistory:
+                            getMostRecentIssueReportStatusHistory,
+                        linkedObjectId: issueReport?.id ?? '',
+                      ),
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 10.0),
+                        child: Divider(thickness: 0.3),
+                      ),
+                      ReferenceNumberRow(
+                        referenceNumber: issueReport?.referenceNumber,
+                      ),
+                      CreatedAtRow(
+                        labelText: 'Reported At',
+                        createdAt: issueReport?.createdAt,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          }
+        },
+      ),
     );
   }
 

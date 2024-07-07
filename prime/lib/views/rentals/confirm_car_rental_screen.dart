@@ -24,10 +24,6 @@ import '../../services/stripe/stripe_customer.dart';
 import '../../widgets/rental_agreement.dart';
 import '../../widgets/tiles/payment_method_selector.dart';
 
-// TODO: The system should provide rental agreements that outline the terms and conditions of the rental,
-// including any liabilities or responsibilities of the owner or renter.
-// TODO: let the customer know that if refund will not be given if the customer cancels the booking
-
 class ConfirmCarRentalScreen extends StatefulWidget {
   final String carId;
   final DateTime? pickUpDateTime;

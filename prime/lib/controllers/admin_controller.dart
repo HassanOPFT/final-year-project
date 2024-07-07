@@ -8,6 +8,7 @@ class AdminController {
   //     FirebaseFirestore.instance.collection(_adminCollectionName);
   final _userController = UserController();
 
+  // TODO: move the admin creation lgoic from the view to the controller
   Future<void> createAdmin({required Admin admin}) async {
     try {
       if (admin.userId == null || admin.userId!.isEmpty) {

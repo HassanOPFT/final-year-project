@@ -52,12 +52,24 @@ class _SignUpFormState extends State<SignUpForm> {
     if (value == null || value.isEmpty) {
       return 'Please enter your first name.';
     }
+    if (RegExp(r'[0-9]').hasMatch(value)) {
+      return 'Numbers are not allowed in the first name.';
+    }
+    if (RegExp(r'[!@#<>?":_`~;[\]\\|=+)(*&^%0-9-]').hasMatch(value)) {
+      return 'Special characters are not allowed in the first name.';
+    }
     return null;
   }
 
   String? _validateLastName(String? value) {
     if (value == null || value.isEmpty) {
       return 'Please enter your last name.';
+    }
+    if (RegExp(r'[0-9]').hasMatch(value)) {
+      return 'Numbers are not allowed in the last name.';
+    }
+    if (RegExp(r'[!@#<>?":_`~;[\]\\|=+)(*&^%0-9-]').hasMatch(value)) {
+      return 'Special characters are not allowed in the last name.';
     }
     return null;
   }
@@ -76,8 +88,12 @@ class _SignUpFormState extends State<SignUpForm> {
   String? _validatePassword(String? value) {
     if (value == null || value.isEmpty) {
       return 'Please enter your password.';
-    } else if (value.length < 6) {
-      return 'Password must be at least 6 characters long.';
+    } else if (value.length < 8) {
+      return 'Password must be at least 8 characters long.';
+    } else if (!RegExp(
+            r'^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[!@#\$&*~]).{8,}$')
+        .hasMatch(value)) {
+      return 'must contain uppercase, lowercase, number, special character.';
     }
     return null;
   }
