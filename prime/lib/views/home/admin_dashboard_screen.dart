@@ -38,30 +38,42 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   @override
   Widget build(BuildContext context) {
     Future<Map<String, dynamic>> getAllFinance(
-        List<String?> chargesList) async {
+      List<String?> chargesList,
+    ) async {
       final stripeChargeService = StripeChargeService();
       List<StripeCharge> stripeChargesList = [];
+
       for (final chargeId in chargesList) {
+        // if chargeId is null, skip it
+        if (chargeId == null) {
+          continue;
+        }
         final charge = await stripeChargeService.getChargeDetails(
-            chargeId: chargeId ?? '');
+          chargeId: chargeId,
+        );
         stripeChargesList.add(charge);
       }
       final stripeTransactionService = StripeTransactionService();
       List<StripeTransaction> stripeTransactionList = [];
+
       for (final charge in stripeChargesList) {
         final transaction =
             await stripeTransactionService.getBalanceTransactionDetails(
-                transactionId: charge.balanceTransactionId ?? '');
+          transactionId: charge.balanceTransactionId ?? '',
+        );
         stripeTransactionList.add(transaction);
       }
+
       double platformRevenue = 0;
       double hostsEarnings = 0;
       double stripeFees = 0;
       double totalMoneyTransferred = 0;
+
       for (final transaction in stripeTransactionList) {
         stripeFees += transaction.fee;
         totalMoneyTransferred += transaction.amount;
       }
+
       hostsEarnings = totalMoneyTransferred * 0.85;
       platformRevenue = totalMoneyTransferred - hostsEarnings - stripeFees;
 
@@ -131,8 +143,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       final usersWithRoles = combinedFutures[2];
       final issueReportsWithStatuses = combinedFutures[3];
 
-      final stripeChargesList =
-          carRentals.map((carRental) => carRental.stripeChargeId).toList();
+      final stripeChargesList = carRentals
+          .where((carRental) =>
+              carRental.status != CarRentalStatus.customerCancelled &&
+              carRental.status != CarRentalStatus.adminConfirmedRefund)
+          .map((carRental) {
+        return carRental.stripeChargeId;
+      }).toList();
+
       final allFinance = await getAllFinance(stripeChargesList);
 
       return {

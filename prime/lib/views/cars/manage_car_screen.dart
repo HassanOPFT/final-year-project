@@ -232,7 +232,7 @@ class _ManageCarScreenState extends State<ManageCarScreen> {
     }
 
     Future<void> approveCar(Car car) async {
-      // TODO: Check for car documents if approved and if address is provided
+      // TODO: Check for car documents if approved and if address is provided, alternative ask the admin to confirm
       try {
         await carProvider.updateCarStatus(
           carId: car.id ?? '',
@@ -545,7 +545,9 @@ class _ManageCarScreenState extends State<ManageCarScreen> {
               body: SingleChildScrollView(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 10.0, vertical: 5.0),
+                    horizontal: 10.0,
+                    vertical: 5.0,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
