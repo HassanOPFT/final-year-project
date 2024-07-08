@@ -26,7 +26,6 @@ class StripeSetupIntents {
 
       return jsonDecode(response.body);
     } catch (e) {
-      print('Error creating SetupIntent: $e');
       return {'error': 'Failed to create SetupIntent'};
     }
   }
@@ -48,7 +47,6 @@ class StripeSetupIntents {
 
       return jsonDecode(response.body);
     } catch (e) {
-      print('Error updating SetupIntent: $e');
       return {'error': 'Failed to update SetupIntent'};
     }
   }
@@ -65,7 +63,6 @@ class StripeSetupIntents {
 
       return jsonDecode(response.body);
     } catch (e) {
-      print('Error getting SetupIntent: $e');
       return {'error': 'Failed to get SetupIntent'};
     }
   }
@@ -82,7 +79,6 @@ class StripeSetupIntents {
 
       return jsonDecode(response.body);
     } catch (e) {
-      print('Error canceling SetupIntent: $e');
       return {'error': 'Failed to cancel SetupIntent'};
     }
   }
@@ -101,7 +97,6 @@ class StripeSetupIntents {
 
       return jsonDecode(response.body);
     } catch (e) {
-      print('Error confirming SetupIntent: $e');
       return {'error': 'Failed to confirm SetupIntent'};
     }
   }

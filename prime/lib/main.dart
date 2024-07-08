@@ -11,6 +11,7 @@ import 'package:prime/providers/issue_report_provider.dart';
 import 'package:prime/providers/notification_provider.dart';
 import 'package:prime/providers/search_cars_provider.dart';
 import 'package:prime/providers/search_issue_reports_provider.dart';
+import 'package:prime/providers/stripe_payment_method_provider.dart';
 import 'package:provider/provider.dart';
 import 'firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -160,6 +161,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => SearchRentalsProvider()),
         ChangeNotifierProvider(create: (_) => SearchIssueReportsProvider()),
         ChangeNotifierProvider(create: (_) => SearchUsersProvider()),
+        ChangeNotifierProvider(create: (_) => StripePaymentMethodProvider()),
       ],
       child: Consumer<ThemeProvider>(
         builder: (_, themeProvider, __) => MaterialApp(

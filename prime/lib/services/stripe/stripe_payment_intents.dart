@@ -42,7 +42,6 @@ class StripePaymentIntents {
       );
       return await _handleResponse(response);
     } catch (e) {
-      print('Error creating PaymentIntent: $e');
       rethrow;
     }
   }
@@ -66,7 +65,6 @@ class StripePaymentIntents {
       );
       return await _handleResponse(response);
     } catch (e) {
-      print('Error updating PaymentIntent: $e');
       rethrow;
     }
   }
@@ -85,14 +83,13 @@ class StripePaymentIntents {
       );
       return await _handleResponse(response);
     } catch (e) {
-      print('Error retrieving PaymentIntent: $e');
       rethrow;
     }
   }
 
   Future<Map<String, dynamic>> confirmPaymentIntent({
     required String paymentIntentId,
-    String paymentMethodId = '',
+    required String paymentMethodId,
     String receiptEmail = '',
     String setupFutureUsage = 'off_session',
   }) async {
@@ -100,7 +97,6 @@ class StripePaymentIntents {
       String apiKey = _getStripeAPIKey();
 
       Map<String, dynamic> body = {
-        // 'payment_method': 'pm_1OyJRE06sxMdZTBdDq7u6nO1',
         'payment_method': paymentMethodId,
         'receipt_email': receiptEmail,
         'setup_future_usage': setupFutureUsage,
@@ -115,7 +111,6 @@ class StripePaymentIntents {
       );
       return await _handleResponse(response);
     } catch (e) {
-      print('Error confirming PaymentIntent: $e');
       rethrow;
     }
   }
@@ -138,7 +133,6 @@ class StripePaymentIntents {
       );
       return await _handleResponse(response);
     } catch (e) {
-      print('Error canceling PaymentIntent: $e');
       rethrow;
     }
   }

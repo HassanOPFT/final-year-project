@@ -115,49 +115,6 @@ class StripePaymentMethodService {
     }
   }
 
-  // Future<Map<String, dynamic>> retrievePaymentMethod(
-  //   String paymentMethodId,
-  // ) async {
-  //   try {
-  //     final response = await http.get(
-  //       Uri.parse('$_baseUrl/payment_methods/$paymentMethodId'),
-  //       headers: {
-  //         'Authorization': 'Bearer ${_apiKey()}',
-  //       },
-  //     );
-  //     return _handleResponse(response);
-  //   } catch (e) {
-  //     rethrow;
-  //   }
-  // }
-
-  // Future<Map<String, dynamic>> listCustomerPaymentMethods(
-  //   String customerId, {
-  //   int? limit,
-  //   String? endingBefore,
-  //   String? startingAfter,
-  // }) async {
-  //   try {
-  //     final Uri uri = Uri.parse(
-  //       '$_baseUrl/customers/$customerId/payment_methods',
-  //     );
-  //     final Map<String, dynamic> queryParams = {};
-  //     if (limit != null) queryParams['limit'] = limit.toString();
-  //     if (endingBefore != null) queryParams['ending_before'] = endingBefore;
-  //     if (startingAfter != null) queryParams['starting_after'] = startingAfter;
-
-  //     final response = await http.get(
-  //       uri.replace(queryParameters: queryParams),
-  //       headers: {
-  //         'Authorization': 'Bearer ${_apiKey()}',
-  //       },
-  //     );
-  //     return _handleResponse(response);
-  //   } catch (e) {
-  //     rethrow;
-  //   }
-  // }
-
   Future<Map<String, dynamic>> attachPaymentMethodToCustomer(
     String paymentMethodId,
     String customerId,

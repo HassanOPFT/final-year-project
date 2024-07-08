@@ -8,9 +8,11 @@ import 'package:flutter_stripe/flutter_stripe.dart' hide Address;
 import 'package:intl/intl.dart';
 import 'package:prime/models/car.dart';
 import 'package:prime/providers/customer_provider.dart';
+import 'package:prime/providers/stripe_payment_method_provider.dart';
 import 'package:prime/providers/user_provider.dart';
 import 'package:prime/services/firebase/firebase_auth_service.dart';
 import 'package:prime/services/stripe/stripe_payment_intents.dart';
+import 'package:prime/services/stripe/stripe_payment_method_service.dart';
 import 'package:prime/utils/navigate_with_animation.dart';
 import 'package:prime/utils/snackbar.dart';
 import 'package:prime/views/rentals/car_rental_confirmation_screen.dart';
@@ -426,31 +428,70 @@ class _ConfirmCarRentalScreenState extends State<ConfirmCarRentalScreen> {
         address: null,
       );
 
-      await Stripe.instance.initPaymentSheet(
-        paymentSheetParameters: SetupPaymentSheetParameters(
-          customFlow: false,
-          merchantDisplayName: 'PRIME',
-          customerId: paymentIntent['customer'],
-          customerEphemeralKeySecret: paymentIntent['ephemeralKey'],
-          paymentIntentClientSecret: paymentIntent['client_secret'],
-          primaryButtonLabel: 'Pay now',
-          removeSavedPaymentMethodMessage: 'Remove Card',
-          intentConfiguration: IntentConfiguration(
-            mode: IntentMode(
-              currencyCode: 'MYR',
-              amount: totalAmountInCents,
-              setupFutureUsage: IntentFutureUsage.OffSession,
-              captureMethod: CaptureMethod.Automatic,
-            ),
-          ),
-          billingDetails: billingDetails,
-        ),
+      // based on the user payment method selection new card or existing card
+      final stripePaymentMethodProvider =
+          Provider.of<StripePaymentMethodProvider>(
+        context,
+        listen: false,
       );
 
-      await Stripe.instance.presentPaymentSheet();
+      final selectedPaymentMethod =
+          stripePaymentMethodProvider.getSelectedPaymentMethod();
+      if (!stripePaymentMethodProvider.isNewCardSelected &&
+          selectedPaymentMethod != null &&
+          selectedPaymentMethod.paymentMethodId != null) {
+        // confirm the payment intent with the selected payment method id
 
-      final successfulPaymentIntent = await paymentIntentObject
-          .getPaymentIntent(paymentIntentId: paymentIntent['id']);
+        final stripePaymentIntents = StripePaymentIntents();
+        await stripePaymentIntents.confirmPaymentIntent(
+          paymentIntentId: paymentIntent['id'],
+          paymentMethodId: selectedPaymentMethod.paymentMethodId ?? '',
+          receiptEmail: customerEmail,
+        );
+      } else {
+        await Stripe.instance.initPaymentSheet(
+          paymentSheetParameters: SetupPaymentSheetParameters(
+            customFlow: false,
+            merchantDisplayName: 'PRIME',
+            customerId: paymentIntent['customer'],
+            customerEphemeralKeySecret: paymentIntent['ephemeralKey'],
+            paymentIntentClientSecret: paymentIntent['client_secret'],
+            primaryButtonLabel: 'Pay now',
+            removeSavedPaymentMethodMessage: 'Remove Card',
+            intentConfiguration: IntentConfiguration(
+              mode: IntentMode(
+                currencyCode: 'MYR',
+                amount: totalAmountInCents,
+                setupFutureUsage: IntentFutureUsage.OffSession,
+                captureMethod: CaptureMethod.Automatic,
+              ),
+            ),
+            billingDetails: billingDetails,
+          ),
+        );
+
+        await Stripe.instance.presentPaymentSheet();
+
+        // based on save card option under customer account
+        if (!stripePaymentMethodProvider.saveCard) {
+          // detach the payment method from the customer
+
+          final successfulPaymentIntent =
+              await paymentIntentObject.getPaymentIntent(
+            paymentIntentId: paymentIntent['id'],
+          );
+
+          final stripePaymentMethodService = StripePaymentMethodService();
+          await stripePaymentMethodService.detachPaymentMethodFromCustomer(
+            successfulPaymentIntent['payment_method'],
+          );
+        }
+      }
+
+      final successfulPaymentIntent =
+          await paymentIntentObject.getPaymentIntent(
+        paymentIntentId: paymentIntent['id'],
+      );
 
       // get the charge ID from the payment intent
       final chargeId = successfulPaymentIntent['latest_charge'];
@@ -536,6 +577,173 @@ class _ConfirmCarRentalScreenState extends State<ConfirmCarRentalScreen> {
       }
     }
   }
+
+  // Future<void> confirmAndPay({
+  //   required double totalPrice,
+  //   required String carName,
+  //   required String carImage,
+  //   required String carAddressId,
+  //   required String carColor,
+  //   required CarStatus carStatus,
+  // }) async {
+  //   // check both dates
+  //   if (widget.pickUpDateTime == null || widget.dropOffDateTime == null) {
+  //     buildAlertSnackbar(
+  //       context: context,
+  //       message: 'Please select pick-up and drop-off dates.',
+  //     );
+  //     return;
+  //   }
+
+  //   _stopListeningToCarStatus();
+
+  //   try {
+  //     final userId = FirebaseAuthService().currentUser?.uid ?? '';
+  //     final user = await Provider.of<UserProvider>(
+  //       context,
+  //       listen: false,
+  //     ).getUserDetails(userId);
+  //     final customerName = '${user?.userFirstName} ${user?.userLastName}';
+  //     final customerEmail = user?.userEmail ?? '';
+  //     final customerPhone = user?.userPhoneNumber ?? '';
+  //     final stripeCustomerId = await getOrCreateStripeCustomerId(
+  //       userId,
+  //       customerName,
+  //       customerEmail,
+  //       '',
+  //       '',
+  //       '',
+  //       '',
+  //       '',
+  //       '',
+  //       customerPhone,
+  //     );
+  //     int totalAmountInCents = (totalPrice * 100).toInt();
+
+  //     final paymentIntentObject = StripePaymentIntents();
+  //     final paymentIntent = await paymentIntentObject.createPaymentIntent(
+  //       amount: totalAmountInCents.toString(),
+  //       currency: 'MYR',
+  //       customerId: stripeCustomerId,
+  //     );
+
+  //     final billingDetails = BillingDetails(
+  //       name: customerName,
+  //       email: customerEmail,
+  //       phone: customerPhone,
+  //       address: null,
+  //     );
+
+  //     await Stripe.instance.initPaymentSheet(
+  //       paymentSheetParameters: SetupPaymentSheetParameters(
+  //         customFlow: false,
+  //         merchantDisplayName: 'PRIME',
+  //         customerId: paymentIntent['customer'],
+  //         customerEphemeralKeySecret: paymentIntent['ephemeralKey'],
+  //         paymentIntentClientSecret: paymentIntent['client_secret'],
+  //         primaryButtonLabel: 'Pay now',
+  //         removeSavedPaymentMethodMessage: 'Remove Card',
+  //         intentConfiguration: IntentConfiguration(
+  //           mode: IntentMode(
+  //             currencyCode: 'MYR',
+  //             amount: totalAmountInCents,
+  //             setupFutureUsage: IntentFutureUsage.OffSession,
+  //             captureMethod: CaptureMethod.Automatic,
+  //           ),
+  //         ),
+  //         billingDetails: billingDetails,
+  //       ),
+  //     );
+
+  //     await Stripe.instance.presentPaymentSheet();
+
+  //     final successfulPaymentIntent = await paymentIntentObject
+  //         .getPaymentIntent(paymentIntentId: paymentIntent['id']);
+
+  //     // get the charge ID from the payment intent
+  //     final chargeId = successfulPaymentIntent['latest_charge'];
+
+  //     final carRentalProvider = Provider.of<CarRentalProvider>(
+  //       context,
+  //       listen: false,
+  //     );
+
+  //     final carRentalId = await carRentalProvider.createCarRental(
+  //       carId: widget.carId,
+  //       customerId: userId,
+  //       startDate: widget.pickUpDateTime!,
+  //       endDate: widget.dropOffDateTime!,
+  //       stripeChargeId: chargeId,
+  //     );
+
+  //     // update the car status
+  //     final carProvider = Provider.of<CarProvider>(
+  //       context,
+  //       listen: false,
+  //     );
+  //     carProvider.updateCarStatus(
+  //       carId: widget.carId,
+  //       previousStatus: carStatus,
+  //       newStatus: CarStatus.upcomingRental,
+  //       modifiedById: userId,
+  //     );
+
+  //     final carAddress = await Provider.of<AddressProvider>(
+  //       context,
+  //       listen: false,
+  //     ).getAddressById(carAddressId);
+
+  //     animatedPushReplacementNavigation(
+  //       context: context,
+  //       screen: CarRentalConfirmationScreen(
+  //         carName: carName,
+  //         carImage: carImage,
+  //         carColor: carColor,
+  //         carAddress: carAddress.toString(),
+  //         pickUpTime: widget.pickUpDateTime ?? DateTime.now(),
+  //         dropOffTime: widget.dropOffDateTime ?? DateTime.now(),
+  //         totalPrice: totalPrice.toString(),
+  //         carRentalId: carRentalId,
+  //       ),
+  //     );
+
+  //     if (mounted) {
+  //       buildSuccessSnackbar(
+  //         context: context,
+  //         message: 'Payment successful. Thank you for renting with us!',
+  //       );
+  //     }
+  //   } on Exception catch (e) {
+  //     if (e is StripeException) {
+  //       String message =
+  //           'Error occurred while processing payment. Please try again.';
+  //       switch (e.error.code) {
+  //         case FailureCode.Failed:
+  //           message = 'Payment failed. Please try again.';
+  //           break;
+  //         case FailureCode.Canceled:
+  //           message = 'Payment canceled. Please try again.';
+  //           break;
+  //         case FailureCode.Timeout:
+  //           message = 'Payment timed out. Please try again.';
+  //           break;
+  //         default:
+  //           message =
+  //               'Error occurred while processing payment. Please try again.';
+  //           break;
+  //       }
+  //       buildFailureSnackbar(
+  //         context: context,
+  //         message: message,
+  //       );
+  //     } else {
+  //       buildFailureSnackbar(
+  //         context: context,
+  //         message: 'Error occurred while processing payment. Please try again.',
+  //       );
+  //     }
+  //   }
+  // }
 
   Widget _buildIconTextRow(
     BuildContext context,

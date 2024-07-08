@@ -9,6 +9,9 @@ class RentalAgreement extends StatelessWidget {
     return RichText(
       text: TextSpan(
         text: 'By confirming this rental, you agree to the ',
+        style: TextStyle(
+          color: Theme.of(context).colorScheme.onBackground,
+        ),
         children: [
           TextSpan(
             text: 'rental agreement',
@@ -21,8 +24,11 @@ class RentalAgreement extends StatelessWidget {
                 _showRentalTermsDialog(context);
               },
           ),
-          const TextSpan(
+          TextSpan(
             text: '.',
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onBackground,
+            ),
           ),
         ],
       ),
